@@ -37,6 +37,7 @@ export default defineConfig({
 				test: {
 					name: 'dom',
 					environment: 'jsdom',
+					setupFiles: ['src/ui/testSetup.ts'],
 					include: [
 						'src/**/*.test.{ts,tsx}',
 						'!src/engine/**/*.test.ts',

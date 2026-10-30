@@ -32,9 +32,6 @@ import { fakeStccIndex } from './testStcc'
 import { SHELL_KEY, resetShellChoiceCache } from './mobile/shell'
 
 vi.setConfig({ testTimeout: 20_000 })
-;(
-	globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true
 
 const catalog = loadBrowserCatalog()
 

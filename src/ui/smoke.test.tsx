@@ -21,11 +21,11 @@ function config(): SetupConfig {
 	}
 }
 
-function renderApp(): HTMLElement {
+async function renderApp(): Promise<HTMLElement> {
 	const host = document.createElement('div')
 	document.body.appendChild(host)
 	const root = createRoot(host)
-	act(() => {
+	await act(async () => {
 		root.render(<App />)
 	})
 	return host
@@ -37,11 +37,11 @@ beforeEach(() => {
 })
 
 describe('app smoke (jsdom)', () => {
-	it('boots the setup screen and lists the built crew decks', () => {
+	it('boots the setup screen and lists the built crew decks', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 		})
-		const host = renderApp()
+		const host = await renderApp()
 		expect(host.textContent).toContain('Ready Room')
 		expect(host.textContent).toContain('Start game')
 		const state = useGameStore.getState()
@@ -49,12 +49,12 @@ describe('app smoke (jsdom)', () => {
 		expect(state.error).toBeNull()
 	})
 
-	it('starts a game and renders the board, areas, hand and log', () => {
+	it('starts a game and renders the board, areas, hand and log', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().startGame(config())
 		})
-		const host = renderApp()
+		const host = await renderApp()
 
 		const text = host.textContent ?? ''
 		expect(text).toContain('Market')
@@ -74,12 +74,12 @@ describe('app smoke (jsdom)', () => {
 		expect(store.error).toBeNull()
 	})
 
-	it('the crew board shows the real mission and the side’s own track glyphs', () => {
+	it('the crew board shows the real mission and the side’s own track glyphs', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().startGame(config())
 		})
-		const host = renderApp()
+		const host = await renderApp()
 		const board = host.querySelector('[aria-label="Player 1 crew board"]')
 		expect(board).not.toBeNull()
 		// the PIC Basic side prints 1PIC/M1 (no VP shown on the Basic side)
@@ -99,12 +99,12 @@ describe('app smoke (jsdom)', () => {
 		expect(influence?.querySelectorAll('.console-seg').length).toBe(16)
 	})
 
-	it('your resources sit in the top bar, the opponent keeps its pips', () => {
+	it('your resources sit in the top bar, the opponent keeps its pips', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().startGame(config())
 		})
-		const host = renderApp()
+		const host = await renderApp()
 		const topbar = host.querySelector('.topbar')
 		const board = host.querySelector('[aria-label="Player 1 crew board"]')
 		const p0 = useGameStore.getState().state!.players[0]
@@ -122,12 +122,12 @@ describe('app smoke (jsdom)', () => {
 		expect(host.querySelector('[data-anchor="player:1:DIL"]')).not.toBeNull()
 	})
 
-	it('opens a new game past the START boundary, no extra click', () => {
+	it('opens a new game past the START boundary, no extra click', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().startGame(config())
 		})
-		const host = renderApp()
+		const host = await renderApp()
 		expect(useGameStore.getState().session?.log).toEqual([{ t: 'START' }])
 		expect(host.textContent).not.toContain('Start game')
 		// After START the stack machine auto-advances RESUPPLY -> CONTROL -> ACTION
@@ -138,12 +138,12 @@ describe('app smoke (jsdom)', () => {
 		expect((host.textContent ?? '').length).toBeGreaterThan(0)
 	})
 
-	it('one Reference menu tabs between its panels; Settings holds the preferences', () => {
+	it('one Reference menu tabs between its panels; Settings holds the preferences', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().startGame(config())
 		})
-		const host = renderApp()
+		const host = await renderApp()
 		const button = (text: string, root: ParentNode = host) =>
 			[...root.querySelectorAll('button')].find(
 				(b) => b.textContent?.trim() === text,

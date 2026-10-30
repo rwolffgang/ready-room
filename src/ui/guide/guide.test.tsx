@@ -20,9 +20,6 @@ import {
 	tidyEnglish,
 } from './glossary'
 import { ShorthandGuide, type GuideSection } from './ShorthandGuide'
-;(
-	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true
 
 const catalog = loadBrowserCatalog()
 
