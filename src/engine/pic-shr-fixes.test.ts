@@ -218,6 +218,21 @@ describe('reaction windows only offer reactions whose cost can be paid', () => {
 		expect(s.cards['ally']!.zone).toEqual({ k: 'BEAMED', host: 'ship' })
 	})
 
+	// The discard names the operation that asks for it, so the UI can show
+	// the reaction's wording: why the discard, and what it pays for.
+	it('1PIC01 PIC: the discard choice names the reaction it pays for', () => {
+		const asked: PendingChoice[] = []
+		drive(drainEvents(pic(2)).state, (c) => {
+			asked.push(c)
+			return undefined
+		})
+		const window = asked.find((c) => c.k === 'OPTIONAL_TRIGGERS')
+		expect(window?.sourceOp).toBeUndefined()
+		const discard = asked.find((c) => c.k === 'CHOOSE_CARDS')
+		expect(discard?.sourceCard).toBe(ID('pic'))
+		expect(discard?.sourceOp).toBe(0)
+	})
+
 	// The window names its card only when both players know it: a face-up
 	// Market pick put onto the deck top is public, a blind deck-top gain not.
 	it('the window names an ALLY gained face up onto the deck top', () => {

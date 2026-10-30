@@ -36,7 +36,7 @@ import { MarketSlot } from './board'
 import { LocationCard, isLocationInPlay } from './location'
 import { OperationOptions, operationOptions } from './opOptions'
 import { seatLabel } from './format'
-import { useDefForIid, useDefById } from './defs'
+import { useDefForIid, useDefById, type CardDef } from './defs'
 import { cardName, withCardNames } from '../data/cardNames'
 import { printedOpFor, printedOps } from '../data/stcc'
 import { stccCard } from './stcc'
@@ -48,13 +48,29 @@ const SKIP_CONTROL = '__SKIP__' as CardInstanceId
 // shared bits
 // ---------------------------------------------------------------------------
 
+/** The card's printed wording of operation #opIndex (without its header), or
+ *  our own rendering when the STCC text has none. */
+function opWording(def: CardDef, opIndex: number): string | null {
+	const op = def.operations[opIndex]
+	if (op === undefined) return null
+	const stcc = stccCard(def)
+	const printed =
+		stcc === null
+			? null
+			: printedOpFor(printedOps(stcc.text), def.operations, opIndex)
+	return printed?.text ?? describeOperation(op)
+}
+
 function SourceCard({
 	sourceCard,
 	sourceDef,
+	sourceOp,
 	label,
 }: {
 	sourceCard: CardInstanceId | null
 	sourceDef?: string | undefined
+	/** the resolving operation: its wording says why the choice is asked */
+	sourceOp?: number | undefined
 	label?: string | undefined
 }) {
 	// The instance may have gone face-down (an Incident returned to its deck
@@ -64,6 +80,9 @@ function SourceCard({
 	const stampedDef = useDefById(sourceDef ?? '')
 	const def = liveDef ?? stampedDef
 	if (sourceCard === null || def === null) return null
+	const type =
+		sourceOp === undefined ? undefined : def.operations[sourceOp]?.type
+	const wording = sourceOp === undefined ? null : opWording(def, sourceOp)
 	return (
 		<span className="source-card">
 			{label !== undefined && <span>{label}</span>}
@@ -72,7 +91,17 @@ function SourceCard({
 			) : (
 				<CardFace def={def} size="micro" />
 			)}
-			<span className="source-card-name">{cardName(def)}</span>
+			<span className="source-card-body">
+				<span className="source-card-name">{cardName(def)}</span>
+				{type !== undefined && wording !== null && (
+					<span className="source-card-op">
+						<span className="source-card-op-type">
+							{type.charAt(0) + type.slice(1).toLowerCase()}:
+						</span>{' '}
+						<OpText text={wording} plain />
+					</span>
+				)}
+			</span>
 		</span>
 	)
 }
@@ -93,10 +122,10 @@ function ChoiceHeader({
 				<strong>
 					<OpText text={choice.prompt} plain />
 				</strong>
-				<span className="muted">for {seatLabel(choice.seat)}</span>
 				<SourceCard
 					sourceCard={choice.sourceCard}
 					sourceDef={choice.sourceDef}
+					sourceOp={choice.sourceOp}
 					label={sourceLabel}
 				/>
 			</div>
@@ -1006,14 +1035,7 @@ function ReactionRow({
 	onToggle: () => void
 }) {
 	const def = useDefForIid(opRef.card)
-	const op = def?.operations[opRef.opIndex]
-	const stcc = def === null ? null : stccCard(def)
-	const printed =
-		def === null || stcc === null
-			? null
-			: printedOpFor(printedOps(stcc.text), def.operations, opRef.opIndex)
-	const text =
-		printed?.text ?? (op === undefined ? null : describeOperation(op))
+	const text = def === null ? null : opWording(def, opRef.opIndex)
 	const setHoverIid = useGameStore((s) => s.setHoverIid)
 	const picked = order > 0
 	return (

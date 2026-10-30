@@ -74,6 +74,10 @@ export interface ChoiceBase {
 	 *  it after the card has left play face-down (e.g. an Incident returned to
 	 *  its deck mid-effect). A played card is public, so this leaks nothing. */
 	sourceDef?: string | undefined
+	/** Index of the sourceCard's printed operation that is resolving, so the UI
+	 *  can say why the choice is asked and what it pays for. Absent for
+	 *  phase-level prompts and granted (ALT_PLAY) operations. */
+	sourceOp?: number | undefined
 }
 
 export type PendingChoice =
@@ -123,7 +127,7 @@ export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
  *  `sourceCard = ctx.source`. */
 export type ChoiceSeed = DistributiveOmit<
 	PendingChoice,
-	'id' | 'seat' | 'sourceCard' | 'sourceDef'
+	'id' | 'seat' | 'sourceCard' | 'sourceDef' | 'sourceOp'
 >
 
 /** Result of the pure selection validator (todo/07 DoD). */
