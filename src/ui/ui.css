@@ -1767,6 +1767,26 @@ h3,
 	font-variant-numeric: tabular-nums;
 }
 
+/* A "you may …" confirm's preview (choice.tsx ConfirmPreview): the cards it
+   would pick from, then what they may go onto, each headed and grouped by
+   zone like a card choice's candidates. */
+.confirm-preview {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 8px 32px;
+	margin-top: 10px;
+}
+.confirm-preview-head {
+	font-family: 'Antonio', 'Arial Narrow', sans-serif;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-size: 13px;
+	color: var(--sunflower);
+}
+.confirm-preview .candidate-groups {
+	margin-top: 4px;
+}
 /* Groups sit side by side (Market offer next to the deck top), wrapping only
    when they do not fit. */
 .candidate-groups {
