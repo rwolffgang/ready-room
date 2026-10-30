@@ -23,9 +23,8 @@ import {
 	useRealState,
 } from './store'
 import { CardSprite, CardStack, browsePile } from './cards'
-import { ShipPosition } from './standees'
 import { LocationCard } from './location'
-import { BeamedChips } from './beamed'
+import { TableCard } from './tableCard'
 import { seatLabel, specialtyName } from './format'
 import { Icon, suitIconId } from './icons'
 import { DeltaCounter } from './delta'
@@ -289,25 +288,13 @@ function ZoneRow({
 				{iids.length === 0 ? (
 					<span className="empty-slot muted">empty</span>
 				) : (
-					iids.map((iid) => {
-						const onClick = () => useGameStore.getState().cardClicked(iid)
-						if (k === 'LOCATION_AREA')
-							return <LocationCard key={iid} iid={iid} onClick={onClick} />
-						const sprite = (
-							<CardSprite key={iid} iid={iid} size="board" onClick={onClick} />
-						)
-						return k === 'FLEET' ? (
-							<div key={iid} className="fleet-col">
-								<div className="fleet-ship">
-									{sprite}
-									<ShipPosition ship={iid} />
-								</div>
-								<BeamedChips host={iid} placement="board" />
-							</div>
-						) : (
-							sprite
-						)
-					})
+					iids.map((iid) => (
+						<TableCard
+							key={iid}
+							iid={iid}
+							onClick={() => useGameStore.getState().cardClicked(iid)}
+						/>
+					))
 				)}
 			</div>
 		</div>

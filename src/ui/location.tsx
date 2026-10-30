@@ -1,11 +1,11 @@
 // A Location in play as the desktop draws it: the card, its Away Teams stacked
 // down the edges (P1 left, P2 right), the ships standing on it, the cards
 // beamed to it and, in the Neutral Zone, whether the viewer has it secured.
-// Every desktop surface that shows a Location — the Neutral Zone, both
-// Location Areas, the Location choice and Locations among a card choice's
-// candidates — goes through <LocationCard>, so the teams, ships and beamed
-// cards are never missing. (The phone's CardTile does the same for its
-// Location tiles.)
+// Every desktop surface that shows a Location — the Neutral Zone and the
+// Location choice directly, the Location Areas and any card choice through
+// <TableCard> (tableCard.tsx) — goes through <LocationCard>, so the teams,
+// ships and beamed cards are never missing. (The phone's CardTile does the
+// same for its Location tiles.)
 
 import type { GameState } from '../engine/state'
 import type { CardInstanceId } from '../engine/ids'

@@ -196,18 +196,11 @@ function ConfirmSheet({ choice }: { choice: Of<'CONFIRM'> }) {
 	// what the "you may …" would act on; a group of one is taken without
 	// another prompt (choice.tsx ConfirmPreview)
 	const preview = choice.preview
-	const group = (label: string, iids: readonly CardInstanceId[]) => (
-		<div>
-			<div className="pb-lbl">
-				{label}
-				{iids.length === 1 ? ' · the only option' : ` · ${iids.length} options`}
-			</div>
-			<div className="pb-cands">
-				{iids.map((iid) => (
-					<CardTile key={iid} iid={iid} />
-				))}
-			</div>
-		</div>
+	const group = (what: string, iids: readonly CardInstanceId[]) => (
+		<TileGroup
+			label={`${what} · ${iids.length === 1 ? 'the only option' : `${iids.length} options`}`}
+			iids={iids}
+		/>
 	)
 	return (
 		<ChoiceFrame
@@ -271,6 +264,34 @@ const STATION_WORD: Record<Station, string> = {
 	sector: 'Sector',
 	ship: 'Ship',
 	crew: 'Crew',
+}
+
+/** A labelled row of card tiles in a choice sheet — a card choice's
+ *  candidates by zone, a "you may …" preview. A candidate taken sight unseen
+ *  is a deck, not a tile. */
+function TileGroup({
+	label,
+	iids,
+	hidden,
+}: {
+	label: string
+	iids: readonly CardInstanceId[]
+	hidden?: ReadonlySet<string> | undefined
+}) {
+	return (
+		<div>
+			<div className="pb-lbl">{label}</div>
+			<div className="pb-cands">
+				{iids.map((iid) =>
+					hidden?.has(iid) === true ? (
+						<BlindCard key={iid} iid={iid} />
+					) : (
+						<CardTile key={iid} iid={iid} />
+					),
+				)}
+			</div>
+		</div>
+	)
 }
 
 function BlindCard({ iid }: { iid: CardInstanceId }) {
@@ -410,18 +431,7 @@ function PickSheet({
 				</button>
 			))}
 			{[...groups.entries()].map(([label, iids]) => (
-				<div key={label}>
-					<div className="pb-lbl">{label}</div>
-					<div className="pb-cands">
-						{iids.map((iid) =>
-							hidden.has(iid) ? (
-								<BlindCard key={iid} iid={iid} />
-							) : (
-								<CardTile key={iid} iid={iid} />
-							),
-						)}
-					</div>
-				</div>
+				<TileGroup key={label} label={label} iids={iids} hidden={hidden} />
 			))}
 			{plan.sheet.length === 0 && ringedHere.length > 0 && (
 				<p className="pb-note">

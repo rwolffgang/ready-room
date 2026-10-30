@@ -35,6 +35,8 @@ import {
 import { CardFace, CardSprite, OpText } from './cards'
 import { MarketSlot } from './board'
 import { LocationCard, isLocationInPlay } from './location'
+import { TableCard } from './tableCard'
+import type { ProjectedState } from './projection'
 import { OperationOptions, operationOptions } from './opOptions'
 import { seatLabel } from './format'
 import { useDefForIid, useDefById, type CardDef } from './defs'
@@ -245,39 +247,25 @@ function ConfirmPreview({ preview }: { preview: ChoicePreview }) {
 	const projected = useProjected()
 	const viewer = useViewerSeat()
 	if (projected === null) return null
-	const group = (label: string, iids: readonly CardInstanceId[]) => (
-		<div className="candidate-group">
-			<span className="candidate-group-label">
-				{label}
-				{iids.length === 1 ? ' · the only option' : ` · ${iids.length} options`}
+	const part = (what: string, iids: readonly CardInstanceId[]) => (
+		<div className="confirm-preview-part">
+			<span className="confirm-preview-head">
+				{what} ·{' '}
+				{iids.length === 1 ? 'the only option' : `${iids.length} options`}
 			</span>
-			<div className="candidate-row">
-				{iids.map((iid) => {
-					const zone = projected.cards[iid]?.zone
-					return (
-						<div key={iid} className="candidate-tile">
-							<div className="candidate-card-wrap">
-								<CardSprite iid={iid} size="board" />
-							</div>
-							{zone?.k === 'FLEET' ? (
-								<ShipWhere iid={iid} />
-							) : (
-								zone !== undefined && (
-									<span className="small muted">
-										{groupOf(zone as ZoneRef, viewer).label}
-									</span>
-								)
-							)}
-						</div>
-					)
-				})}
-			</div>
+			<CardCandidates
+				groups={candidateGroups(iids, projected, viewer)}
+				disabledByIid={NO_REASONS}
+				hidden={NO_CARDS}
+				selected={NO_CARDS_LIST}
+				pickable={false}
+			/>
 		</div>
 	)
 	return (
-		<div className="candidate-groups">
-			{group(preview.cards.length === 1 ? 'Card' : 'Cards', preview.cards)}
-			{preview.onto !== undefined && group('Onto', preview.onto)}
+		<div className="confirm-preview">
+			{part(preview.cards.length === 1 ? 'Card' : 'Cards', preview.cards)}
+			{preview.onto !== undefined && part('Onto', preview.onto)}
 		</div>
 	)
 }
@@ -346,32 +334,6 @@ function ChooseCardsChoice({
 		isLocationInPlay(projected.cards[iid]?.zone),
 	)
 
-	// Group candidates by zone so the panel keeps spatial context inline. A
-	// Market deck's top card (the one card a gain may take face down) is not a
-	// group of its own: it is the deck in its suit's Market slot.
-	const deckPicks = new Map<string, number>()
-	for (const iid of candidates) {
-		const z = projected.cards[iid]?.zone
-		if (z?.k === 'MARKET_DECK')
-			deckPicks.set(z.suit, (deckPicks.get(z.suit) ?? 0) + 1)
-	}
-	const groups = new Map<string, CandidateGroup>()
-	for (const iid of candidates) {
-		const z = projected.cards[iid]?.zone
-		if (z === undefined) continue
-		const asMarket = z.k === 'MARKET_DECK' && deckPicks.get(z.suit) === 1
-		const { key, label } = asMarket
-			? { key: 'MARKET_OFFER', label: 'Market' }
-			: groupOf(z as ZoneRef, viewer)
-		const group = groups.get(key) ?? {
-			label,
-			market: key === 'MARKET_OFFER',
-			iids: [],
-		}
-		group.iids.push(iid)
-		groups.set(key, group)
-	}
-
 	return (
 		<section
 			className="panel choice-panel"
@@ -394,7 +356,7 @@ function ChooseCardsChoice({
 				/>
 			) : (
 				<CardCandidates
-					groups={groups}
+					groups={candidateGroups(candidates, projected, viewer)}
 					disabledByIid={disabledByIid}
 					hidden={hidden}
 					selected={selected}
@@ -436,6 +398,39 @@ interface CandidateGroup {
 	/** Market offers: drawn as on the table, each by its suit's deck */
 	market: boolean
 	iids: CardInstanceId[]
+}
+
+/** Candidates grouped by zone, so the panel keeps spatial context inline. A
+ *  Market deck's top card (the one card a gain may take face down) is not a
+ *  group of its own: it is the deck in its suit's Market slot. */
+function candidateGroups(
+	candidates: readonly CardInstanceId[],
+	projected: ProjectedState,
+	viewer: Seat,
+): Map<string, CandidateGroup> {
+	const deckPicks = new Map<string, number>()
+	for (const iid of candidates) {
+		const z = projected.cards[iid]?.zone
+		if (z?.k === 'MARKET_DECK')
+			deckPicks.set(z.suit, (deckPicks.get(z.suit) ?? 0) + 1)
+	}
+	const groups = new Map<string, CandidateGroup>()
+	for (const iid of candidates) {
+		const z = projected.cards[iid]?.zone
+		if (z === undefined) continue
+		const asMarket = z.k === 'MARKET_DECK' && deckPicks.get(z.suit) === 1
+		const { key, label } = asMarket
+			? { key: 'MARKET_OFFER', label: 'Market' }
+			: groupOf(z as ZoneRef, viewer)
+		const group = groups.get(key) ?? {
+			label,
+			market: key === 'MARKET_OFFER',
+			iids: [],
+		}
+		group.iids.push(iid)
+		groups.set(key, group)
+	}
+	return groups
 }
 
 /** Where a group of candidates lies, in the player's words (the key keeps
@@ -505,20 +500,24 @@ function marketSlots(
 	return [...bySuit.values()]
 }
 
-/** The card choice's own candidate rows: the offered cards grouped by zone,
- *  each with where its ship stands and why a greyed one can't be picked.
- *  Market offers lie as on the table — the suit banner over its deck and
- *  the offered card (MarketSlot) — not as a row of bare cards. */
+/** The candidate rows of a card choice (and of a "you may …" preview): the
+ *  cards grouped by zone, each drawn as on the table (TableCard — a ship with
+ *  its position and crew, a Location with its teams) and with why a greyed
+ *  one can't be picked. Market offers lie as on the table — the suit banner
+ *  over its deck and the offered card (MarketSlot) — not as a row of bare
+ *  cards. `pickable` false only shows them. */
 function CardCandidates({
 	groups,
 	disabledByIid,
 	hidden,
 	selected,
+	pickable = true,
 }: {
 	groups: ReadonlyMap<string, CandidateGroup>
 	disabledByIid: ReadonlyMap<CardInstanceId, string>
 	hidden: ReadonlySet<CardInstanceId>
 	selected: readonly CardInstanceId[]
+	pickable?: boolean
 }) {
 	const projected = useProjected()
 	if (projected === null) return null
@@ -527,12 +526,10 @@ function CardCandidates({
 		const isSel = selected.includes(iid)
 		const isHiddenCandidate = hidden.has(iid)
 		const click =
-			disabledReason === undefined
+			pickable && disabledReason === undefined
 				? () => useGameStore.getState().cardClicked(iid)
 				: undefined
-		// a Location in play brings its Away Teams and ships along
 		const isLocation = isLocationInPlay(projected.cards[iid]?.zone)
-		const Sprite = isLocation ? LocationCard : CardSprite
 		return (
 			<div
 				key={iid}
@@ -540,16 +537,14 @@ function CardCandidates({
 				title={disabledReason}
 			>
 				<div className="candidate-card-wrap">
-					<Sprite
+					<TableCard
 						iid={iid}
-						size="board"
 						selected={isSel}
 						dimmed={disabledReason !== undefined}
 						reason={disabledReason}
 						onClick={click}
 					/>
 				</div>
-				<ShipWhere iid={iid} />
 				{disabledReason !== undefined && (
 					<span className="muted small why-not">why not: {disabledReason}</span>
 				)}
@@ -581,7 +576,7 @@ function CardCandidates({
 										key={suit}
 										suit={suit}
 										deckPick={
-											deck === undefined
+											deck === undefined || !pickable
 												? undefined
 												: {
 														selected: selected.includes(deck),
@@ -603,6 +598,8 @@ function CardCandidates({
 }
 
 const NO_REASONS: ReadonlyMap<CardInstanceId, string> = new Map()
+const NO_CARDS: ReadonlySet<CardInstanceId> = new Set()
+const NO_CARDS_LIST: readonly CardInstanceId[] = []
 
 function ChooseLocationChoice({
 	choice,
@@ -720,26 +717,6 @@ function LocationPicker({
 					</div>
 				))}
 		</div>
-	)
-}
-
-/** Under a Fleet SHIP candidate: where its token is right now, so a choice like
- *  "beam to a SHIP … to send an Away Team where this ship is" shows the
- *  destination. Same wording as the phone tile's chip (tile/CardTile.tsx). */
-function ShipWhere({ iid }: { iid: CardInstanceId }) {
-	const projected = useProjected()
-	const card = projected?.cards[iid]
-	const at = card?.shipTokenAt ?? null
-	const atDef = useDefForIid(at === 'SUPPLY' ? null : at)
-	if (card?.zone.k !== 'FLEET') return null
-	return (
-		<span className="small ship-where">
-			{at === null
-				? 'token on card'
-				: at === 'SUPPLY'
-					? 'token in supply'
-					: `at ${cardName(atDef) ?? at}`}
-		</span>
 	)
 }
 
@@ -1136,12 +1113,7 @@ function ChooseWitnessChoice({
 						<span className="muted small">Witness set {si + 1}</span>
 						<div className="witness-cards">
 							{set.map((iid) => (
-								<CardSprite
-									key={iid}
-									iid={iid}
-									size="board"
-									detailOnHover={false}
-								/>
+								<TableCard key={iid} iid={iid} />
 							))}
 						</div>
 						<button

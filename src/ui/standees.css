@@ -149,6 +149,11 @@
 	letter-spacing: 0.05em;
 	text-transform: uppercase;
 }
+/* the token is on the card or in the supply: said, not pointed at */
+.ship-at-idle {
+	--standee: var(--dim);
+	cursor: default;
+}
 .ship-at .standee-icon {
 	width: 11px;
 	height: 11px;

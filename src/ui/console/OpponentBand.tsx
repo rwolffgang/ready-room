@@ -19,7 +19,7 @@ import { BotTicker } from '../BotTicker'
 import { CardSprite } from '../cards'
 import { DeltaCounter } from '../delta'
 import { Icon } from '../icons'
-import { LocationCard } from '../location'
+import { TableCard } from '../tableCard'
 import { burnForecast } from '../mobile/facts'
 import { RESOURCE_LABEL, seatLabel } from '../format'
 import {
@@ -192,23 +192,14 @@ function BandZoneCards({
 		<div className={`band-zone band-${k.toLowerCase().replace('_', '-')}`}>
 			<span className="band-zone-label">{label}</span>
 			<div className="band-cards">
-				{iids.map((iid) =>
-					k === 'LOCATION_AREA' ? (
-						<LocationCard
-							key={iid}
-							iid={iid}
-							size="micro"
-							onClick={() => open(iid)}
-						/>
-					) : (
-						<CardSprite
-							key={iid}
-							iid={iid}
-							size="micro"
-							onClick={() => open(iid)}
-						/>
-					),
-				)}
+				{iids.map((iid) => (
+					<TableCard
+						key={iid}
+						iid={iid}
+						size="micro"
+						onClick={() => open(iid)}
+					/>
+				))}
 			</div>
 		</div>
 	)
