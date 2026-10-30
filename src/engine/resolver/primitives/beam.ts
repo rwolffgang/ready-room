@@ -52,6 +52,11 @@ export const beam: Primitive<Extract<Effect, { k: 'BEAM' }>> = {
 		if (candidatesOf(state, node, ctx).length === 0) return false
 		return resolveQuery(state, node.to, ctx).length > 0
 	},
+	preview(state, node, ctx) {
+		const cards = candidatesOf(state, node, ctx)
+		const onto = resolveQuery(state, node.to, ctx)
+		return cards.length === 0 || onto.length === 0 ? null : { cards, onto }
+	},
 	execute(state, node, ctx, _frame) {
 		if (answered(ctx, 'beam.host')) {
 			// the picked cards ride along as a plain binding (suspend `extra`)

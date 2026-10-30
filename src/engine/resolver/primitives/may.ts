@@ -12,6 +12,7 @@ import { describe } from '../../describe'
 import { evalAmount, evalPredicate } from '../../queries/resolveQuery'
 import type { GameState, EffectCtx } from '../../state'
 import type { ResourceId } from '../../../data/ids'
+import type { ChoicePreview } from '../choices'
 
 /** MAY → CONFIRM choice; accept pushes the body, decline skips it. The
  *  prompt spells out the optional effect ("You may promote …?") so the
@@ -39,11 +40,29 @@ export const may: Primitive<Extract<Effect, { k: 'MAY' }>> = {
 		}
 		if (wouldDoNothing(state, node.body, ctx))
 			return skipBenefit(state, node.body, ctx, 'cannot fully resolve')
+		const preview = previewOf(state, node.body, ctx)
 		return suspend(state, node, ctx, key, {
 			k: 'CONFIRM',
 			prompt: mayPrompt(node) + gloryNote(state, node.body, ctx),
+			...(preview !== null ? { preview } : {}),
 		})
 	},
+}
+
+/** What the optional effect would act on first: the node itself, the first
+ *  step of a SEQ, or the cost of a PAY_THEN (it is asked before the body). */
+function previewOf(
+	state: GameState,
+	node: Effect,
+	ctx: EffectCtx,
+): ChoicePreview | null {
+	if (node.k === 'SEQ')
+		return node.steps[0] === undefined
+			? null
+			: previewOf(state, node.steps[0], ctx)
+	if (node.k === 'PAY_THEN') return previewOf(state, node.cost, ctx)
+	if (isControl(node)) return null
+	return primitiveOf(node).preview?.(state, node, ctx) ?? null
 }
 
 /** True when accepting could not change anything (the optional effect is

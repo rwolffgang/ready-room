@@ -20,6 +20,7 @@ import { run } from './resolver/stack'
 import { applyChoice, type PendingChoice } from './resolver/choices'
 import { collectReactionGroups, drainEvents } from './resolver/triggers'
 import { zoneKey, type GameState } from './state'
+import { HIDDEN_DEF, project } from './projection'
 import type { CardInstanceId } from './ids'
 import type { Seat } from './resolver/queries'
 
@@ -231,6 +232,34 @@ describe('reaction windows only offer reactions whose cost can be paid', () => {
 		const discard = asked.find((c) => c.k === 'CHOOSE_CARDS')
 		expect(discard?.sourceCard).toBe(ID('pic'))
 		expect(discard?.sourceOp).toBe(0)
+	})
+
+	// With one card and one ship the beam asks nothing more, so the "you may
+	// beam" confirm is where the player sees what would go where — even when
+	// the gained card lies on the deck top.
+	it('1PIC01 PIC: the beam confirm previews the gained card and the ships', () => {
+		let s = pic(1)
+		s = place(s, 'pxAlly', ID('ally'), { k: 'DRAW', seat: 0 }, 0)
+		s = place(s, 'pxShip', ID('ship'), { k: 'FLEET', seat: 0 }, 0)
+		// answer the window and the discard, stop at the confirm
+		let t = run(drainEvents(s).state)
+		while (t.pendingChoice !== null && t.pendingChoice.k !== 'CONFIRM') {
+			t = run(
+				applyChoice(t, {
+					t: 'RESOLVE_CHOICE',
+					choiceId: t.pendingChoice.id,
+					selection: auto(t.pendingChoice) as never,
+				}),
+			)
+		}
+		const choice = t.pendingChoice
+		expect(choice?.k).toBe('CONFIRM')
+		expect(choice?.k === 'CONFIRM' && choice.preview).toEqual({
+			cards: [ID('ally')],
+			onto: [ID('ship')],
+		})
+		expect(project(t, 0).cards['ally']!.def).toBe('pxAlly')
+		expect(project(t, 1).cards['ally']!.def).toBe(HIDDEN_DEF)
 	})
 
 	// The window names its card only when both players know it: a face-up

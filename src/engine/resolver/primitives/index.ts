@@ -11,6 +11,7 @@
 // `canResolveEffect`/`canPayAll` at call time, never at module-evaluation time.
 
 import type { Effect } from '../nodes'
+import type { ChoicePreview } from '../choices'
 import type { GameState, EffectCtx, Frame } from '../../state'
 import { otherSeat } from '../../state'
 import {
@@ -116,6 +117,9 @@ export interface Primitive<N extends Effect> {
 	/** true if this node is a cost — pre-validated by canPayAll before any
 	 *  mutation (todo/04 §4). */
 	isCost: boolean
+	/** The cards this node would pick from (and move onto), for the CONFIRM of
+	 *  a MAY around it (may.ts); null when it has nothing to show. */
+	preview?(state: GameState, node: N, ctx: EffectCtx): ChoicePreview | null
 }
 
 /**
