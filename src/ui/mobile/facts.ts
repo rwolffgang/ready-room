@@ -63,6 +63,32 @@ export function secureStatus(
 	return { mine, theirs, securedBy, need }
 }
 
+/** The secure status in words: a headline and what it takes from here (the
+ *  phone's Sector tiles and the console's Neutral Zone close-up). */
+export function secureCopy(
+	s: SecureStatus,
+	oppName: string,
+): { cls: string; head: string; note: string } {
+	const score = `${s.mine} vs ${s.theirs}`
+	if (s.securedBy === 'you')
+		return {
+			cls: 'me',
+			head: `Secured by you · ${score}`,
+			note: 'At your next Control step you may take control of it.',
+		}
+	if (s.securedBy === 'them')
+		return {
+			cls: 'them',
+			head: `Secured by ${oppName} · ${score}`,
+			note: `${oppName} may take it at their next Control step. You need ${s.need} more token${s.need === 1 ? '' : 's'} here.`,
+		}
+	return {
+		cls: 'none',
+		head: `${s.mine > 0 && s.theirs > 0 ? 'Contested' : s.mine + s.theirs === 0 ? 'Open' : 'Not secured'} · ${score}`,
+		note: `You need ${s.need} more token${s.need === 1 ? '' : 's'} here to secure it.`,
+	}
+}
+
 // ---------------------------------------------------------------------------
 // The Burn: fewer Incidents wins (rules/03 §3.1)
 // ---------------------------------------------------------------------------

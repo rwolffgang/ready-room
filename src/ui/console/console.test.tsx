@@ -1,6 +1,7 @@
 // The console laid out across the table (docs/ui-lcars.md §4): the opponent
 // band, the decks on the table, the hand dock, and the layers that open only
-// on request — the viewscreen (V), the log drawer (L), the menu.
+// on request — the viewscreen (V), the Neutral Zone close-up (N), the log
+// drawer (L), the menu.
 
 import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'
@@ -121,6 +122,98 @@ describe('console across the table', () => {
 			;(host.querySelector('.band-tableau') as HTMLElement).click()
 		})
 		expect(host.querySelector('.viewscreen')).not.toBeNull()
+	})
+
+	it('N brings the Neutral Zone close up, and Esc or a click outside puts it away', () => {
+		const host = renderGame()
+		const closeup = () => host.querySelector('.closeup')
+		expect(closeup()).toBeNull()
+		key('n')
+		expect(closeup()).not.toBeNull()
+		// the three Locations, each with its teams' place and a readout
+		const slots = closeup()!.querySelectorAll('.closeup-slot')
+		expect(slots).toHaveLength(3)
+		for (const slot of slots) {
+			expect(slot.querySelector('.location-with-teams')).not.toBeNull()
+			expect(slot.querySelector('.closeup-status')!.textContent).toBe(
+				'Open · 0 vs 0',
+			)
+			expect(
+				slot.querySelector(
+					'[aria-label="Player 1 (you): 0 Away Teams, 0 ships"]',
+				),
+			).not.toBeNull()
+		}
+		key('Escape')
+		expect(closeup()).toBeNull()
+		// the button over the three Locations opens it too
+		const button = host.querySelector(
+			'.neutral-zone .nz-closeup-btn',
+		) as HTMLElement
+		act(() => {
+			button.click()
+		})
+		expect(closeup()).not.toBeNull()
+		act(() => {
+			;(host.querySelector('.closeup-backdrop') as HTMLElement).click()
+		})
+		expect(closeup()).toBeNull()
+	})
+
+	it('the close-up works out who secures each Location', () => {
+		const host = renderGame()
+		const p = useGameStore.getState().projected!
+		const locs = ([0, 1, 2] as const).map(
+			(slot) => p.zones[zoneKey({ k: 'NEUTRAL_ZONE', slot })]![0]!,
+		)
+		// UI-only: the view is patched directly
+		act(() => {
+			useGameStore.setState({
+				projected: {
+					...p,
+					awayTeamsAt: {
+						...p.awayTeamsAt,
+						[locs[0]!]: [3, 1],
+						[locs[1]!]: [1, 2],
+						[locs[2]!]: [0, 4],
+					},
+				},
+			})
+		})
+		key('n')
+		const readouts = [...host.querySelectorAll('.closeup-readout')]
+		expect(
+			readouts.map((r) => r.querySelector('.closeup-status')!.textContent),
+		).toEqual([
+			'Secured by you · 3 vs 1',
+			'Contested · 1 vs 2',
+			'Secured by Player 2 · 0 vs 4',
+		])
+		// the holder's colour, none while it is contested
+		expect(readouts[0]!.classList.contains('closeup-seat-0')).toBe(true)
+		expect(readouts[1]!.className).toBe('closeup-readout')
+		expect(readouts[2]!.classList.contains('closeup-seat-1')).toBe(true)
+		expect(
+			readouts[1]!.querySelector(
+				'[aria-label="Player 2: 2 Away Teams, 0 ships"]',
+			),
+		).not.toBeNull()
+		expect(readouts[1]!.querySelector('.closeup-note')!.textContent).toBe(
+			'You need 3 more tokens here to secure it.',
+		)
+	})
+
+	it('the close-up and the viewscreen share the screen: one puts the other away', () => {
+		const host = renderGame()
+		key('n')
+		key('v')
+		expect(host.querySelector('.closeup')).toBeNull()
+		expect(host.querySelector('.viewscreen')).not.toBeNull()
+		key('n')
+		expect(host.querySelector('.closeup')).not.toBeNull()
+		expect(host.querySelector('.viewscreen')).toBeNull()
+		key('n')
+		expect(host.querySelector('.closeup')).toBeNull()
 	})
 
 	it('the log opens only on request, and Esc closes the top layer first', () => {

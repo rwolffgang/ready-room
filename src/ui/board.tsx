@@ -220,14 +220,19 @@ export function MarketSlot({
 // Neutral Zone
 // ---------------------------------------------------------------------------
 
-export function NeutralZone() {
+/** `aside` sits over the three Locations, where the Market has its suit row
+ *  (the console's close-up button). */
+export function NeutralZone({ aside }: { aside?: ReactNode | undefined }) {
 	return (
 		<section className="panel neutral-zone" aria-label="Neutral Zone">
 			<h3>Neutral Zone</h3>
-			<div className="nz-row">
-				{([0, 1, 2] as const).map((slot) => (
-					<LocationSlot key={slot} slot={slot} />
-				))}
+			<div>
+				{aside !== undefined && <div className="nz-head">{aside}</div>}
+				<div className="nz-row">
+					{([0, 1, 2] as const).map((slot) => (
+						<LocationSlot key={slot} slot={slot} />
+					))}
+				</div>
 			</div>
 		</section>
 	)
