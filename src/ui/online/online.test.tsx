@@ -44,11 +44,6 @@ import {
 } from './seats'
 import { cardName } from '../../data/cardNames'
 
-// React's act() environment flag for a hand-rolled root
-;(
-	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true
-
 const catalog = loadBrowserCatalog()
 const defs = new Map<string, CardDef>(catalog.defs.map((d) => [d.id, d]))
 let dir: string

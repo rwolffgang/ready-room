@@ -26,9 +26,6 @@ import { useGameStore } from '../store'
 import { setOnlineClientFactory } from './controller'
 import { OnlineLobby } from './OnlineLobby'
 import { loadSeats, removeSeat } from './seats'
-;(
-	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true
 
 const catalog = loadBrowserCatalog()
 let dir: string

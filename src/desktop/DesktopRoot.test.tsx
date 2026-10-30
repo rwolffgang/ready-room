@@ -52,10 +52,6 @@ vi.mock('./bridge', () => {
 
 const { DesktopRoot } = await import('./DesktopRoot')
 
-;(
-	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true
-
 let root: Root
 let host: HTMLElement
 

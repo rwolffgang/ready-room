@@ -38,11 +38,11 @@ function installFakeImage(mode: 'load' | 'error' = 'error'): void {
 	vi.stubGlobal('Image', FakeImage)
 }
 
-function renderApp(): HTMLElement {
+async function renderApp(): Promise<HTMLElement> {
 	const host = document.createElement('div')
 	document.body.appendChild(host)
 	const root = createRoot(host)
-	act(() => {
+	await act(async () => {
 		root.render(<App />)
 	})
 	return host
@@ -63,12 +63,12 @@ afterEach(() => {
 // The page renders the whole catalogue (~280 cards, every operation in text
 // and Shorthand): about 2 s alone, so the 5 s default flakes on a busy machine.
 describe('deck review page', { timeout: 20_000 }, () => {
-	it('lists every captain deck plus the common pool, grouped by deck and suit', () => {
+	it('lists every captain deck plus the common pool, grouped by deck and suit', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().setDeckReviewOpen(true)
 		})
-		const host = renderApp()
+		const host = await renderApp()
 		const text = host.textContent ?? ''
 
 		expect(host.querySelector('.deck-review')).not.toBeNull()
@@ -84,7 +84,7 @@ describe('deck review page', { timeout: 20_000 }, () => {
 		expect(text).toContain('1PIC01/24') // name falls back to the card number
 	})
 
-	it('renders each card with the printed card art and Printed/Interpreted columns', () => {
+	it('renders each card with the printed card art and Printed/Interpreted columns', async () => {
 		// Load mode with scans for every card, so CardFace draws the printed art.
 		installFakeImage('load')
 		setStccIndex(fakeStccIndex(loadBrowserCatalog().defs))
@@ -92,7 +92,7 @@ describe('deck review page', { timeout: 20_000 }, () => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().setDeckReviewOpen(true)
 		})
-		const host = renderApp()
+		const host = await renderApp()
 
 		const cards = host.querySelectorAll('.review-card')
 		expect(cards.length).toBeGreaterThan(20)
@@ -116,12 +116,12 @@ describe('deck review page', { timeout: 20_000 }, () => {
 		expect(interpreted.length).toBeGreaterThan(0)
 	})
 
-	it('closes through the page close button', () => {
+	it('closes through the page close button', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().setDeckReviewOpen(true)
 		})
-		const host = renderApp()
+		const host = await renderApp()
 		expect(host.querySelector('.deck-review')).not.toBeNull()
 		const close = [...host.querySelectorAll('button')].find(
 			(b) => (b.textContent ?? '').trim() === 'Close',

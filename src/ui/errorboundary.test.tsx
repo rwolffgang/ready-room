@@ -34,11 +34,11 @@ function Boom(): never {
 	throw new Error('engine boom')
 }
 
-function render(node: ReactNode): HTMLElement {
+async function render(node: ReactNode): Promise<HTMLElement> {
 	const host = document.createElement('div')
 	document.body.appendChild(host)
 	const root = createRoot(host)
-	act(() => {
+	await act(async () => {
 		root.render(node)
 	})
 	return host
@@ -50,8 +50,8 @@ beforeEach(() => {
 })
 
 describe('recoverable error boundary', () => {
-	it('catches a render throw and shows the recoverable screen (not a blank page)', () => {
-		const host = render(
+	it('catches a render throw and shows the recoverable screen (not a blank page)', async () => {
+		const host = await render(
 			<RecoverableErrorBoundary>
 				<Boom />
 			</RecoverableErrorBoundary>,
@@ -63,13 +63,13 @@ describe('recoverable error boundary', () => {
 		expect(host.querySelector('.error-screen')).not.toBeNull()
 	})
 
-	it('the recoverable screen carries the live session log + a copy button', () => {
+	it('the recoverable screen carries the live session log + a copy button', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().startGame(config())
 		})
 		expect(useGameStore.getState().session).not.toBeNull()
-		const host = render(
+		const host = await render(
 			<RecoverableErrorBoundary>
 				<Boom />
 			</RecoverableErrorBoundary>,
@@ -82,12 +82,12 @@ describe('recoverable error boundary', () => {
 		expect(host.querySelector('.error-screen')).not.toBeNull()
 	})
 
-	it('Back to setup returns to the setup screen without a white page', () => {
+	it('Back to setup returns to the setup screen without a white page', async () => {
 		act(() => {
 			useGameStore.getState().loadCatalog()
 			useGameStore.getState().startGame(config())
 		})
-		const host = render(
+		const host = await render(
 			<RecoverableErrorBoundary>
 				<Boom />
 			</RecoverableErrorBoundary>,
@@ -100,12 +100,12 @@ describe('recoverable error boundary', () => {
 		expect(useGameStore.getState().state).toBeNull() // session torn down → setup screen state
 	})
 
-	it('the app shell itself keeps its outer boundary (main.tsx safety net)', () => {
+	it('the app shell itself keeps its outer boundary (main.tsx safety net)', async () => {
 		// <App/> mounts the let-adapter behind GameFlow; without a game the setup
 		// screen renders. This guards the wiring path (the boundary is added around
 		// <App/> in main.tsx and around the board in App.tsx).
 		act(() => useGameStore.getState().loadCatalog())
-		const host = render(<App />)
+		const host = await render(<App />)
 		expect(host.textContent ?? '').toContain('Ready Room')
 	})
 })
@@ -137,8 +137,8 @@ describe('malformed card fallback', () => {
 		],
 	} as unknown as CardDef
 
-	it('renders a text-only card with a warning badge instead of crashing', () => {
-		const host = render(<CardFace def={malformed} size="hand" />)
+	it('renders a text-only card with a warning badge instead of crashing', async () => {
+		const host = await render(<CardFace def={malformed} size="hand" />)
 		const text = host.textContent ?? ''
 		expect(text).toContain('Broken Relay')
 		expect(text).toContain('malformed')
@@ -147,12 +147,12 @@ describe('malformed card fallback', () => {
 		expect(text).toContain('unreadable operation')
 	})
 
-	it('healthy cards keep rendering normally through the same path', () => {
+	it('healthy cards keep rendering normally through the same path', async () => {
 		const def = catalog.defs.find((d) => d.deck === 'PIC') ?? catalog.defs[0]!
 		// Sprites are the default face now; use the Details view so this stays a
 		// deterministic text-path assertion (jsdom has no real image loading).
 		useGameStore.getState().setShowCardDetails(true)
-		const host = render(<CardFace def={def} size="board" />)
+		const host = await render(<CardFace def={def} size="board" />)
 		expect(host.textContent ?? '').toContain(cardName(def))
 		expect(host.querySelector('.malformed-badge')).toBeNull()
 	})

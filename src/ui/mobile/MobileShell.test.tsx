@@ -19,11 +19,6 @@ import { SHELL_KEY, resetShellChoiceCache } from './shell'
 import { useBridgeUi } from './bridgeUi'
 import { ChoiceSheet } from './ChoiceSheet'
 
-// React's act() warns unless the test environment says it is one
-;(
-	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true
-
 let host: HTMLElement
 let root: Root
 

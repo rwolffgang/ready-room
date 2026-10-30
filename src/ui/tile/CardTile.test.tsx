@@ -15,11 +15,6 @@ import { useGameStore } from '../store'
 import { loadBrowserCatalog } from '../browserCatalog'
 import { CardTile, candidateState } from './CardTile'
 
-// React's act() warns unless the test environment says it is one
-;(
-	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true
-
 let catalog: CardCatalog
 let host: HTMLElement
 let root: Root
