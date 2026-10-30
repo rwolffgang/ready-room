@@ -335,6 +335,18 @@
 	/* the Market's suit row: the three Locations line up with its cards */
 	padding-top: 30px;
 }
+/* …or the close-up button takes that row: 26px high and 4px above, like the
+ * Market's suits */
+.nz-head {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	height: 26px;
+	margin-bottom: 4px;
+}
+.nz-head + .nz-row {
+	padding-top: 0;
+}
 .location-slot {
 	align-items: stretch;
 }
@@ -703,7 +715,8 @@ kbd {
 }
 
 /* -------------------------------------------------------------- viewscreen */
-.viewscreen-backdrop {
+.viewscreen-backdrop,
+.closeup-backdrop {
 	position: absolute;
 	inset: 0 0 calc(var(--dock-h) + var(--gap)) 0;
 	z-index: 34;
@@ -713,13 +726,15 @@ kbd {
 	padding: 6px;
 	background: #05050acc;
 }
-.viewscreen {
+.viewscreen,
+.closeup {
+	--screen: var(--salmon);
 	width: 100%;
 	max-height: 100%;
 	overflow: auto;
 	padding: 0 10px 10px;
 	background: var(--ground);
-	border: 3px solid var(--salmon);
+	border: 3px solid var(--screen);
 	border-radius: 22px 6px 22px 6px;
 	box-shadow: 0 20px 60px #000e;
 }
@@ -728,7 +743,7 @@ kbd {
 	align-items: center;
 	gap: 10px;
 	padding: 8px 0;
-	color: var(--salmon);
+	color: var(--screen);
 	font-family: 'Antonio', sans-serif;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
@@ -740,13 +755,106 @@ kbd {
 	width: 40px;
 	height: 18px;
 	border-radius: 9px 0 0 9px;
-	background: var(--salmon);
+	background: var(--screen);
 }
 .viewscreen-body {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 320px;
 	gap: var(--gap);
 	align-items: start;
+}
+
+/* The Neutral Zone close-up (N): the three Locations as large as the board
+ * leaves room for. The height pays for the frame's head, the readout under
+ * each card and the standees' lower half; three cards and their gaps share
+ * the width. Everything on a card steps on --card-w, so this one number scales
+ * the faces, and the markers and standees stay where they stand on the table. */
+.closeup {
+	--screen: var(--periwinkle);
+	--card-w: clamp(
+		132px,
+		min((100cqh - var(--dock-h) - 250px) / 1.397, (100cqw - 140px) / 3),
+		360px
+	);
+}
+.closeup-row {
+	display: grid;
+	grid-template-columns: repeat(3, var(--card-w));
+	justify-content: center;
+	/* the Away Team markers stand half outside each card */
+	gap: 36px;
+	align-items: start;
+	padding: 4px 18px 6px;
+}
+.closeup-slot {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 0;
+}
+.board .closeup-slot .empty-slot {
+	box-sizing: border-box;
+	width: var(--card-w);
+	height: calc((var(--card-w) - 2px) * 1.397 + 5px);
+	min-height: 0;
+}
+.closeup .away-stack {
+	top: calc(var(--card-w) * 0.3);
+}
+.closeup .away-marker {
+	width: 30px;
+	height: 30px;
+}
+.closeup-readout {
+	--seat: var(--dim);
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	padding: 7px 10px;
+	border-left: 4px solid var(--seat);
+	border-radius: 0 4px 4px 0;
+	background: var(--panel);
+	font-size: 13px;
+}
+.closeup-seat-0 {
+	--seat: var(--ice);
+}
+.closeup-seat-1 {
+	--seat: var(--salmon);
+}
+.closeup-status {
+	font-family: 'Antonio', sans-serif;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+.closeup-readout[class*='closeup-seat-'] > .closeup-status {
+	color: var(--seat);
+}
+.closeup-side {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-variant-numeric: tabular-nums;
+}
+.closeup-who {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--seat);
+}
+.closeup-count {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	min-width: 3.2em;
+}
+.closeup-note {
+	margin: 0;
+	color: var(--dim);
+	font-size: 12px;
 }
 
 /* -------------------------------------------------------------- log drawer */

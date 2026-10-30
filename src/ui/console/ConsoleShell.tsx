@@ -8,8 +8,9 @@
 //   you         your in-play area · your crew console
 //   hand dock   your Draw and Discard, your hand peeking up from the edge
 //
-// with three layers that open only on request: the hand lifted (hover, tap,
-// H), the opponent on the viewscreen (V) and the log drawer (L). Cards size
+// with layers that open only on request: the hand lifted (hover, tap, H), the
+// opponent on the viewscreen (V), the Neutral Zone close up (N) and the log
+// drawer (L). Cards size
 // themselves to the height the board has (--card-w in console.css), so on a
 // laptop or an iPad everything a turn needs is on one screen.
 
@@ -36,6 +37,7 @@ import { useConsoleUi } from './consoleUi'
 import { HandDock } from './HandDock'
 import { HeadBar } from './HeadBar'
 import { LogDrawer } from './LogDrawer'
+import { CloseupButton, NeutralCloseup } from './NeutralCloseup'
 import { OpponentBand } from './OpponentBand'
 import { Viewscreen } from './Viewscreen'
 import './console.css'
@@ -82,7 +84,7 @@ function Board() {
 				<OpponentBand seat={opponent} />
 				<div className="shared-row">
 					<Market />
-					<NeutralZone />
+					<NeutralZone aside={<CloseupButton />} />
 					<CentrePiles />
 				</div>
 				<div className="own-row">
@@ -92,6 +94,7 @@ function Board() {
 			</div>
 			<HandDock seat={viewer} />
 			<Viewscreen seat={opponent} />
+			<NeutralCloseup />
 			<LogDrawer />
 		</main>
 	)
