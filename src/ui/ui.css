@@ -1652,9 +1652,23 @@ h3,
 	font-size: 14px;
 	color: var(--dim);
 }
+.source-card-body {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
 .source-card-name {
 	color: var(--text);
 	font-weight: 600;
+}
+/* the operation that asks: why the choice comes up and what it pays for */
+.source-card-op {
+	color: var(--text);
+	line-height: 1.4;
+}
+.source-card-op-type {
+	color: var(--dim);
 }
 .source-card .card {
 	width: 40px;
