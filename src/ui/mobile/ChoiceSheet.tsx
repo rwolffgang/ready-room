@@ -193,6 +193,22 @@ type Of<K extends PendingChoice['k']> = Extract<PendingChoice, { k: K }>
 // ---------------------------------------------------------------------------
 
 function ConfirmSheet({ choice }: { choice: Of<'CONFIRM'> }) {
+	// what the "you may …" would act on; a group of one is taken without
+	// another prompt (choice.tsx ConfirmPreview)
+	const preview = choice.preview
+	const group = (label: string, iids: readonly CardInstanceId[]) => (
+		<div>
+			<div className="pb-lbl">
+				{label}
+				{iids.length === 1 ? ' · the only option' : ` · ${iids.length} options`}
+			</div>
+			<div className="pb-cands">
+				{iids.map((iid) => (
+					<CardTile key={iid} iid={iid} />
+				))}
+			</div>
+		</div>
+	)
 	return (
 		<ChoiceFrame
 			choice={choice}
@@ -204,7 +220,14 @@ function ConfirmSheet({ choice }: { choice: Of<'CONFIRM'> }) {
 					</Pill>
 				</>
 			}
-		/>
+		>
+			{preview === undefined ? undefined : (
+				<>
+					{group(preview.cards.length === 1 ? 'Card' : 'Cards', preview.cards)}
+					{preview.onto !== undefined && group('Onto', preview.onto)}
+				</>
+			)}
+		</ChoiceFrame>
 	)
 }
 

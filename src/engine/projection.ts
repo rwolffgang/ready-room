@@ -86,6 +86,13 @@ function shownByChoice(state: GameState, viewerSeat: Seat): Set<string> {
 		}
 		case 'ORDER_CARDS':
 			return new Set(choice.cards)
+		// "you may beam …": the cards the follow-up choice would show — when
+		// there is only one, that choice never comes
+		case 'CONFIRM':
+			return new Set([
+				...(choice.preview?.cards ?? []),
+				...(choice.preview?.onto ?? []),
+			])
 		default:
 			return new Set()
 	}

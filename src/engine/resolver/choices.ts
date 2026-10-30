@@ -80,8 +80,17 @@ export interface ChoiceBase {
 	sourceOp?: number | undefined
 }
 
+/** What accepting a "you may …" (a CONFIRM) would act on: the cards it picks
+ *  from and, for a move onto a card (a beam), the cards it may go onto. A
+ *  list of one is taken without asking, so the CONFIRM is the only place the
+ *  player sees it. Shown like CHOOSE_CARDS candidates (projection.ts). */
+export interface ChoicePreview {
+	cards: CardInstanceId[]
+	onto?: CardInstanceId[] | undefined
+}
+
 export type PendingChoice =
-	| (ChoiceBase & { k: 'CONFIRM' })
+	| (ChoiceBase & { k: 'CONFIRM'; preview?: ChoicePreview | undefined })
 	| (ChoiceBase & { k: 'CHOOSE_OPTION'; options: ChoiceOption[] })
 	| (ChoiceBase & { k: 'CHOOSE_CARDS' } & ChoiceCardsContext)
 	| (ChoiceBase & { k: 'CHOOSE_LOCATION'; candidates: CardInstanceId[] })

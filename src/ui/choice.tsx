@@ -16,6 +16,7 @@ import type {
 	PendingChoice,
 	ChoiceDisabledCard,
 	ChoiceOption,
+	ChoicePreview,
 } from '../engine/resolver/choices'
 import type { OperationRef } from '../engine/state'
 import { otherSeat, zoneKey } from '../engine/state'
@@ -214,6 +215,9 @@ function ConfirmChoice({
 	return (
 		<section className="panel choice-panel">
 			<ChoiceHeader choice={choice} />
+			{choice.preview !== undefined && (
+				<ConfirmPreview preview={choice.preview} />
+			)}
 			<div className="choice-actions">
 				<button
 					type="button"
@@ -231,6 +235,50 @@ function ConfirmChoice({
 				</button>
 			</div>
 		</section>
+	)
+}
+
+/** What a "you may …" would act on: the cards it picks from and the cards
+ *  they may go onto. A group of one is taken without another prompt, so
+ *  this is the only place the player sees it. */
+function ConfirmPreview({ preview }: { preview: ChoicePreview }) {
+	const projected = useProjected()
+	const viewer = useViewerSeat()
+	if (projected === null) return null
+	const group = (label: string, iids: readonly CardInstanceId[]) => (
+		<div className="candidate-group">
+			<span className="candidate-group-label">
+				{label}
+				{iids.length === 1 ? ' · the only option' : ` · ${iids.length} options`}
+			</span>
+			<div className="candidate-row">
+				{iids.map((iid) => {
+					const zone = projected.cards[iid]?.zone
+					return (
+						<div key={iid} className="candidate-tile">
+							<div className="candidate-card-wrap">
+								<CardSprite iid={iid} size="board" />
+							</div>
+							{zone?.k === 'FLEET' ? (
+								<ShipWhere iid={iid} />
+							) : (
+								zone !== undefined && (
+									<span className="small muted">
+										{groupOf(zone as ZoneRef, viewer).label}
+									</span>
+								)
+							)}
+						</div>
+					)
+				})}
+			</div>
+		</div>
+	)
+	return (
+		<div className="candidate-groups">
+			{group(preview.cards.length === 1 ? 'Card' : 'Cards', preview.cards)}
+			{preview.onto !== undefined && group('Onto', preview.onto)}
+		</div>
 	)
 }
 
