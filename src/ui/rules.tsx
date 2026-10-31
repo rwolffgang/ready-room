@@ -10,7 +10,7 @@ import type { CardDef } from '../data/schema'
 import type { Suit, TraitId, MarketSuit } from '../data/ids'
 import { MARKET_SUITS_FOUR } from '../engine/market'
 import { useProjected, useCatalog } from './store'
-import { CardFace } from './cards'
+import { CardFace, useZoomKey } from './cards'
 import { useDefIndex } from './defs'
 import { HIDDEN_DEF } from './projection'
 import { zoneKey } from '../engine/state'
@@ -244,6 +244,9 @@ export function CardListPanel({ onClose }: { onClose: () => void }) {
 	const [query, setQuery] = useState('')
 	const [suit, setSuit] = useState<Suit | 'ALL'>('ALL')
 	const [trait, setTrait] = useState<TraitId | 'ALL'>('ALL')
+	// Option + hover lifts a card to 3×, as on the board (cards.tsx CardZoom)
+	const zoomHeld = useZoomKey()
+	const [hovered, setHovered] = useState<CardDef | null>(null)
 
 	const common: CardDef[] = useMemo(
 		() => (catalog?.defs ?? []).filter((d) => d.deck === 'COMMON'),
@@ -290,67 +293,84 @@ export function CardListPanel({ onClose }: { onClose: () => void }) {
 	}, [common, suit, trait, query])
 
 	return (
-		<div className="drawer-backdrop" onClick={onClose}>
-			<aside
-				className="drawer cardlist-drawer"
-				onClick={(e) => e.stopPropagation()}
-				aria-label="Card list"
-			>
-				<div className="drawer-head">
-					<ReferenceTabs current="cards" />
-					<button type="button" className="btn" onClick={onClose}>
-						Close
-					</button>
-				</div>
-				<div className="cardlist-controls">
-					<input
-						value={query}
-						onChange={(e) => setQuery(e.target.value)}
-						placeholder="filter by name / trait / suit"
-						aria-label="filter cards"
-					/>
-					<select
-						value={suit}
-						onChange={(e) => setSuit(e.target.value as Suit | 'ALL')}
-						aria-label="filter by suit"
-					>
-						<option value="ALL">all suits</option>
-						{Array.from(new Set(common.map((d) => d.suit))).map((s) => (
-							<option key={s} value={s}>
-								{s}
-							</option>
+		<>
+			<div className="drawer-backdrop" onClick={onClose}>
+				<aside
+					className="drawer cardlist-drawer"
+					onClick={(e) => e.stopPropagation()}
+					aria-label="Card list"
+				>
+					<div className="drawer-head">
+						<ReferenceTabs current="cards" />
+						<button type="button" className="btn" onClick={onClose}>
+							Close
+						</button>
+					</div>
+					<div className="cardlist-controls">
+						<input
+							value={query}
+							onChange={(e) => setQuery(e.target.value)}
+							placeholder="filter by name / trait / suit"
+							aria-label="filter cards"
+						/>
+						<select
+							value={suit}
+							onChange={(e) => setSuit(e.target.value as Suit | 'ALL')}
+							aria-label="filter by suit"
+						>
+							<option value="ALL">all suits</option>
+							{Array.from(new Set(common.map((d) => d.suit))).map((s) => (
+								<option key={s} value={s}>
+									{s}
+								</option>
+							))}
+						</select>
+						<select
+							value={trait}
+							onChange={(e) => setTrait(e.target.value as TraitId | 'ALL')}
+							aria-label="filter by trait"
+						>
+							<option value="ALL">all traits</option>
+							{allTraits.map((t) => (
+								<option key={t} value={t}>
+									{t}
+								</option>
+							))}
+						</select>
+					</div>
+					<div className="cardlist-remaining">
+						<span className="muted small">Remaining in each Market deck:</span>
+						{MARKET_SUITS_FOUR.map((s) => (
+							<span key={s} className="remaining-chip">
+								{s}: {remains.get(s) ?? 0}
+							</span>
 						))}
-					</select>
-					<select
-						value={trait}
-						onChange={(e) => setTrait(e.target.value as TraitId | 'ALL')}
-						aria-label="filter by trait"
-					>
-						<option value="ALL">all traits</option>
-						{allTraits.map((t) => (
-							<option key={t} value={t}>
-								{t}
-							</option>
-						))}
-					</select>
+					</div>
+					<div className="cardlist-grid">
+						{filtered.length === 0 && (
+							<p className="muted small">No cards match.</p>
+						)}
+						{filtered.map((d) => {
+							const def = index.get(d.id) ?? d
+							return (
+								<CardFace
+									key={d.id}
+									def={def}
+									size="micro"
+									onMouseEnter={() => setHovered(def)}
+									onMouseLeave={() => setHovered(null)}
+								/>
+							)
+						})}
+					</div>
+				</aside>
+			</div>
+			{/* outside the backdrop's stacking context, so it tops the choice bar too */}
+			{zoomHeld && hovered !== null && (
+				<div className="zoom-layer" role="presentation">
+					<CardFace def={hovered} size="zoom" />
 				</div>
-				<div className="cardlist-remaining">
-					<span className="muted small">Remaining in each Market deck:</span>
-					{MARKET_SUITS_FOUR.map((s) => (
-						<span key={s} className="remaining-chip">
-							{s}: {remains.get(s) ?? 0}
-						</span>
-					))}
-				</div>
-				<div className="cardlist-grid">
-					{filtered.length === 0 && (
-						<p className="muted small">No cards match.</p>
-					)}
-					{filtered.map((d) => (
-						<CardFace key={d.id} def={index.get(d.id) ?? d} size="micro" />
-					))}
-				</div>
-			</aside>
-		</div>
+			)}
+		</>
 	)
 }

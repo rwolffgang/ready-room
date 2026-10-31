@@ -1037,18 +1037,37 @@ function usePileState(): [
  * the middle of the screen at 3× the board size. Hover alone does nothing — the board is dense enough that a
  * preview firing on every pointer move is noise, and it cost a permanent panel
  * in the side column for something wanted a few times a turn.
+ */
+export function CardZoom() {
+	const hoverIid = useHoverIid()
+	const zoomHeld = useZoomKey()
+	// a card held under a finger (console/longPress.ts) — the touch twin
+	const pressedIid = useGameStore((s) => s.zoomIid)
+
+	const iid = pressedIid ?? (zoomHeld ? hoverIid : null)
+	if (iid === null) return null
+	return (
+		<div className="zoom-layer" role="presentation">
+			<CardSprite
+				iid={iid}
+				size="zoom"
+				detailOnHover={false}
+				hoverable={false}
+			/>
+		</div>
+	)
+}
+
+/**
+ * Whether Option is held, tracked into the store while the caller is mounted
+ * (the board's CardZoom, and the Card list, which can be open without a game).
  *
  * The key is held, never toggled: releasing Option, leaving the window, or
  * hiding the tab all drop it, so the overlay cannot get stuck open after an
  * Option-Tab away.
  */
-export function CardZoom() {
-	const hoverIid = useHoverIid()
-	const zoomHeld = useZoomHeld()
-	// a card held under a finger (console/longPress.ts) — the touch twin
-	const pressedIid = useGameStore((s) => s.zoomIid)
+export function useZoomKey(): boolean {
 	const setZoomHeld = useGameStore((s) => s.setZoomHeld)
-
 	useEffect(() => {
 		const sync = (e: KeyboardEvent) => setZoomHeld(e.altKey)
 		const drop = () => setZoomHeld(false)
@@ -1064,19 +1083,7 @@ export function CardZoom() {
 			drop()
 		}
 	}, [setZoomHeld])
-
-	const iid = pressedIid ?? (zoomHeld ? hoverIid : null)
-	if (iid === null) return null
-	return (
-		<div className="zoom-layer" role="presentation">
-			<CardSprite
-				iid={iid}
-				size="zoom"
-				detailOnHover={false}
-				hoverable={false}
-			/>
-		</div>
-	)
+	return useZoomHeld()
 }
 
 export function CardDetailHost() {

@@ -197,7 +197,7 @@ What the layout follows:
   so reading a card never also plays it. The overlay is `pointer-events: none` and sits above
   everything, the choice bar included, because reading a card is usually what you are doing while a
   choice is pending. Releasing the key, lifting the finger, leaving the window or hiding the tab
-  drop it.
+  drop it. The Card list zooms its catalog cards the same way, with or without a game.
 - **Fullscreen** (**F**, or the button) takes the whole document fullscreen, which wins back the
   browser's ~90px on a laptop. It is offered only where it works and helps: not on an iPhone, not
   in the desktop app, not when the app runs from the home screen (which has no browser chrome to
