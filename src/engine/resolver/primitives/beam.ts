@@ -57,6 +57,7 @@ export const beam: Primitive<Extract<Effect, { k: 'BEAM' }>> = {
 		const onto = resolveQuery(state, node.to, ctx)
 		return cards.length === 0 || onto.length === 0 ? null : { cards, onto }
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		if (answered(ctx, 'beam.host')) {
 			// the picked cards ride along as a plain binding (suspend `extra`)
@@ -68,6 +69,7 @@ export const beam: Primitive<Extract<Effect, { k: 'BEAM' }>> = {
 		const candidates = candidatesOf(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'beam.cards', {
 			prompt: 'Beam a card',
+			declinable: true,
 			candidates,
 			min: 1,
 			max: node.count,

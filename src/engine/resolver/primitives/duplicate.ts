@@ -7,6 +7,7 @@ import {
 	answer,
 	answerSingle,
 	skipBenefit,
+	declinedPick,
 } from '../runtime'
 import { evalPredicate, matchFilter } from '../../queries/resolveQuery'
 import { cardDef } from '../../cards'
@@ -34,17 +35,21 @@ export const duplicate: Primitive<Extract<Effect, { k: 'DUPLICATE' }>> = {
 		if (ctx.noNestedDuplicate === true) return true // nested → no-op, trivially fine
 		return sourceCards(state, node, ctx).length > 0
 	},
+	offersDecline: (_state, _node, ctx) => ctx.noNestedDuplicate !== true,
 	execute(state, node, ctx, _frame) {
 		if (ctx.noNestedDuplicate === true) {
 			return skipBenefit(state, node, ctx, 'nested DUPLICATE is a no-op')
 		}
 		const cardKey = 'duplicate.card'
 		if (answered(ctx, cardKey)) {
+			const declined = declinedPick(state, ctx, cardKey)
+			if (declined !== null) return declined
 			return chooseOption(state, node, ctx, answerSingle(ctx, cardKey))
 		}
 		const cands = sourceCards(state, node, ctx)
 		const r = pickCards(state, node, ctx, cardKey, {
 			prompt: 'Duplicate which card?',
+			declinable: true,
 			candidates: cands,
 			min: 1,
 			max: 1,

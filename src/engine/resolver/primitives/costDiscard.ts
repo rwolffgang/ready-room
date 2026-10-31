@@ -44,6 +44,7 @@ export const costDiscard: Primitive<Extract<Effect, { k: 'COST_DISCARD' }>> = {
 		}
 		return costCanResolve(s, n, ctx)
 	},
+	offersDecline: (_state, node) => node.whose !== 'OPPONENT',
 	execute(state, node, ctx, _frame) {
 		const seat = discardSeat(ctx, node.whose)
 		const candidates =
@@ -60,6 +61,7 @@ export const costDiscard: Primitive<Extract<Effect, { k: 'COST_DISCARD' }>> = {
 					)
 		const r = pickCards(state, node, ctx, 'costDiscard', {
 			prompt: 'Discard a card',
+			declinable: true,
 			candidates,
 			min: node.count,
 			max: node.count,

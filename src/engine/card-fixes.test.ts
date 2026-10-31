@@ -374,7 +374,8 @@ describe('1PIC20: may promote a PERSON from the Staging Area', () => {
 
 	it('promotes the staged PERSON, never a hand card', () => {
 		const { s, asked } = redAlert(true)
-		expect(asked).toEqual(['CHOOSE_CARDS', 'CONFIRM'])
+		// the "may promote" is asked as its pick (with a Decline), not a CONFIRM
+		expect(asked).toEqual(['CHOOSE_CARDS', 'CHOOSE_CARDS'])
 		expect(zone(s, 'DUTY_OFFICER', 0)).toEqual([ID('sp')])
 		expect(zone(s, 'HAND', 0)).toEqual([ID('hp')])
 		expect(zone(s, 'DRAW', 0)).toEqual([ID('h1')])

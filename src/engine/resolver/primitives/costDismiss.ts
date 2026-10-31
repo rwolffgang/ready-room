@@ -17,6 +17,7 @@ import {
 export const costDismiss: Primitive<Extract<Effect, { k: 'COST_DISMISS' }>> = {
 	isCost: true,
 	canResolve: (s, n, ctx) => costCanResolve(s, n, ctx),
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const candidates = thisOnly(
 			dismissibleCandidates(state, ctx, node.filter, node.from),
@@ -25,6 +26,7 @@ export const costDismiss: Primitive<Extract<Effect, { k: 'COST_DISMISS' }>> = {
 		)
 		const r = pickCards(state, node, ctx, 'costDismiss', {
 			prompt: 'Dismiss a card',
+			declinable: true,
 			candidates,
 			min: node.count,
 			max: node.count,

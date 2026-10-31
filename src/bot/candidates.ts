@@ -120,8 +120,13 @@ export function choiceSelections(
 			return choice.options
 				.filter((o) => o.enabled)
 				.map((o) => ({ key: o.key }))
-		case 'CHOOSE_CARDS':
-			return cardSubsets(state, seat, choice)
+		case 'CHOOSE_CARDS': {
+			const subsets = cardSubsets(state, seat, choice)
+			// an optional pick below its min: the empty selection declines
+			return choice.optional === true && choice.min > 0
+				? [...subsets, []]
+				: subsets
+		}
 		case 'CHOOSE_LOCATION':
 			return [...choice.candidates]
 		case 'CHOOSE_SUIT':

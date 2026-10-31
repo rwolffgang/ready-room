@@ -15,6 +15,7 @@ export const putOnDeckTop: Primitive<
 		if (node.target === 'THIS') return true
 		return resolveQuery(state, node.target, ctx).length > 0
 	},
+	offersDecline: (_state, node) => node.target !== 'THIS',
 	execute(state, node, ctx, _frame) {
 		let iid: CardInstanceId
 		if (node.target === 'THIS') {
@@ -23,6 +24,7 @@ export const putOnDeckTop: Primitive<
 			const candidates = resolveQuery(state, node.target, ctx)
 			const r = pickSingle(state, node, ctx, 'putOnDeckTop', {
 				prompt: 'Put a card on top of your deck',
+				declinable: true,
 				candidates,
 				from: 'IN_PLAY',
 			})

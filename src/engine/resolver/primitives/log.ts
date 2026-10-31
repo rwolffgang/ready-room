@@ -4,7 +4,14 @@ import type { EffectCtx, Frame, GameState } from '../../state'
 import type { CardInstanceId } from '../../ids'
 import { resolveQuery } from '../../queries/resolveQuery'
 import { cardDef } from '../../cards'
-import { pickSingle, moveCard, emit, answered, answerSingle } from '../runtime'
+import {
+	pickSingle,
+	moveCard,
+	emit,
+	answered,
+	answerSingle,
+	declinedPick,
+} from '../runtime'
 
 type LogNode = Extract<Effect, { k: 'LOG' }>
 type EffectFrame = Extract<Frame, { k: 'EFFECT' }>
@@ -91,6 +98,7 @@ export const log: Primitive<LogNode> = {
 		if (node.target === 'THIS') return true
 		return resolveQuery(state, node.target, ctx).length > 0
 	},
+	offersDecline: (_state, node) => node.target !== 'THIS',
 	execute(state, node, ctx, frame) {
 		const kept = ctx.bindings[PRE_LEAVE_TARGET]
 		if (typeof kept === 'string' && frame.gates?.includes('PRE_LOG') === true)
@@ -99,11 +107,15 @@ export const log: Primitive<LogNode> = {
 			// self-reference redirects to the duplicating card when inside DUPLICATE
 			return logCard(state, node, ctx, frame, ctx.duplicating ?? ctx.source)
 		}
-		if (answered(ctx, 'log'))
+		if (answered(ctx, 'log')) {
+			const declined = declinedPick(state, ctx, 'log')
+			if (declined !== null) return declined
 			return logCard(state, node, ctx, frame, answerSingle(ctx, 'log'))
+		}
 		const candidates = resolveQuery(state, node.target, ctx)
 		const r = pickSingle(state, node, ctx, 'log', {
 			prompt: 'Log a card',
+			declinable: true,
 			candidates,
 			from: 'SELECT',
 		})

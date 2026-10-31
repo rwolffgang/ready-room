@@ -34,10 +34,12 @@ function candidatesOf(
 export const costRecall: Primitive<Extract<Effect, { k: 'COST_RECALL' }>> = {
 	isCost: true,
 	canResolve: (s, n, ctx) => costCanResolve(s, n, ctx),
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const candidates = candidatesOf(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'costRecall', {
 			prompt: 'Recall a card',
+			declinable: true,
 			candidates,
 			min: 1,
 			max: 1,

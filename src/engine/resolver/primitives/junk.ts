@@ -9,6 +9,7 @@ export const junk: Primitive<Extract<Effect, { k: 'JUNK' }>> = {
 	canResolve(state, node, ctx) {
 		return legalCandidates(state, node, ctx).length > 0
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const cands = candidates(state, node, ctx)
 		const tainted = cands.filter((iid) => {
@@ -17,6 +18,7 @@ export const junk: Primitive<Extract<Effect, { k: 'JUNK' }>> = {
 		})
 		const r = pickCards(state, node, ctx, 'junk', {
 			prompt: 'Junk a card',
+			declinable: true,
 			candidates: cands,
 			min: 1,
 			max: 1,

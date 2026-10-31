@@ -1618,8 +1618,8 @@ describe('rulebook p.22–23 — full ACTION STEP example (rules/03 §3.5)', () 
 		>
 		expect(loc01Window.offered).toHaveLength(1) // 1LOC01 reacts to the ENCOUNTER
 		d.settle(loc01Window.offered, 'OPTIONAL_TRIGGERS')
-		d.settle(true, 'CONFIRM') // accept the "may log"
-		d.settle([ID('1PER19')], 'CHOOSE_CARDS') // log 1PER19 from the Discard pile
+		// the "may log" is asked as its pick: log 1PER19 from the Discard pile
+		d.settle([ID('1PER19')], 'CHOOSE_CARDS')
 		const memAlphaWindow = d.choice('OPTIONAL_TRIGGERS') as Extract<
 			PendingChoice,
 			{ k: 'OPTIONAL_TRIGGERS' }

@@ -19,6 +19,7 @@ import {
 	type LogEntry,
 	type GameEvent,
 	type JsonValue,
+	type Declinable,
 } from '../state'
 import { cardDef, isLocationDef } from '../cards'
 import type { ChoiceSeed, ChoiceDisabledCard, PendingChoice } from './choices'
@@ -263,6 +264,8 @@ export function resolveAmount(
 	return { kind: 'suspended', state: next }
 }
 
+/** `suspended`: stop and return `state` — a choice was published, or a
+ *  declined "you may" dropped its body (`declineMay`). */
 export type PickResult =
 	| { kind: 'none' }
 	| { kind: 'suspended'; state: GameState }
@@ -283,6 +286,11 @@ export interface PickOpts {
 	hidden?: CardInstanceId[] | undefined
 	/** An empty selection declines (the UI offers a Decline button). */
 	optional?: boolean | undefined
+	/** The primitive's first prompt, asked before it changes anything: under
+	 *  an open "you may" (`ctx.declinable`) it carries the decline — it shows
+	 *  the "you may" wording, asks even when one candidate is left (it is the
+	 *  only prompt), and an empty answer declines the optional effect. */
+	declinable?: boolean | undefined
 }
 
 /**
@@ -297,26 +305,67 @@ export function pickCards(
 	key: string,
 	opts: PickOpts,
 ): PickResult {
+	const decline = opts.declinable === true ? ctx.declinable : undefined
 	if (answered(ctx, key)) {
-		return { kind: 'selected', iids: answer<CardInstanceId[]>(ctx, key) }
+		const iids = answer<CardInstanceId[]>(ctx, key)
+		if (decline !== undefined && iids.length === 0)
+			return { kind: 'suspended', state: declineMay(state, decline) }
+		return { kind: 'selected', iids }
 	}
 	const { candidates, min, max } = opts
 	const disabledSet = new Set((opts.disabled ?? []).map((d) => d.iid))
 	const legal = candidates.filter((iid) => !disabledSet.has(iid))
 	if (legal.length < min) return { kind: 'none' }
-	if (legal.length === min) return { kind: 'selected', iids: [...legal] }
+	if (legal.length === min && decline === undefined)
+		return { kind: 'selected', iids: [...legal] }
 	const next = suspend(state, node, ctx, key, {
 		k: 'CHOOSE_CARDS',
-		prompt: opts.prompt,
+		prompt: decline?.prompt ?? opts.prompt,
 		candidates: [...candidates],
 		disabled: opts.disabled,
 		hidden: opts.hidden,
 		min,
 		max,
 		from: opts.from,
-		...(opts.optional === true ? { optional: true } : {}),
+		...(opts.optional === true || decline !== undefined
+			? { optional: true }
+			: {}),
+		...(decline !== undefined ? { mayDecline: true } : {}),
 	})
 	return { kind: 'suspended', state: next }
+}
+
+/** Decline an open "you may" (`EffectCtx.declinable`): drop the optional
+ *  body, every frame from the depth it was pushed at up. Nothing has happened
+ *  yet, so nothing is undone; the asking frame's choice keys are scrubbed as
+ *  for any finished frame (stack.ts scopeChoiceKeys). */
+export function declineMay(state: GameState, decline: Declinable): GameState {
+	return { ...state, stack: state.stack.slice(0, decline.base) }
+}
+
+/** The declined state when a first pick (`declinable`) was answered empty
+ *  under an open "you may", else null — for primitives that read their
+ *  pick's answer before calling pickCards. */
+export function declinedPick(
+	state: GameState,
+	ctx: EffectCtx,
+	key: string,
+): GameState | null {
+	if (ctx.declinable === undefined || !answered(ctx, key)) return null
+	const v = answer<unknown>(ctx, key)
+	return Array.isArray(v) && v.length === 0
+		? declineMay(state, ctx.declinable)
+		: null
+}
+
+/** `ctx` without the open decline: only the first prompt of a "you may"
+ *  carries it, so SEQ, PAY_THEN and CHOOSE_ONE give this to every later step,
+ *  the body after a cost and the chosen option. Keeps the bindings object,
+ *  so answers stay shared with the siblings. */
+export function withoutDecline(ctx: EffectCtx): EffectCtx {
+	if (ctx.declinable === undefined) return ctx
+	const { declinable: _declinable, ...rest } = ctx
+	return rest
 }
 
 /** `onlyBound` (DISCARD / COST_DISCARD): "discard IT" / "discard one of
@@ -337,7 +386,12 @@ export function pickSingle(
 	node: Effect,
 	ctx: EffectCtx,
 	key: string,
-	opts: { prompt: string; candidates: CardInstanceId[]; from: string },
+	opts: {
+		prompt: string
+		candidates: CardInstanceId[]
+		from: string
+		declinable?: boolean | undefined
+	},
 ): PickResult {
 	return pickCards(state, node, ctx, key, { ...opts, min: 1, max: 1 })
 }

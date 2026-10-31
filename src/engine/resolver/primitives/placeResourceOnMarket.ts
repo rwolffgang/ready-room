@@ -22,12 +22,14 @@ export const placeResourceOnMarket: Primitive<
 			candidates(state, node).length > 0
 		)
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const amount = evalAmount(state, node.amount, ctx)
 		if (amount <= 0) return state
 		const cands = candidates(state, node)
 		const r = pickSingle(state, node, ctx, 'placeRes', {
 			prompt: 'Place tokens on which Market card?',
+			declinable: true,
 			candidates: cands,
 			from: 'MARKET',
 		})

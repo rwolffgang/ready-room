@@ -110,6 +110,24 @@ function attackOf(
 	return rec?.k === 'ATTACK' ? [id, rec] : null
 }
 
+/** Would the attack gate stop `node` before it runs — the attacker executing
+ *  something that negatively affects the victim (`victimEffects`)? A "you
+ *  may" around it keeps its CONFIRM (may.ts), so the victim's "would be
+ *  attacked" window never opens for an effect the attacker then declines. */
+export function attackGated(
+	state: GameState,
+	node: Effect,
+	ctx: EffectCtx,
+): boolean {
+	const found = attackOf(state, ctx)
+	if (found === null) return false
+	const [, rec] = found
+	return (
+		ctx.actor === rec.attacker &&
+		victimEffects(state, node, ctx, rec.victim) !== null
+	)
+}
+
 /** The victim of the ATTACK operation `ctx` belongs to, if any. */
 export function attackVictim(state: GameState, ctx: EffectCtx): 0 | 1 | null {
 	return attackOf(state, ctx)?.[1].victim ?? null

@@ -7,12 +7,14 @@ import {
 	answer,
 	skipBenefit,
 	glorySubstitutedFor,
+	withoutDecline,
 } from '../runtime'
 import { describe } from '../../describe'
 import { evalAmount, evalPredicate } from '../../queries/resolveQuery'
 import type { GameState, EffectCtx } from '../../state'
 import type { ResourceId } from '../../../data/ids'
 import type { ChoicePreview } from '../choices'
+import { attackGated } from '../replacement'
 
 /** MAY → CONFIRM choice; accept pushes the body, decline skips it. The
  *  prompt spells out the optional effect ("You may promote …?") so the
@@ -22,9 +24,11 @@ import type { ChoicePreview } from '../choices'
  *  PERSON staged, or 1PIC04' "may discard a SHIP" (a PAY_THEN) with
  *  no SHIP in hand. The accepted body runs with `ctx.optional`, so a cost
  *  that became unpayable only skips the optional part (PAY_THEN). A body
- *  whose own prompt can say no (`offersDecline` — "you may warp": the
- *  destination choice has a Skip) runs straight away, without the CONFIRM,
- *  so the yes/no and the pick are one dialog. */
+ *  whose first prompt can say no (`offersDecline`: "you may promote a
+ *  PERSON" — the pick has a Decline, "you may warp" — the destination has a
+ *  Skip) runs straight away with `ctx.declinable`, without the CONFIRM, so
+ *  the yes/no and the pick are one dialog. A cost partly paid in Glory keeps
+ *  the CONFIRM, the only prompt that says so. */
 export const may: Primitive<Extract<Effect, { k: 'MAY' }>> = {
 	isCost: false,
 	canResolve: () => true,
@@ -36,18 +40,23 @@ export const may: Primitive<Extract<Effect, { k: 'MAY' }>> = {
 				state.stack.push({
 					k: 'EFFECT',
 					node: node.body,
-					ctx: ctx.optional === true ? ctx : { ...ctx, optional: true },
+					ctx: { ...withoutDecline(ctx), optional: true },
 					ip: 0,
 				})
 			return state
 		}
 		if (wouldDoNothing(state, node.body, ctx))
 			return skipBenefit(state, node.body, ctx, 'cannot fully resolve')
-		if (offersDecline(state, node.body, ctx)) {
+		const glory = gloryNote(state, node.body, ctx)
+		if (glory === '' && offersDecline(state, node.body, ctx)) {
 			state.stack.push({
 				k: 'EFFECT',
 				node: node.body,
-				ctx: { ...ctx, optional: true, declinable: true },
+				ctx: {
+					...ctx,
+					optional: true,
+					declinable: { base: state.stack.length, prompt: `${mayText(node)}.` },
+				},
 				ip: 0,
 			})
 			return state
@@ -55,19 +64,49 @@ export const may: Primitive<Extract<Effect, { k: 'MAY' }>> = {
 		const preview = previewOf(state, node.body, ctx)
 		return suspend(state, node, ctx, key, {
 			k: 'CONFIRM',
-			prompt: mayPrompt(node) + gloryNote(state, node.body, ctx),
+			prompt: `${mayText(node)}?${glory}`,
 			...(preview !== null ? { preview } : {}),
 		})
 	},
 }
 
-function offersDecline(
+/** True when `node` asks before it changes anything and that first prompt can
+ *  carry the decline: a primitive's `offersDecline`, reached through a SEQ's
+ *  first step or a PAY_THEN's cost (asked before its body), or a single
+ *  CHOOSE_ONE (its option choice gains a Decline row). A REPEAT UP_TO asks
+ *  its rounds the same way (repeat.ts). That prompt must really come up: a
+ *  first step that cannot resolve is skipped unasked (stack.ts), and the
+ *  steps after it would run without the "you may" — so it keeps the CONFIRM,
+ *  as does a node the attack gate would stop first (attackGated). Exported
+ *  for REPEAT. */
+export function offersDecline(
 	state: GameState,
 	node: Effect,
 	ctx: EffectCtx,
 ): boolean {
-	if (isControl(node)) return false
-	return primitiveOf(node).offersDecline?.(state, node, ctx) === true
+	if (attackGated(state, node, ctx)) return false
+	switch (node.k) {
+		case 'SEQ':
+			return (
+				node.steps[0] !== undefined && offersDecline(state, node.steps[0], ctx)
+			)
+		case 'PAY_THEN':
+			return offersDecline(state, node.cost, ctx)
+		case 'CHOOSE_ONE':
+			return (node.count ?? 1) === 1 && canResolveEffect(state, node, ctx)
+		case 'REPEAT':
+			return (
+				typeof node.times === 'object' &&
+				node.times.k === 'UP_TO' &&
+				offersDecline(state, node.body, ctx)
+			)
+		default:
+			if (isControl(node)) return false
+			return (
+				primitiveOf(node).offersDecline?.(state, node, ctx) === true &&
+				canResolveEffect(state, node, ctx)
+			)
+	}
 }
 
 /** What the optional effect would act on first: the node itself, the first
@@ -133,10 +172,11 @@ export function wouldDoNothing(
 	}
 }
 
-function mayPrompt(node: Extract<Effect, { k: 'MAY' }>): string {
+/** The MAY's card wording without its full stop ("You may promote …"). */
+function mayText(node: Extract<Effect, { k: 'MAY' }>): string {
 	const text = describe(node).trim()
-	if (text === '') return 'Resolve this optional effect?'
-	return text.endsWith('.') ? `${text.slice(0, -1)}?` : `${text}?`
+	if (text === '') return 'Resolve this optional effect'
+	return text.endsWith('.') ? text.slice(0, -1) : text
 }
 
 /** " (Paid with N {GLO}.)" when accepting would pay a resource cost partly

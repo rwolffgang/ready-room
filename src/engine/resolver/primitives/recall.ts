@@ -11,10 +11,12 @@ export const recall: Primitive<Extract<Effect, { k: 'RECALL' }>> = {
 	canResolve(state, node, ctx) {
 		return candidates(state, node, ctx).length > 0
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const cands = candidates(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'recall', {
 			prompt: 'Recall a card',
+			declinable: true,
 			candidates: cands,
 			min: 1,
 			max: 1,

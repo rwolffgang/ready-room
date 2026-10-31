@@ -1,6 +1,7 @@
 import type { Effect } from '../nodes'
 import type { Primitive } from './index'
-import { suspend, answered, answer, emit } from '../runtime'
+import { suspend, answered, answer, emit, declineMay } from '../runtime'
+import { SKIP_LOCATION } from '../choices'
 import { resolveQuery } from '../../queries/resolveQuery'
 import { otherSeat, type GameState } from '../../state'
 import { isCadetOpponent, opponentAwayTeamsAt } from '../../../bot/cadet'
@@ -8,7 +9,8 @@ import type { CardInstanceId } from '../../ids'
 
 /** REMOVE_AWAY_TEAM: pull `count` away-team tokens off a Location back to the
  *  owning player's pool ("removing" is the attacker's phrasing, but tokens
- *  belong to the seat named by `whose`). */
+ *  belong to the seat named by `whose`). A "you may remove" asked without a
+ *  CONFIRM (may.ts) always asks the Location, with a Skip that declines. */
 export const removeAwayTeam: Primitive<
 	Extract<Effect, { k: 'REMOVE_AWAY_TEAM' }>
 > = {
@@ -17,6 +19,7 @@ export const removeAwayTeam: Primitive<
 		const side = node.whose === 'SELF' ? ctx.actor : otherSeat(ctx.actor)
 		return candidates(state, node, ctx, side).length > 0
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const key = 'removeAwayTeam.loc'
 		const side = node.whose === 'SELF' ? ctx.actor : otherSeat(ctx.actor)
@@ -25,9 +28,22 @@ export const removeAwayTeam: Primitive<
 			if (node.bind !== undefined) ctx.bindings[node.bind] = loc
 			return remove(state, loc, side, node.count)
 		}
-		if (answered(ctx, key)) return done(answer<CardInstanceId>(ctx, key))
+		if (answered(ctx, key)) {
+			const loc = answer<CardInstanceId>(ctx, key)
+			if (loc === SKIP_LOCATION && ctx.declinable !== undefined)
+				return declineMay(state, ctx.declinable)
+			return done(loc)
+		}
 		const cands = candidates(state, node, ctx, side)
 		if (cands.length === 0) return state
+		const decline = ctx.declinable
+		if (decline !== undefined)
+			return suspend(state, node, ctx, key, {
+				k: 'CHOOSE_LOCATION',
+				prompt: `${decline.prompt} (Skip declines)`,
+				candidates: [...cands, SKIP_LOCATION],
+				mayDecline: true,
+			})
 		if (cands.length === 1) return done(cands[0]!)
 		return suspend(state, node, ctx, key, {
 			k: 'CHOOSE_LOCATION',
