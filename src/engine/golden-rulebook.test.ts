@@ -9,16 +9,13 @@
 //   p.11  ACTIVATION example (1PIC24)       -> passing
 //   p.14  ENLIST example (1PIC13)      -> passing
 //   p.14  DEVELOPMENT example (1PIC04)       -> passing
-//   p.16  SCAN-for-trait example (1PER04/1PER07) -> SKIPPED (engine gap, see below)
+//   p.16  SCAN-for-trait example (1PER04/1PER07) -> passing
 //   p.20  MISSION example (1PIC/M1)  -> SKIPPED (engine gap, see below)
 //   p.22-23 full ACTION STEP (1LOC01 chain)   -> passing
 //   p.25  SCORING example (29 VP)               -> passing
 //
 // Engine/corpus gaps documented but NOT fixed here (the rules/16 §1/§2
 // contract: a parallel agent owns src/engine, card JSON stays untouched):
-//   - p.16: SCAN_FOR_TRAIT hardcodes the gain to the top of the Draw deck
-//     (scanForTrait.ts calls gainCard.finish(...,'DECK_TOP')); the rulebook
-//     (p.16, rules/05 §5.4.3) lets the player choose Draw-deck-top OR Discard.
 //   - p.25: the corpus cards (1ALL09, 1PIC03, 1PIC09, U.S.S.
 //     Pasteur) have focus:null in src/data/cards; the rulebook example shows
 //     them with the blue RESEARCH focus. The fixtures below carry that focus
@@ -775,14 +772,10 @@ describe('rulebook p.16 — SCAN-for-trait example (rules/05 §5.4.3)', () => {
 									body: { k: 'GAIN_RESOURCE', res: 'GLO', amount: 1 },
 								},
 								// rules/05 §5.4.3 (p.16 example): the gained card may be placed in
-								// the Discard pile — the engine now surfaces a CHOOSE_DESTINATION.
+								// the Discard pile — a scan always surfaces a CHOOSE_DESTINATION.
 								{
 									k: 'MAY',
-									body: {
-										k: 'SCAN_FOR_TRAIT',
-										traits: ['KLINGON'],
-										to: ['DECK_TOP', 'DISCARD'],
-									},
+									body: { k: 'SCAN_FOR_TRAIT', traits: ['KLINGON'] },
 								},
 							],
 						},
@@ -856,8 +849,7 @@ describe('rulebook p.16 — SCAN-for-trait example (rules/05 §5.4.3)', () => {
 		// Choose SHIP first (no KLINGON), then PERSON (1PER07 found).
 		d.settle('SHIP', 'CHOOSE_SUIT')
 		d.settle('PERSON', 'CHOOSE_SUIT')
-		if (d.state.pendingChoice !== null)
-			d.settle('DISCARD', 'CHOOSE_DESTINATION')
+		d.settle('DISCARD', 'CHOOSE_DESTINATION')
 
 		// Rulebook: the newly gained card goes into the Discard pile.
 		expect(zoneDefs(d.state, 'DISCARD:0')).toContain('gb-per07')

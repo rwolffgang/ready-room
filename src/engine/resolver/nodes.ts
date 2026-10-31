@@ -219,9 +219,9 @@ export type EffectNode =
 			traits: TraitId[]
 			includeJunk?: boolean | undefined
 			bind?: string | undefined
-			/** Legal placements for the gained card (rules/05 §5.4.3): omitted /
-			 *  single-entry means the gain is automatic there, two entries surface a
-			 *  CHOOSE_DESTINATION. Defaults to the deck top. */
+			/** Legal placements for the gained card (rules/05 §5.4.3): omitted =
+			 *  both (a CHOOSE_DESTINATION, as for GAIN_CARD); a single entry places
+			 *  the gain there automatically. */
 			to?: ('DECK_TOP' | 'DISCARD')[] | undefined
 	  } // 2 Glory consolation if exhausted
 	| {

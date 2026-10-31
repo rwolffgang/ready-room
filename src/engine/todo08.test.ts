@@ -376,9 +376,45 @@ describe('SCAN_FOR_TRAIT (todo/08 §4, rules/05 §5.4.3)', () => {
 				selection: 'SHIP',
 			}),
 		)
-		expect(s2.pendingChoice).toBeNull()
-		expect(s2.cards[ID('kShip')]!.zone.k).toBe('DRAW') // the ship gained
-		expect(offers(s2, 'PERSON')).toContain(ID('perOff')) // PERSON offer untouched
+		// the found card is shown in the deck-top-or-Discard choice (rules/05 §5.4.3)
+		const dest = s2.pendingChoice
+		expect(dest).toMatchObject({
+			k: 'CHOOSE_DESTINATION',
+			card: ID('kShip'),
+			options: ['DECK_TOP', 'DISCARD'],
+		})
+		const s3 = run(
+			applyChoice(s2, {
+				t: 'RESOLVE_CHOICE',
+				choiceId: dest!.id,
+				selection: 'DECK_TOP',
+			}),
+		)
+		expect(s3.pendingChoice).toBeNull()
+		expect(s3.cards[ID('kShip')]!.zone.k).toBe('DRAW') // the ship gained
+		expect(offers(s3, 'PERSON')).toContain(ID('perOff')) // PERSON offer untouched
+	})
+
+	it('a faceup match is offered for the Discard pile too', () => {
+		register([mk('ship', 'SHIP', [], ['KLINGON'])])
+		let s = fresh()
+		s = place(s, 'ship', ID('kOff'), { k: 'MARKET_OFFER', suit: 'SHIP' })
+		const halted = pushAndRun(
+			s,
+			{ k: 'SCAN_FOR_TRAIT', traits: ['KLINGON'] },
+			ID('e'),
+			0,
+		)
+		const dest = halted.pendingChoice
+		expect(dest).toMatchObject({ k: 'CHOOSE_DESTINATION', card: ID('kOff') })
+		const out = run(
+			applyChoice(halted, {
+				t: 'RESOLVE_CHOICE',
+				choiceId: dest!.id,
+				selection: 'DISCARD',
+			}),
+		)
+		expect(out.cards[ID('kOff')]!.zone.k).toBe('DISCARD')
 	})
 })
 

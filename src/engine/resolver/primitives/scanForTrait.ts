@@ -39,7 +39,7 @@ export const scanForTrait: Primitive<Extract<Effect, { k: 'SCAN_FOR_TRAIT' }>> =
 			const suitKey = 'scanForTrait.suit'
 
 			// (0) destination answered → place the scanned card there (rules/05 §5.4.3:
-			//     deck top OR Discard, when the effect offers both).
+			//     deck top OR Discard).
 			if (answered(ctx, destKey)) {
 				const picked = ctx.bindings['$scanForTrait.picked']
 				if (typeof picked !== 'string')
@@ -143,9 +143,11 @@ export const scanForTrait: Primitive<Extract<Effect, { k: 'SCAN_FOR_TRAIT' }>> =
 		},
 	}
 
-/** Gain the scanned card, letting the player choose where it goes when the
- *  effect offers a destination (rules/05 §5.4.3); otherwise place it directly.
- *  The picked card is stored on the shared ctx so the resume knows what moved. */
+/** Gain the scanned card, letting the player choose where it goes: the deck
+ *  top or the Discard pile unless the effect narrows it to one (rules/05
+ *  §5.4.3, §5.4.5). The CHOOSE_DESTINATION is also where the player sees the
+ *  card they scanned out of a face-down deck. The picked card is stored on the
+ *  shared ctx so the resume knows what moved. */
 function placeOrAsk(
 	state: GameState,
 	node: Effect & { k: 'SCAN_FOR_TRAIT' },
@@ -153,7 +155,7 @@ function placeOrAsk(
 	picked: CardInstanceId,
 ): GameState {
 	if (node.bind !== undefined) ctx.bindings[node.bind] = picked
-	const dests = node.to ?? ['DECK_TOP']
+	const dests = node.to ?? ['DECK_TOP', 'DISCARD']
 	if (dests.length <= 1)
 		return gainFinish(state, ctx.actor, picked, dests[0] ?? 'DECK_TOP')
 	return suspend(
