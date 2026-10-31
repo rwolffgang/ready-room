@@ -21,10 +21,12 @@ export const dismiss: Primitive<Extract<Effect, { k: 'DISMISS' }>> = {
 	canResolve(state, node, ctx) {
 		return candidate(state, node, ctx).length > 0
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, frame) {
 		const candidates = candidate(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'dismiss', {
 			prompt: 'Dismiss a card',
+			declinable: true,
 			candidates,
 			min: 1,
 			max: 1,

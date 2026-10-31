@@ -9,6 +9,7 @@ export const destroy: Primitive<Extract<Effect, { k: 'DESTROY' }>> = {
 		if (node.target === 'THIS') return true
 		return resolveQuery(state, node.target, ctx).length > 0
 	},
+	offersDecline: (_state, node) => node.target !== 'THIS',
 	execute(state, node, ctx, _frame) {
 		if (node.target === 'THIS') {
 			const iid = ctx.duplicating ?? ctx.source
@@ -21,6 +22,7 @@ export const destroy: Primitive<Extract<Effect, { k: 'DESTROY' }>> = {
 		const candidates = resolveQuery(state, node.target, ctx)
 		const r = pickCards(state, node, ctx, 'destroy', {
 			prompt: 'Destroy a card',
+			declinable: true,
 			candidates,
 			min: 1,
 			max: 1,

@@ -11,6 +11,7 @@ import {
 export const costExhaust: Primitive<Extract<Effect, { k: 'COST_EXHAUST' }>> = {
 	isCost: true,
 	canResolve: (s, n, ctx) => costCanResolve(s, n, ctx),
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const candidates = thisOnly(
 			exhaustibleCandidates(state, ctx, node.filter),
@@ -19,6 +20,7 @@ export const costExhaust: Primitive<Extract<Effect, { k: 'COST_EXHAUST' }>> = {
 		)
 		const r = pickSingle(state, node, ctx, 'costExhaust', {
 			prompt: 'Exhaust a card',
+			declinable: true,
 			candidates,
 			from: 'IN_PLAY',
 		})

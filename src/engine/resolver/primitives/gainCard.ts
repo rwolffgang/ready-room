@@ -10,6 +10,7 @@ import {
 	gainResource,
 	setOwner,
 	skipBenefit,
+	declinedPick,
 } from '../runtime'
 import { refillMarket, suitOfOffer } from '../../market'
 import { zonesOf, moveCard, zoneProps } from '../../state'
@@ -77,6 +78,7 @@ export const gainCard: Primitive<Extract<Effect, { k: 'GAIN_CARD' }>> = {
 				).length > 0,
 		)
 	},
+	offersDecline: (_state, node) => new Set(node.suits).size === 1,
 	execute(state, node, ctx, frame) {
 		const suitKey = 'gainCard.suit'
 		const pickKey = 'gainCard.pick'
@@ -94,6 +96,8 @@ export const gainCard: Primitive<Extract<Effect, { k: 'GAIN_CARD' }>> = {
 		}
 		// 2. a card was picked → ask where it goes.
 		if (answered(ctx, pickKey)) {
+			const declined = declinedPick(state, ctx, pickKey)
+			if (declined !== null) return declined
 			const iid = answerSingle(ctx, pickKey)
 			const gate = gainGate(state, frame, iid)
 			return gate.run ? placeOrAsk(gate.state, node, ctx, iid) : gate.state
@@ -131,6 +135,7 @@ export const gainCard: Primitive<Extract<Effect, { k: 'GAIN_CARD' }>> = {
 		}
 		const r = pickCards(state, node, ctx, pickKey, {
 			prompt: `Gain a ${suit} card`,
+			declinable: true,
 			candidates: cands.map((c) => c.iid),
 			hidden: cands.filter((c) => c.hidden).map((c) => c.iid),
 			min: 1,

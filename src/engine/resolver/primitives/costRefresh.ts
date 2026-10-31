@@ -15,9 +15,11 @@ import {
 export const costRefresh: Primitive<Extract<Effect, { k: 'COST_REFRESH' }>> = {
 	isCost: true,
 	canResolve: (s, n, ctx) => costCanResolve(s, n, ctx),
+	offersDecline: () => true,
 	execute(state, node, ctx) {
 		const r = pickSingle(state, node, ctx, 'costRefresh', {
 			prompt: 'Refresh a card',
+			declinable: true,
 			candidates: thisOnly(
 				refreshableCandidates(state, ctx, node.filter),
 				node,

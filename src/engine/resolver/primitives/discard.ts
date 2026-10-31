@@ -36,6 +36,8 @@ export const discard: Primitive<Extract<Effect, { k: 'DISCARD' }>> = {
 			(iid) => onlyBoundAllows(ctx, node.onlyBound, iid),
 		)
 	},
+	offersDecline: (_state, node) =>
+		node.from !== 'DECK_TOP' && node.whose !== 'OPPONENT',
 	execute(state, node, ctx, _frame) {
 		if (node.from === 'DECK_TOP') {
 			const seat = discardSeat(ctx, node.whose)
@@ -63,6 +65,7 @@ export const discard: Primitive<Extract<Effect, { k: 'DISCARD' }>> = {
 		).filter((iid) => onlyBoundAllows(ctx, node.onlyBound, iid))
 		const r = pickCards(state, node, ctx, 'discard', {
 			prompt: 'Discard cards',
+			declinable: true,
 			candidates,
 			// "discard 2 cards": as many as the hand allows, never fewer
 			min: Math.min(node.count, candidates.length),

@@ -39,10 +39,12 @@ export const promote: Primitive<Extract<Effect, { k: 'PROMOTE' }>> = {
 	canResolve(state, node, ctx) {
 		return personCandidates(state, node, ctx).length > 0
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const cands = personCandidates(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'promote', {
 			prompt: 'Promote to Duty Officer',
+			declinable: true,
 			candidates: cands,
 			min: 1,
 			max: 1,

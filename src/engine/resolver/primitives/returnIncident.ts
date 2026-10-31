@@ -11,6 +11,7 @@ export const returnIncident: Primitive<
 		if (node.target === 'THIS') return true
 		return resolveQuery(state, node.target, ctx).length > 0
 	},
+	offersDecline: (_state, node) => node.target !== 'THIS',
 	execute(state, node, ctx, _frame) {
 		if (node.target === 'THIS') {
 			// "return this card" — the resolving INCIDENT itself (mirror of LOG 'THIS').
@@ -24,6 +25,7 @@ export const returnIncident: Primitive<
 		const candidates = resolveQuery(state, node.target, ctx)
 		const r = pickSingle(state, node, ctx, 'returnIncident', {
 			prompt: 'Return an Incident',
+			declinable: true,
 			candidates,
 			from: 'SELECT',
 		})

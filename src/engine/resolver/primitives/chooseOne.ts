@@ -1,8 +1,16 @@
 import type { Effect } from '../nodes'
 import type { Primitive } from './index'
-import { suspend, answered, answer, skipBenefit } from '../runtime'
+import {
+	suspend,
+	answered,
+	answer,
+	skipBenefit,
+	declineMay,
+	withoutDecline,
+} from '../runtime'
 import type { GameState, EffectCtx } from '../../state'
 import { canResolveEffect } from './index'
+import { DECLINE_OPTION } from '../choices'
 
 /** CHOOSE_ONE: pre-filter options with canResolveEffect; hard-filter disabled
  *  options for an isAttack resolved by the opponent (rules/03 §3.5.3). */
@@ -51,12 +59,22 @@ export const chooseOne: Primitive<Extract<Effect, { k: 'CHOOSE_ONE' }>> = {
 		const count = node.count ?? 1
 		const round = count > 1 ? frame.ip : 0
 		const key = roundKey(count, round)
+		// "you may choose one" asked without a CONFIRM (may.ts): a Decline row
+		const decline = count === 1 ? ctx.declinable : undefined
 		if (answered(ctx, key)) {
 			const sel = answer<{ key: string }>(ctx, key)
+			if (sel.key === DECLINE_OPTION && decline !== undefined)
+				return declineMay(state, decline)
 			const opt = node.options[Number(sel.key)]
 			if (round + 1 < count)
 				state.stack.push({ k: 'EFFECT', node, ctx, ip: round + 1 })
-			if (opt) state.stack.push({ k: 'EFFECT', node: opt.body, ctx, ip: 0 })
+			if (opt)
+				state.stack.push({
+					k: 'EFFECT',
+					node: opt.body,
+					ctx: withoutDecline(ctx),
+					ip: 0,
+				})
 			return state
 		}
 		const taken = new Set<number>()
@@ -83,14 +101,24 @@ export const chooseOne: Primitive<Extract<Effect, { k: 'CHOOSE_ONE' }>> = {
 			node,
 			ctx,
 			key,
-			{
-				k: 'CHOOSE_OPTION',
-				prompt:
-					count > 1
-						? `Choose ${count} different effects (${round + 1} of ${count}):`
-						: 'Choose one effect:',
-				options: offered,
-			},
+			decline !== undefined
+				? {
+						k: 'CHOOSE_OPTION',
+						prompt: decline.prompt,
+						options: [
+							...offered,
+							{ key: DECLINE_OPTION, label: 'Decline', enabled: true },
+						],
+						mayDecline: true,
+					}
+				: {
+						k: 'CHOOSE_OPTION',
+						prompt:
+							count > 1
+								? `Choose ${count} different effects (${round + 1} of ${count}):`
+								: 'Choose one effect:',
+						options: offered,
+					},
 			undefined,
 			round,
 		)

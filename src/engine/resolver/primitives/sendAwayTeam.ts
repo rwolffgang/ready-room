@@ -2,7 +2,8 @@ import type { Effect } from '../nodes'
 import type { Primitive } from './index'
 import { evalAmount, resolveQuery } from '../../queries/resolveQuery'
 import { player, type GameState } from '../../state'
-import { suspend, answered, answer, emit } from '../runtime'
+import { suspend, answered, answer, emit, declineMay } from '../runtime'
+import { SKIP_LOCATION } from '../choices'
 import { canSendAwayTeam } from '../../queries/board'
 import { cardDef, isLocationDef } from '../../cards'
 import type { CardInstanceId } from '../../ids'
@@ -16,7 +17,8 @@ import type { Seat } from '../queries'
  *  cover `count` you may freely pull tokens off your other Locations to
  *  complete the placement (CHOOSE_LOCATION over the sources, auto when only
  *  one) — `awayTeamsTotal` never decreases (asserted at the stack boundary).
- *  Emits AWAY_TEAM_SENT. */
+ *  Emits AWAY_TEAM_SENT. A "you may send" asked without a CONFIRM (may.ts)
+ *  always asks the destination, with a Skip that declines. */
 export const sendAwayTeam: Primitive<Extract<Effect, { k: 'SEND_AWAY_TEAM' }>> =
 	{
 		isCost: false,
@@ -26,6 +28,7 @@ export const sendAwayTeam: Primitive<Extract<Effect, { k: 'SEND_AWAY_TEAM' }>> =
 			if (targets(state, node, ctx).length === 0) return false
 			return tokensAvailable(state, ctx.actor) > 0
 		},
+		offersDecline: () => true,
 		execute(state, node, ctx, _frame) {
 			const targetKey = 'sendAwayTeam.target'
 			const sourceKey = 'sendAwayTeam.source'
@@ -47,11 +50,22 @@ export const sendAwayTeam: Primitive<Extract<Effect, { k: 'SEND_AWAY_TEAM' }>> =
 			}
 			// 2. target answered: evaluate pool; if short, pull from a source.
 			if (answered(ctx, targetKey)) {
-				return send(state, node, ctx, answer<CardInstanceId>(ctx, targetKey))
+				const target = answer<CardInstanceId>(ctx, targetKey)
+				if (target === SKIP_LOCATION && ctx.declinable !== undefined)
+					return declineMay(state, ctx.declinable)
+				return send(state, node, ctx, target)
 			}
 			// 1. fresh: choose the destination Location.
 			const cands = targets(state, node, ctx)
 			if (cands.length === 0) return state
+			const decline = ctx.declinable
+			if (decline !== undefined)
+				return suspend(state, node, ctx, targetKey, {
+					k: 'CHOOSE_LOCATION',
+					prompt: `${decline.prompt} (Skip declines)`,
+					candidates: [...cands, SKIP_LOCATION],
+					mayDecline: true,
+				})
 			if (cands.length === 1) {
 				// remembered for step 3, should `send` still have to ask for a source
 				ctx.bindings[AUTO_TARGET] = cands[0]!

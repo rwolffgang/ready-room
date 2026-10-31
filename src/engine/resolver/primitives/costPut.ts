@@ -14,6 +14,7 @@ import {
 export const costPut: Primitive<Extract<Effect, { k: 'COST_PUT' }>> = {
 	isCost: true,
 	canResolve: (s, n, ctx) => costCanResolve(s, n, ctx),
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const candidates = thisOnly(
 			putCandidates(state, ctx, node.filter, node.from),
@@ -22,6 +23,7 @@ export const costPut: Primitive<Extract<Effect, { k: 'COST_PUT' }>> = {
 		)
 		const r = pickCards(state, node, ctx, 'costPut', {
 			prompt: 'Put a card',
+			declinable: true,
 			candidates,
 			min: node.count,
 			max: node.count,

@@ -876,10 +876,11 @@ describe('DUPLICATE, COST_PUT and 1ENC07', () => {
 			recording(seen),
 		)
 		// no CHOOSE_OPTION: op #0 (gain {DIL}) was already resolved, so the
-		// OTHER op (advance a chosen specialty) is duplicated at once
+		// OTHER op (advance a chosen specialty) is duplicated at once; the "you
+		// may put a PERSON" is asked as the put's own pick
 		expect(seen.map((c) => c.k)).toEqual([
 			'OPTIONAL_TRIGGERS',
-			'CONFIRM',
+			'CHOOSE_CARDS',
 			'CHOOSE_SPECIALTY',
 		])
 		expect(s.players[0].resources.DIL).toBe(0)

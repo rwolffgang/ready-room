@@ -12,6 +12,7 @@ export const refresh: Primitive<Extract<Effect, { k: 'REFRESH' }>> = {
 			(iid) => state.cards[iid]!.exhausted,
 		)
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const count =
 			node.count !== undefined
@@ -22,6 +23,7 @@ export const refresh: Primitive<Extract<Effect, { k: 'REFRESH' }>> = {
 		)
 		const r = pickCards(state, node, ctx, 'refresh', {
 			prompt: 'Refresh cards',
+			declinable: true,
 			candidates,
 			min: 1,
 			max: Math.min(count, candidates.length),

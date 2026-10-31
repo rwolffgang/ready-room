@@ -12,10 +12,12 @@ export const drawFromDiscard: Primitive<
 	canResolve(state, node, ctx) {
 		return candidates(state, node, ctx).length > 0
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const cand = candidates(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'drawFromDiscard', {
 			prompt: 'Draw from Discard',
+			declinable: true,
 			candidates: cand,
 			min: 1,
 			max: Math.max(1, Math.min(node.count, cand.length)),

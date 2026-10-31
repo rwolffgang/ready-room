@@ -39,6 +39,7 @@ export const freePlay: Primitive<Extract<Effect, { k: 'FREE_PLAY' }>> = {
 	canResolve(state, node, ctx) {
 		return candidates(state, node, ctx).length > 0
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const opKey = 'freePlay.op'
 		const cardKey = '$freePlay.card'
@@ -51,6 +52,7 @@ export const freePlay: Primitive<Extract<Effect, { k: 'FREE_PLAY' }>> = {
 		const cands = candidates(state, node, ctx)
 		const r = pickSingle(state, node, ctx, 'freePlay', {
 			prompt: 'Play which card for free?',
+			declinable: true,
 			candidates: cands,
 			from: `HAND:${ctx.actor}`,
 		})

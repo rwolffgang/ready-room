@@ -129,10 +129,10 @@ describe('1PIC07 — free play THE found card', () => {
 		s = place(s, 'sb-person', ID('found'), { k: 'DRAW', seat: 0 }, 0)
 		s = place(s, 'sb-other', ID('other'), { k: 'HAND', seat: 0 }, 0)
 		s = pushAndRun(s, node, SRC, 0)
-		// FIND auto-picks the single candidate; MAY asks
-		s = answer(s, true)
-		// the only legal discard is the OTHER card (the found one is excluded) —
-		// auto-paid; the free play plays the found card, not the other PERSON.
+		// FIND auto-picks the single candidate; the MAY is asked as the discard:
+		// the only legal one is the OTHER card (the found one is excluded); the
+		// free play plays the found card, not the other PERSON.
+		s = answer(s, [ID('other')])
 		expect(s.cards[ID('other')]!.zone).toEqual({ k: 'DISCARD', seat: 0 })
 		expect(s.cards[ID('found')]!.zone).toEqual({ k: 'STAGING', seat: 0 })
 		expect(s.players[0]!.resources.DIL).toBe(2)
