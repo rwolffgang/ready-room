@@ -641,7 +641,14 @@ function PileTile({
 // Hand
 // ---------------------------------------------------------------------------
 
-export function Hand({ seat }: { seat: Seat }) {
+/** `size`: hand-sized in the dock, on `--card-w` in the hand close-up. */
+export function Hand({
+	seat,
+	size = 'hand',
+}: {
+	seat: Seat
+	size?: 'hand' | 'board'
+}) {
 	const state = useStateGame()
 	// Legality must be evaluated on the real engine state — the projected view
 	// hides facedown decks (HIDDEN_DEF), which starves the canPlay probe of the
@@ -673,7 +680,7 @@ export function Hand({ seat }: { seat: Seat }) {
 							<CardSprite
 								key={iid}
 								iid={iid}
-								size="hand"
+								size={size}
 								detailOnHover={false}
 							/>
 						)
@@ -695,7 +702,7 @@ export function Hand({ seat }: { seat: Seat }) {
 						<CardSprite
 							key={iid}
 							iid={iid}
-							size="hand"
+							size={size}
 							dimmed={dimmed}
 							reason={reason}
 							onClick={() => useGameStore.getState().cardClicked(iid)}

@@ -8,19 +8,19 @@
 import { create } from 'zustand'
 
 /** The parts of the table that come close up: the Neutral Zone (N), the
- *  Market (M) and your own area (B). */
-export type Closeup = 'neutral-zone' | 'market' | 'area'
+ *  Market (M), your own area (B) and your hand (H). */
+export type Closeup = 'neutral-zone' | 'market' | 'area' | 'hand'
 
 export interface ConsoleUi {
-	/** H or the dock's end cap: the hand stays raised until toggled again
-	 *  (or Esc, where it lifts over the board). Kept per device. */
+	/** The dock's end cap: the hand stays raised until toggled again (or
+	 *  Esc, where it lifts over the board). Kept per device. */
 	handPinned: boolean
 	logOpen: boolean
 	/** log entries the player had seen when they last closed the drawer */
 	logSeen: number
 	/** V: the opponent's full board on screen */
 	viewscreen: boolean
-	/** N / M / B: one part of the table close up, or none */
+	/** N / M / B / H: one part of the table close up, or none */
 	closeup: Closeup | null
 	menuOpen: boolean
 	setHandPinned: (b: boolean) => void

@@ -109,7 +109,7 @@ The split is itself informational: **condensed caps = system chrome, normal-widt
 │ YOUR AREA  Captain · Fleet · Duty Officer · Location Area  Close up (B)│ CREW CONSOLE  tracks · piles ·       │
 │            Staging Area                                                 │               missions               │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [Draw][Discard] [Hand]  the hand, peeking up from the bottom edge                                  [Hold · H] │
+│ [Draw][Discard] [Hand · H]  the hand, peeking up from the bottom edge                                  [Hold] │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -145,7 +145,7 @@ What the layout follows:
 - **The hand docks.** It rests along the bottom edge with only the top strip of each card showing —
   the name band, enough to see what you hold, with unplayable cards dimmed as always — and lifts
   to full size over your area when you point at it, focus it or tap it (the first tap on a lowered
-  hand only lifts it). The end cap that closes the dock on the right — or **H** — pins it up and
+  hand only lifts it). The end cap that closes the dock on the right (**Hold**) pins it up and
   lets it drop; the pin is kept per device. On a screen tall enough (`HAND_ROOM_QUERY`, 960px) a
   pinned hand docks at full size in a row of its own and the board's cards shrink to fit above it
   (123px instead of 132 at 1080p), so it covers nothing and Esc leaves it; on a shorter screen it
@@ -155,7 +155,7 @@ What the layout follows:
 - **Four layers open only on request.** The hand (above), the opponent **on screen** (**V**, or a
   click on the band: their full area and crew console at your card size, framed like the main
   viewscreen), a **close-up** of one part of the table (**N** the Neutral Zone, **M** the Market,
-  **B** your area) and the **log drawer** (**L** or the Log button; it never opens by itself, and
+  **B** your area, **H** your hand) and the **log drawer** (**L** or the Log button; it never opens by itself, and
   the button counts what the other side did since you last looked). **Esc** closes the topmost
   one.
 - **The close-ups** draw the same components as the table, only with `--card-w` set as high as
@@ -163,8 +163,8 @@ What the layout follows:
   colour; one shows at a time, and opening one puts the viewscreen away (`Closeup.tsx`). A click
   on a card does what it does on the table, so a choice that asks for one can be answered from
   the close-up. Their doors: the Close up button over the three Locations (N), the Market's own
-  label (M, since its suits fill the row a button would take) and the Close up button at the end
-  of your area's first line (B).
+  label (M, since its suits fill the row a button would take), the Close up button at the end
+  of your area's first line (B) and the hand dock's own name (H).
   - **Neutral Zone** (periwinkle; about 280px wide on a 1180×760 iPad, 330px on a laptop,
     against 85–104px on the table): the three `<LocationCard>`s with their Away Teams, ships and
     beamed cards. Under each a readout works out the secure rule for both sides (rules/03
@@ -177,10 +177,15 @@ What the layout follows:
     §5.4.4, §5.6) and that suit's cards in the Junk.
   - **Your area** (ice; about 160px on the iPad, 190px on a laptop): your `<PlayerArea>`, sized
     so its two lines fit; a late game that runs out of width wraps and the frame scrolls.
+  - **Your hand** (orange; five cards about 260px wide on a laptop, against 156px in the dock):
+    every card in your hand at once, in as many rows as draw them largest, and the rows even —
+    seven cards are four and three, not six and one (`HandCloseup.tsx` measures the backdrop for
+    that; `handLayout`). A click on a card does what it does in the dock. While it is open the
+    dock stays down, unless it is docked in a row of its own.
 - **Cards fit the screen.** One number, `--card-w`, sizes every card on the table from the
   board's height: the shared row is one card high and your area two, and a card's face keeps the
   printed proportions (1170×1635, 1:1.397 — any other box crops the art's edges), so 4.19 card
-  widths plus the measured fixed parts (353px) must fit. It runs from 84px (below that the table
+  widths plus the dock and the measured fixed parts (281px) must fit. It runs from 84px (below that the table
   scrolls) to 132px — about 104px on a 1470×840 laptop and 85px on a 1180×760 iPad, where the old
   layout had 94px cards and still scrolled. The hand keeps its 156px.
 - **Zoom is held, not hovered.** Hovering a card does nothing on its own; hold **Option** and the
@@ -198,7 +203,7 @@ What the layout follows:
 | Key        | Does                                 |
 | ---------- | ------------------------------------ |
 | O          | Orders: every legal move in one list |
-| H          | pin the hand up / let it drop        |
+| H          | your hand close up                   |
 | V          | the opponent on screen               |
 | N          | the Neutral Zone close up            |
 | M          | the Market close up                  |

@@ -675,8 +675,9 @@ kbd {
 	height: 42px;
 	font-size: 14px;
 }
-/* The dock's name opens the bar on the left; the end cap closes it on the
- * right and is the pin (H), lit while the hand is held up. */
+/* The dock's name opens the bar on the left and is the door to the hand
+ * close-up (H); the end cap closes it on the right and is the pin, lit while
+ * the hand is held up. */
 .dock-handle,
 .dock-cap {
 	flex: none;
@@ -694,14 +695,20 @@ kbd {
 	letter-spacing: 0.06em;
 }
 .dock-handle {
+	gap: 5px;
 	width: 58px;
 	border-radius: var(--radius-pill) 0 0 var(--radius-pill);
 }
 .dock-cap {
 	width: 64px;
 	border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+}
+.dock-handle,
+.dock-cap {
 	cursor: pointer;
 }
+.dock-handle:hover,
+.dock-handle[aria-expanded='true'],
 .dock-cap:hover {
 	filter: brightness(1.12);
 }
@@ -810,7 +817,7 @@ kbd {
 	align-items: start;
 }
 
-/* The close-ups (N, M, B), each framed in its system's colour, with the cards
+/* The close-ups (N, M, B, H), each framed in its system's colour, with the cards
  * as large as the board leaves room for. Everything on a card steps on
  * --card-w, so this one number scales the faces, and the markers and
  * standees stay where they stand on the table.
@@ -842,6 +849,39 @@ kbd {
 .closeup-area {
 	--screen: var(--ice);
 	--card-w: clamp(110px, (100cqh - var(--dock-h) - 190px) / 2.8, 240px);
+}
+/* Your hand: every card at once, as large as the backdrop leaves room for, in
+ * even rows — HandCloseup measures it and sets --card-w and --cols (the
+ * values here stand in until it has). Each row is at most --cols cards wide,
+ * the last one centred under the others. */
+.closeup-hand {
+	--screen: var(--orange);
+}
+.closeup-hand-fan {
+	--fan-gap: 16px;
+	--card-w: 200px;
+	--cols: 5;
+	padding: 4px 18px 6px;
+}
+.closeup-hand-fan .hand {
+	padding: 0;
+	border: 0;
+	background: none;
+	box-shadow: none;
+}
+.closeup-hand-fan .hand-head {
+	display: none;
+}
+.closeup-hand-fan .hand-row {
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--fan-gap);
+	max-width: calc(
+		var(--cols) * (var(--card-w) + var(--fan-gap)) - var(--fan-gap)
+	);
+	margin: 0 auto;
+	overflow: visible;
+	padding: 0;
 }
 .closeup-row {
 	display: grid;

@@ -8,10 +8,10 @@
 //   you         your in-play area · your crew console
 //   hand dock   your Draw and Discard, your hand peeking up from the edge
 //
-// with layers that open only on request: the hand lifted (hover, tap, H — on a
-// tall screen a pinned hand docks in a row of its own instead), the
-// opponent on the viewscreen (V), a close-up of the Neutral Zone (N), the
-// Market (M) or your area (B), and the log drawer (L). Cards size themselves
+// with layers that open only on request: the hand lifted (hover, tap, the
+// dock's end cap — on a tall screen a pinned hand docks in a row of its own
+// instead), the opponent on the viewscreen (V), a close-up of the Neutral Zone
+// (N), the Market (M), your area (B) or your hand (H), and the log drawer (L). Cards size themselves
 // to the height the board has (--card-w in console.css), so on a laptop or an
 // iPad everything a turn needs is on one screen.
 
