@@ -44,7 +44,7 @@ A husky pre-commit hook runs lint-staged (Prettier on staged files). Prettier st
 semicolons, single quotes.
 
 Desktop builds for macOS and Windows come from `.github/workflows/desktop.yml` (Tauri, unsigned;
-a `v*` tag creates a draft release); see `docs/desktop.md`.
+publishing a GitHub Release builds the installers and attaches them to it); see `docs/desktop.md`.
 
 Deployment is a single Fly.io machine (`fly deploy --ha=false --remote-only`, see `docs/deploy.md`);
 it must never be scaled past one machine because game state and deadline timers live on its volume.
