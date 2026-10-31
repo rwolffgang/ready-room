@@ -15,7 +15,8 @@
 //         their unseen cards. For `seat` itself only its own Draw deck is
 //         hidden, so this just reshuffles its deck order;
 //       - `RESERVE:<owner>`: a Reserve deck only holds the setup Reserve cards,
-//         so it is a pool of its own;
+//         so it is a pool of its own (so is the solo Bot's `SUPPLEMENT`, while
+//         its face-down `BOT_ROW` joins its `P:` pool);
 //       - every shared face-down deck (`MARKET_DECK:<suit>`, ENCOUNTER_DECK,
 //         INCIDENT_DECK, LOCATION_DECK) is its own pool, so its order is
 //         reshuffled.
@@ -49,6 +50,9 @@ export function poolKey(card: CardInstance): string {
 		case 'HAND':
 		case 'DRAW':
 		case 'LOG':
+		// the official solo Bot's face-down Staging row: unknown cards that
+		// came off its deck (rules/13 §13.4)
+		case 'BOT_ROW':
 			return `P:${card.owner ?? 'none'}`
 		default:
 			return zoneKey(card.zone)

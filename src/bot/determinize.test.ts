@@ -173,4 +173,60 @@ describe('determinize', () => {
 		}
 		expect(seedFromView(u, 0)).not.toBe(seedFromView(s, 0))
 	})
+
+	it('does not leak the official solo Bot’s hidden cards (no-cheat, solo)', () => {
+		// your Action step a few turns into a solo game against the Bot
+		const start = setup(
+			{
+				mode: 'SOLO',
+				players: [
+					{ deck: 'SIS', boardSide: 'ADVANCED' },
+					{ deck: 'KOL', boardSide: 'BASIC' },
+				],
+				seed: 9,
+				solo: { level: 'CAPTAIN' },
+			},
+			catalog,
+		)
+		let s: GameState | undefined
+		let seen = 0
+		autoPlay(start, undefined, 2000, (x) => {
+			if (
+				s === undefined &&
+				x.result === null &&
+				x.pendingChoice === null &&
+				x.phase.k === 'ACTION' &&
+				x.activeSeat === 0 &&
+				++seen === 4
+			)
+				s = x
+		})
+		if (s === undefined) throw new Error('no solo mid-game state')
+		// the Bot's deck + Captain's Log and its Supplement, each reversed
+		const flip = (st: GameState, keys: string[]): GameState => {
+			const zones = { ...st.zones }
+			const cards = { ...st.cards }
+			const all = keys.flatMap((k) => st.zones[k] ?? []).reverse()
+			let i = 0
+			for (const key of keys) {
+				const size = (st.zones[key] ?? []).length
+				const ref = st.cards[(st.zones[key] ?? [])[0]!]?.zone
+				if (size === 0) continue // (an absent zone stays absent)
+				const ids = all.slice(i, i + size)
+				i += size
+				zones[key] = ids
+				for (const iid of ids) cards[iid] = { ...st.cards[iid]!, zone: { ...ref! } }
+			}
+			return { ...st, zones, cards }
+		}
+		const t = flip(flip(s, ['DRAW:1', 'LOG:1']), ['SUPPLEMENT:1'])
+		expect(JSON.stringify(t.zones)).not.toBe(JSON.stringify(s.zones))
+		const rng = { seed: 7, counter: 0 }
+		expect(determinize(t, 0, rng)).toEqual(determinize(s, 0, rng))
+		expect(seedFromView(t, 0)).toBe(seedFromView(s, 0))
+		const bot = makeHeuristicBot()
+		expect(bot.decide(t, 0, legalIntents(t))).toEqual(
+			bot.decide(s, 0, legalIntents(s)),
+		)
+	})
 })
