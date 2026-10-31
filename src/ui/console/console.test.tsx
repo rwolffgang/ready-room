@@ -9,9 +9,10 @@ import { act } from 'react'
 import type { SetupConfig } from '../../engine/setup'
 import { zoneKey } from '../../engine/state'
 import App from '../App'
-import { useGameStore } from '../store'
+import { DETAIL_CLICK_WINDOW_MS, useGameStore } from '../store'
 import { useConsoleUi } from './consoleUi'
 import { HAND_ROOM_QUERY } from './HandDock'
+import { handLayout } from './HandCloseup'
 import { HOLD_MS } from './longPress'
 
 function config(): SetupConfig {
@@ -61,6 +62,11 @@ beforeEach(() => {
 	useConsoleUi.getState().setHandPinned(false)
 	vi.unstubAllGlobals()
 })
+
+/** The dock's end cap: pin the hand up or let it drop. */
+function pin(host: HTMLElement) {
+	act(() => host.querySelector<HTMLButtonElement>('.dock-cap')!.click())
+}
 
 /** A viewport as tall as HAND_ROOM_QUERY asks (jsdom has no matchMedia). */
 function stubTallScreen() {
@@ -372,21 +378,48 @@ describe('console across the table', () => {
 		expect(host.querySelector('.log-drawer')).not.toBeNull()
 	})
 
-	it('H pins the hand dock up and lets it drop again', () => {
+	it('H brings your hand close up, every card on the close-up size', async () => {
 		const host = renderGame()
-		const dock = () => host.querySelector('.hand-dock')!
-		expect(dock().classList.contains('dock-raised')).toBe(false)
-		key('h')
-		expect(dock().classList.contains('dock-raised')).toBe(true)
-		expect(dock().classList.contains('dock-pinned')).toBe(true)
-		key('h')
-		expect(dock().classList.contains('dock-raised')).toBe(false)
-		// the hand is in it, at full size
 		const hand =
 			useGameStore.getState().state!.zones[zoneKey({ k: 'HAND', seat: 0 })]!
+		const dock = () => host.querySelector('.hand-dock')!
+		// the dock holds the hand at hand size
 		expect(dock().querySelectorAll('.dock-fan .card-hand')).toHaveLength(
 			hand.length,
 		)
+		key('h')
+		const closeup = host.querySelector('.closeup-hand')!
+		expect(closeup).not.toBeNull()
+		expect(closeup.querySelectorAll('.card-board')).toHaveLength(hand.length)
+		// H opens a view, it doesn't pin the dock
+		expect(dock().classList.contains('dock-pinned')).toBe(false)
+		key('h')
+		expect(host.querySelector('.closeup')).toBeNull()
+		// the dock's name is the door to it
+		const door = dock().querySelector<HTMLButtonElement>('.dock-handle')!
+		act(() => door.click())
+		expect(host.querySelector('.closeup-hand')).not.toBeNull()
+		expect(door.getAttribute('aria-expanded')).toBe('true')
+		// and a card in it opens its detail, as in the dock
+		act(() => {
+			host.querySelector<HTMLElement>('.closeup-hand .card-inner')!.click()
+		})
+		await act(async () => {
+			await new Promise((r) => setTimeout(r, DETAIL_CLICK_WINDOW_MS + 50))
+		})
+		expect(useGameStore.getState().detailIid).toBe(hand[0])
+	})
+
+	it('the hand close-up draws the cards largest, in even rows', () => {
+		// a laptop's backdrop: five cards fit in one row
+		expect(handLayout(5, 1376, 640)).toEqual({ cardW: 262, cols: 5 })
+		// seven go four and three, not six and one
+		expect(handLayout(7, 1376, 640).cols).toBe(4)
+		expect(handLayout(10, 1376, 640).cols).toBe(5)
+		// a short hand stops at the close-up's largest card
+		expect(handLayout(2, 1376, 640).cardW).toBe(360)
+		// an empty one still lays out
+		expect(handLayout(0, 1376, 640).cols).toBe(1)
 	})
 
 	it('the end cap pins the hand, and the pin is kept on this device', () => {
@@ -414,8 +447,13 @@ describe('console across the table', () => {
 
 	it('on a short screen a pinned hand lifts over the board and Esc drops it', () => {
 		const host = renderGame()
-		key('h')
+		pin(host)
 		expect(host.querySelector('.frame.hand-docked')).toBeNull()
+		expect(host.querySelector('.hand-dock.dock-raised')).not.toBeNull()
+		// under the hand close-up it stays down, and lifts again after
+		key('h')
+		expect(host.querySelector('.hand-dock.dock-raised')).toBeNull()
+		key('h')
 		expect(host.querySelector('.hand-dock.dock-raised')).not.toBeNull()
 		key('Escape')
 		expect(host.querySelector('.hand-dock.dock-raised')).toBeNull()
@@ -425,12 +463,12 @@ describe('console across the table', () => {
 		stubTallScreen()
 		const host = renderGame()
 		expect(host.querySelector('.frame.hand-docked')).toBeNull()
-		key('h')
+		pin(host)
 		expect(host.querySelector('.frame.hand-docked')).not.toBeNull()
 		key('Escape')
 		expect(host.querySelector('.frame.hand-docked')).not.toBeNull()
 		expect(host.querySelector('.hand-dock.dock-pinned')).not.toBeNull()
-		key('h')
+		pin(host)
 		expect(host.querySelector('.frame.hand-docked')).toBeNull()
 	})
 

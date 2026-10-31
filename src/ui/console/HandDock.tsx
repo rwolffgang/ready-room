@@ -5,8 +5,9 @@
 //
 // It lifts to full size over the board when you point at it, when focus moves
 // into it, or on a tap (the first tap on a lowered dock only lifts it). The
-// end cap that closes the dock on the right, or H, pins it up and lets it drop
-// again; the pin is kept per device. On a screen tall enough (HAND_ROOM_QUERY)
+// end cap that closes the dock on the right pins it up and lets it drop
+// again; the pin is kept per device. The dock's name on the left is the door
+// to the hand close-up (H, Closeup.tsx), every card at once and large. On a screen tall enough (HAND_ROOM_QUERY)
 // a pinned hand docks at full height in a row of its own and the board shrinks
 // to fit above it, so it covers nothing; on a shorter one it lifts over the
 // board and Esc lets it drop. Raising moves the cards straight up and never
@@ -32,8 +33,9 @@ import { zoneKey } from '../../engine/state'
 import type { Seat } from '../../engine/resolver/queries'
 import { DeckPiles, Hand } from '../board'
 import { useProjected } from '../store'
+import { CloseupLabel } from './Closeup'
 import { useConsoleUi } from './consoleUi'
-import { useEscape, useShortcut } from './useShortcut'
+import { useEscape } from './useShortcut'
 
 /** Pointer dwell before the dock lifts, and grace before it drops — so a
  *  pointer crossing the bottom edge on its way somewhere does not flap it. */
@@ -85,7 +87,11 @@ export function HandDock({ seat }: { seat: Seat }) {
 	const [hovered, setHovered] = useState(false)
 	const [focused, setFocused] = useState(false)
 	const [tapped, setTapped] = useState(false)
-	const raised = pinned || hovered || focused || tapped
+	// the hand close-up shows these cards already: the dock stays down under
+	// it, unless it has a row of its own
+	const inCloseup = useConsoleUi((s) => s.closeup === 'hand')
+	const raised =
+		docked || (!inCloseup && (pinned || hovered || focused || tapped))
 	const timer = useRef<number | null>(null)
 	const dock = useRef<HTMLDivElement>(null)
 
@@ -111,7 +117,6 @@ export function HandDock({ seat }: { seat: Seat }) {
 		}
 		setPinned(!pinned)
 	}
-	useShortcut('h', toggle)
 	const drop = useCallback(() => {
 		setPinned(false)
 		setTapped(false)
@@ -153,7 +158,7 @@ export function HandDock({ seat }: { seat: Seat }) {
 		lastPointer.current = e.pointerType
 	}
 	const onClickCapture = (e: ReactMouseEvent) => {
-		if (raised || lastPointer.current !== 'touch') return
+		if (raised || inCloseup || lastPointer.current !== 'touch') return
 		if (
 			!(e.target instanceof Element) ||
 			e.target.closest('.dock-fan') === null
@@ -182,7 +187,9 @@ export function HandDock({ seat }: { seat: Seat }) {
 			}}
 		>
 			<DeckPiles seat={seat} />
-			<span className="dock-handle">Hand</span>
+			<CloseupLabel kind="hand" className="dock-handle">
+				Hand
+			</CloseupLabel>
 			<div className="dock-fan">
 				<Hand seat={seat} />
 			</div>
@@ -192,11 +199,9 @@ export function HandDock({ seat }: { seat: Seat }) {
 				onClick={toggle}
 				aria-pressed={pinned}
 				aria-label="Keep your hand up"
-				title={pinned ? 'Let your hand drop (H)' : 'Keep your hand up (H)'}
+				title={pinned ? 'Let your hand drop' : 'Keep your hand up'}
 			>
-				<span>
-					Hold <kbd>H</kbd>
-				</span>
+				Hold
 			</button>
 		</div>
 	)

@@ -1,5 +1,6 @@
 // The close-ups: one part of the table at a size you can read — the Neutral
-// Zone (N), the Market (M) or your own area (B). Framed like the viewscreen
+// Zone (N), the Market (M), your own area (B) or your hand (H, every card as
+// large as the board leaves room for). Framed like the viewscreen
 // (V) and sharing its place: one at a time, and opening one puts the other
 // away. Its key again, Esc or a click outside the frame closes it; a click on
 // a card inside does what it does on the table.
@@ -8,6 +9,7 @@ import { useCallback, type ReactNode } from 'react'
 import { PlayerArea } from '../board'
 import { useViewerSeat } from '../store'
 import { type Closeup, useConsoleUi } from './consoleUi'
+import { HandCloseup } from './HandCloseup'
 import { MarketCloseup } from './MarketCloseup'
 import { NeutralCloseup } from './NeutralCloseup'
 import { useEscape, useShortcut } from './useShortcut'
@@ -16,12 +18,14 @@ const KEY: Record<Closeup, string> = {
 	'neutral-zone': 'N',
 	market: 'M',
 	area: 'B',
+	hand: 'H',
 }
 
 const NAME: Record<Closeup, string> = {
 	'neutral-zone': 'Neutral Zone',
 	market: 'Market',
 	area: 'Your area',
+	hand: 'Your hand',
 }
 
 function toggle(kind: Closeup) {
@@ -46,19 +50,21 @@ export function CloseupButton({ kind }: { kind: Closeup }) {
 }
 
 /** The panel's own label as the door, where its top row has no room for a
- *  button (the Market's suits fill it). */
+ *  button (the Market's suits fill it, the hand dock is all cards). */
 export function CloseupLabel({
 	kind,
 	children,
+	className = 'panel-door',
 }: {
 	kind: Closeup
 	children: ReactNode
+	className?: string
 }) {
 	const open = useConsoleUi((s) => s.closeup === kind)
 	return (
 		<button
 			type="button"
-			className="panel-door"
+			className={className}
 			onClick={() => toggle(kind)}
 			aria-expanded={open}
 			title={`${NAME[kind]} close up (${KEY[kind]})`}
@@ -76,6 +82,7 @@ export function Closeups() {
 	useShortcut('n', () => toggle('neutral-zone'))
 	useShortcut('m', () => toggle('market'))
 	useShortcut('b', () => toggle('area'))
+	useShortcut('h', () => toggle('hand'))
 	useEscape(kind !== null, close)
 	if (kind === null) return null
 	return (
@@ -97,8 +104,10 @@ export function Closeups() {
 					<NeutralCloseup />
 				) : kind === 'market' ? (
 					<MarketCloseup />
-				) : (
+				) : kind === 'area' ? (
 					<OwnArea />
+				) : (
+					<HandCloseup />
 				)}
 			</section>
 		</div>
