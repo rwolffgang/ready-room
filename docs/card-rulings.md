@@ -993,7 +993,7 @@ BEAM, GAIN LAT 1])` (no COST_BEAM).
   card returned to a shared supply (051). This applies in every mode. It surfaced with the solo
   Conspiring Admirals card, which destroys itself before scoring when the Bot owns it.
 - **Keyed on:** `excludedFromScoring` in `src/engine/scoring.ts`;
-  `src/engine/solo/conspiracy.test.ts`.
+  `src/engine/solo/admirals-challenge.test.ts`.
 
 ## 063 — Your hand attacks on the Bot: what "you choose the outcome" means in the engine
 
