@@ -490,22 +490,26 @@ function SpecialtySheet({ choice }: { choice: Of<'CHOOSE_SPECIALTY'> }) {
 	return (
 		<ChoiceFrame choice={choice} sub="Pick a specialty.">
 			<div className="pb-grid3">
-				{choice.specialties.map((s: SpecialtyId) => (
-					<button
-						key={s}
-						type="button"
-						className={`pb-option pb-big pb-spec-${s}`}
-						onClick={() => confirmChoice(s)}
-					>
-						<Gl g={s} />
-						{s}
-						{projected !== null && (
-							<small>
-								now {projected.players[choice.seat]?.specialties[s] ?? 0}
-							</small>
-						)}
-					</button>
-				))}
+				{choice.specialties.map((s: SpecialtyId) => {
+					const gain = choice.gains?.[s]
+					const now = projected?.players[choice.seat]?.specialties[s]
+					return (
+						<button
+							key={s}
+							type="button"
+							className={`pb-option pb-big pb-spec-${s}`}
+							onClick={() => confirmChoice(s)}
+						>
+							<Gl g={s} />
+							{s}
+							{gain !== undefined ? (
+								<b className="pb-gain">+{gain}</b>
+							) : (
+								now !== undefined && <small>now {now}</small>
+							)}
+						</button>
+					)
+				})}
 			</div>
 		</ChoiceFrame>
 	)

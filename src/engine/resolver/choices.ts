@@ -129,7 +129,12 @@ export type PendingChoice =
 	| (ChoiceBase & { k: 'CHOOSE_LOCATION'; candidates: CardInstanceId[] })
 	| (ChoiceBase & { k: 'CHOOSE_SUIT'; suits: MarketSuit[] })
 	| (ChoiceBase & { k: 'CHOOSE_TRAIT'; traits: TraitId[] })
-	| (ChoiceBase & { k: 'CHOOSE_SPECIALTY'; specialties: SpecialtyId[] })
+	| (ChoiceBase & {
+			k: 'CHOOSE_SPECIALTY'
+			specialties: SpecialtyId[]
+			/** how far each offered track would advance (after the clamp at 15) */
+			gains?: Partial<Record<SpecialtyId, number>> | undefined
+	  })
 	| (ChoiceBase & {
 			k: 'CHOOSE_DESTINATION'
 			card: CardInstanceId

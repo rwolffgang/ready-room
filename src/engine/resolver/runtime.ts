@@ -444,7 +444,10 @@ export function handCandidates(
 }
 
 /** Is this card exempt from discards and beams (`discardProtected`)? */
-export function discardProtected(state: GameState, iid: CardInstanceId): boolean {
+export function discardProtected(
+	state: GameState,
+	iid: CardInstanceId,
+): boolean {
 	const card = state.cards[iid]
 	return card !== undefined && cardDef(card.def).discardProtected === true
 }
@@ -758,9 +761,15 @@ export function setOwner(
 	)
 		return next
 	const def = cardDef(card.def)
-	if (def.deck !== 'COMMON' || !MARKET_SUITS_FOUR.includes(def.suit as MarketSuit))
+	if (
+		def.deck !== 'COMMON' ||
+		!MARKET_SUITS_FOUR.includes(def.suit as MarketSuit)
+	)
 		return next
-	return { ...next, solo: { ...solo, marketOwned: [...solo.marketOwned, card.def] } }
+	return {
+		...next,
+		solo: { ...solo, marketOwned: [...solo.marketOwned, card.def] },
+	}
 }
 
 /** Gain a faceup Market card: ownership, resource tokens on it (Glory from the
@@ -1128,6 +1137,11 @@ export function gainAction(
 	return emit(next, { k: 'ACTION_GAINED', seat, amount })
 }
 
+/** A track's value after advancing it by `amount`, clamped at 15. */
+export function advancedSpecialty(cur: number, amount: number): number {
+	return Math.max(0, Math.min(15, cur + Math.max(0, Math.floor(amount))))
+}
+
 /** Advance a specialty track, clamped at 15 (rules/07 §7.1). */
 export function advanceSpecialty(
 	state: GameState,
@@ -1137,10 +1151,7 @@ export function advanceSpecialty(
 ): GameState {
 	const p = player(state, seat)
 	const cur = p.specialties[specialty]
-	const nextVal = Math.max(
-		0,
-		Math.min(15, cur + Math.max(0, Math.floor(amount))),
-	)
+	const nextVal = advancedSpecialty(cur, amount)
 	const players = state.players.map((pl) =>
 		pl.seat === seat
 			? { ...pl, specialties: { ...pl.specialties, [specialty]: nextVal } }

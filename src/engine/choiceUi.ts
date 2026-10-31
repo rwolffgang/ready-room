@@ -52,6 +52,7 @@ export interface ChoiceTraitUi extends ChoiceUiBase<'CHOOSE_TRAIT'> {
 }
 export interface ChoiceSpecialtyUi extends ChoiceUiBase<'CHOOSE_SPECIALTY'> {
 	specialties: SpecialtyId[]
+	gains?: Partial<Record<SpecialtyId, number>> // per track, after the clamp at 15
 }
 export interface ChoiceDestinationUi extends ChoiceUiBase<'CHOOSE_DESTINATION'> {
 	card: CardInstanceId

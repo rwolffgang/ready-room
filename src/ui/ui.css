@@ -1687,6 +1687,15 @@ h3,
 	filter: brightness(1.12);
 	box-shadow: inset 0 0 0 2px #fff8;
 }
+.specialty-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+}
+/* what this pick would add (CHOOSE_SPECIALTY gains) */
+.specialty-gain {
+	font-size: 18px;
+}
 /* room for the Away Team markers that stand half over the card's edges */
 .location-tile {
 	align-items: center;

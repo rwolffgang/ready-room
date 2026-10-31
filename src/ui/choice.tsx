@@ -790,16 +790,22 @@ function ChooseSpecialtyChoice({
 		<section className="panel choice-panel">
 			<ChoiceHeader choice={choice} />
 			<div className="choice-options">
-				{choice.specialties.map((s: SpecialtyId) => (
-					<button
-						key={s}
-						type="button"
-						className={`btn specialty-btn specialty-${s.toLowerCase()}`}
-						onClick={() => confirmChoice(s)}
-					>
-						{s}
-					</button>
-				))}
+				{choice.specialties.map((s: SpecialtyId) => {
+					const gain = choice.gains?.[s]
+					return (
+						<button
+							key={s}
+							type="button"
+							className={`btn specialty-btn specialty-${s.toLowerCase()}`}
+							onClick={() => confirmChoice(s)}
+						>
+							<span>{s}</span>
+							{gain !== undefined && (
+								<span className="specialty-gain">+{gain}</span>
+							)}
+						</button>
+					)
+				})}
 			</div>
 		</section>
 	)

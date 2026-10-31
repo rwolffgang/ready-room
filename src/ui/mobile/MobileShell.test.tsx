@@ -231,7 +231,12 @@ describe('phone shell', () => {
 			},
 			{ ...base, k: 'CHOOSE_SUIT', suits: ['PERSON', 'ALLY'] },
 			{ ...base, k: 'CHOOSE_TRAIT', traits: ['HUMAN', 'VULCAN'] },
-			{ ...base, k: 'CHOOSE_SPECIALTY', specialties: ['RESEARCH', 'MILITARY'] },
+			{
+				...base,
+				k: 'CHOOSE_SPECIALTY',
+				specialties: ['RESEARCH', 'MILITARY'],
+				gains: { RESEARCH: 2, MILITARY: 0 },
+			},
 			{
 				...base,
 				k: 'CHOOSE_DESTINATION',

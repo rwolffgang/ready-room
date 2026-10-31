@@ -163,7 +163,7 @@ type PendingChoice =
 	| { k: 'CHOOSE_LOCATION'; id; seat; prompt; candidates: CardInstanceId[] }
 	| { k: 'CHOOSE_SUIT'; id; seat; prompt; suits: MarketSuit[] }
 	| { k: 'CHOOSE_TRAIT'; id; seat; prompt; traits: TraitId[] }
-	| { k: 'CHOOSE_SPECIALTY'; id; seat; prompt }
+	| { k: 'CHOOSE_SPECIALTY'; id; seat; prompt; specialties; gains } // gains: per track, after the clamp
 	| {
 			k: 'CHOOSE_DESTINATION'
 			id
