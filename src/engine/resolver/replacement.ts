@@ -74,7 +74,11 @@ function newPendingId(state: GameState, base: string): string {
 	return id
 }
 
-/** Open the record for an ATTACK operation (stack.ts, OPERATION phase 0). */
+/** Open the record for an ATTACK operation (stack.ts, OPERATION phase 0), a
+ *  solo Bot row's red part (primitives/attack.ts) or an Attack Reward
+ *  (completeMission.ts, whose `card` is a mission key, not a card). The log
+ *  says so before the attack's effects: without the line, what it dismissed
+ *  read as if the victim had done it themselves. */
 export function openAttack(
 	state: GameState,
 	card: CardInstanceId,
@@ -82,15 +86,26 @@ export function openAttack(
 	attacker: 0 | 1,
 ): { state: GameState; id: string } {
 	const id = newPendingId(state, `atk:${card}#${opIndex}`)
+	const victim = attacker === 0 ? 1 : 0
+	const isCard = !card.startsWith('mission:')
+	const opened = setPending(state, id, {
+		k: 'ATTACK',
+		attacker,
+		victim,
+		asked: false,
+		ignored: false,
+		ignoreEffect: false,
+	})
 	return {
 		id,
-		state: setPending(state, id, {
-			k: 'ATTACK',
-			attacker,
-			victim: attacker === 0 ? 1 : 0,
-			asked: false,
-			ignored: false,
-			ignoreEffect: false,
+		state: addLog(opened, {
+			kind: 'EVENT',
+			seat: attacker,
+			message: isCard
+				? `attacks with ${card}`
+				: 'attacks with a mission reward',
+			...(isCard ? { iid: card } : {}),
+			about: victim,
 		}),
 	}
 }

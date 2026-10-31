@@ -32,7 +32,12 @@ const BOT = 1 as const
 
 register([
 	makeDef({ id: 'pPlain', suit: 'PERSON', operations: [] }),
-	makeDef({ id: 'pKlingon', suit: 'PERSON', traits: ['KLINGON'], operations: [] }),
+	makeDef({
+		id: 'pKlingon',
+		suit: 'PERSON',
+		traits: ['KLINGON'],
+		operations: [],
+	}),
 	makeDef({ id: 'sPlain', suit: 'SHIP', operations: [] }),
 	makeDef({ id: 'sVp2', suit: 'SHIP', vp: 2, operations: [] }),
 	makeDef({ id: 'cVp1', suit: 'CARGO', vp: 1, operations: [] }),
@@ -52,7 +57,10 @@ register([
 		vp: 1,
 		operations: [op('ENDGAME', { k: 'SCORE_VP', amount: 1 })],
 	}),
-	{ ...makeDef({ id: 'aFocus', suit: 'ALLY', operations: [] }), focus: 'FOCUS_INFLUENCE' },
+	{
+		...makeDef({ id: 'aFocus', suit: 'ALLY', operations: [] }),
+		focus: 'FOCUS_INFLUENCE',
+	},
 ])
 
 /** Run `node` as the Bot, answering every choice with its first legal pick
@@ -89,12 +97,26 @@ describe('card value (rules/13 §13.3)', () => {
 	it('breaks ties by tokens, then leftmost — the other way round for least', () => {
 		let s = fresh()
 		s = place(s, 'cVp1', ID('cargo'), { k: 'MARKET_OFFER', suit: 'CARGO' })
-		s = place(s, 'sPlain', ID('ship'), { k: 'MARKET_OFFER', suit: 'SHIP' }, null, {
-			resourceTokens: { GLO: 1 }, // value 1, like the CARGO, but a token
-		})
-		s = place(s, 'aPlain', ID('ally'), { k: 'MARKET_OFFER', suit: 'ALLY' }, null, {
-			resourceTokens: { DIL: 1 }, // value 0
-		})
+		s = place(
+			s,
+			'sPlain',
+			ID('ship'),
+			{ k: 'MARKET_OFFER', suit: 'SHIP' },
+			null,
+			{
+				resourceTokens: { GLO: 1 }, // value 1, like the CARGO, but a token
+			},
+		)
+		s = place(
+			s,
+			'aPlain',
+			ID('ally'),
+			{ k: 'MARKET_OFFER', suit: 'ALLY' },
+			null,
+			{
+				resourceTokens: { DIL: 1 }, // value 0
+			},
+		)
 		s = place(s, 'pPlain', ID('person'), { k: 'MARKET_OFFER', suit: 'PERSON' })
 		const all = [ID('ally'), ID('ship'), ID('cargo'), ID('person')]
 		expect(pickByValue(s, all, BOT, 'MOST')).toBe('ship')
@@ -133,11 +155,21 @@ describe('the Bot deck reshuffle (rules/13 §13.5)', () => {
 describe('Market preferences (rules/13 §13.10)', () => {
 	const market = () => {
 		let s = fresh()
-		s = place(s, 'pKlingon', ID('klingon'), { k: 'MARKET_OFFER', suit: 'PERSON' })
-		s = place(s, 'cVp3', ID('cargo'), { k: 'MARKET_OFFER', suit: 'CARGO' })
-		s = place(s, 'sVp2', ID('ship'), { k: 'MARKET_OFFER', suit: 'SHIP' }, null, {
-			resourceTokens: { GLO: 1, DIL: 2 },
+		s = place(s, 'pKlingon', ID('klingon'), {
+			k: 'MARKET_OFFER',
+			suit: 'PERSON',
 		})
+		s = place(s, 'cVp3', ID('cargo'), { k: 'MARKET_OFFER', suit: 'CARGO' })
+		s = place(
+			s,
+			'sVp2',
+			ID('ship'),
+			{ k: 'MARKET_OFFER', suit: 'SHIP' },
+			null,
+			{
+				resourceTokens: { GLO: 1, DIL: 2 },
+			},
+		)
 		s = place(s, 'aPlain', ID('ally'), { k: 'MARKET_OFFER', suit: 'ALLY' })
 		return s
 	}
@@ -149,7 +181,10 @@ describe('Market preferences (rules/13 §13.10)', () => {
 		let s = gain([[{ traits: ['KLINGON'] }], [{ suits: ['SHIP'] }]])
 		expect(zone(s, 'DISCARD:1')).toEqual(['klingon'])
 		// no ROMULAN: the best of SHIP (2 + 1 Glory) and CARGO (3) — the tokens tip it
-		s = gain([[{ traits: ['ROMULAN'] }], [{ suits: ['SHIP'] }, { suits: ['CARGO'] }]])
+		s = gain([
+			[{ traits: ['ROMULAN'] }],
+			[{ suits: ['SHIP'] }, { suits: ['CARGO'] }],
+		])
 		expect(zone(s, 'DISCARD:1')).toEqual(['ship'])
 		expect(s.players[BOT].resources.DIL).toBe(2) // its tokens go to the Bot
 		expect(s.players[BOT].resources.GLO).toBe(1)
@@ -255,7 +290,10 @@ describe('BOT_PROMOTE and lower/higher specialty picks', () => {
 		expect(s.players[BOT].specialties.INFLUENCE).toBe(1)
 		s = bot(s, gain) // 2 / 1 → INFLUENCE again; then the tie goes to RESEARCH
 		s = bot(s, gain)
-		expect(s.players[BOT].specialties).toMatchObject({ RESEARCH: 3, INFLUENCE: 2 })
+		expect(s.players[BOT].specialties).toMatchObject({
+			RESEARCH: 3,
+			INFLUENCE: 2,
+		})
 	})
 })
 
@@ -295,6 +333,21 @@ describe('TRY + ATTACK (rules/13 §13.6.2, §13.12.1)', () => {
 		expect(s.players[BOT].resources.GLO).toBe(0)
 		s = bot(fresh(), row)
 		expect(s.players[BOT].resources.GLO).toBe(1)
+	})
+
+	it('logs the attack on you, and only when it runs', () => {
+		const attacks = (s: GameState) =>
+			s.log.filter((e) => e.message.startsWith('attacks'))
+		expect(attacks(bot(withYourTeam(), row))).toEqual([
+			{
+				kind: 'EVENT',
+				seat: BOT,
+				message: `attacks with ${ID('src')}`,
+				iid: ID('src'),
+				about: 0,
+			},
+		])
+		expect(attacks(bot(fresh(), row))).toEqual([])
 	})
 
 	it('a cancelled attack still counts as done: no otherwise, and the record closes', () => {
