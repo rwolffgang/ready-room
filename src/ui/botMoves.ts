@@ -33,7 +33,7 @@ import type { Intent } from '../engine/intents'
 import { hiddenCards } from '../engine/projection'
 import type { PendingChoice } from '../engine/resolver/choices'
 import type { Seat } from '../engine/resolver/queries'
-import { SKIP_CONTROL } from '../engine/phases'
+import { SKIP_LOCATION } from '../engine/resolver/choices'
 import { countIncidents } from '../engine/endgame'
 import {
 	zoneProps,
@@ -232,7 +232,7 @@ function answerPhrase(
 			return iids.length === 0 ? 'nothing' : list(iids.map((i) => n.name(i)))
 		}
 		case 'CHOOSE_LOCATION':
-			return selection === SKIP_CONTROL ? 'Skip' : n.name(String(selection))
+			return selection === SKIP_LOCATION ? 'Skip' : n.name(String(selection))
 		case 'CHOOSE_DESTINATION':
 			return selection === 'DECK_TOP'
 				? 'the top of the deck'
@@ -345,9 +345,9 @@ function stepPhrase(
 			if (
 				before.phase.k === 'CONTROL' &&
 				choice.k === 'CHOOSE_LOCATION' &&
-				choice.candidates.includes(SKIP_CONTROL)
+				choice.candidates.includes(SKIP_LOCATION)
 			)
-				return intent.selection === SKIP_CONTROL
+				return intent.selection === SKIP_LOCATION
 					? { phrase: 'skipped the Control step', headline: false }
 					: { phrase: `took control of ${answer}`, headline: true }
 			if (choice.k === 'CHOOSE_DESTINATION')
@@ -361,7 +361,11 @@ function stepPhrase(
 			const picksCards =
 				choice.k === 'CHOOSE_CARDS' || choice.k === 'CHOOSE_LOCATION'
 			const verb = picksCards ? NODE_VERB[askingNode(before) ?? ''] : undefined
-			const empty = answer === 'nothing' || answer === 'none' || answer === 'No'
+			const empty =
+				answer === 'nothing' ||
+				answer === 'none' ||
+				answer === 'No' ||
+				answer === 'Skip'
 			if (verb !== undefined && !empty)
 				return { phrase: `${verb} ${answer}`, headline: true }
 			return { phrase: `chose ${answer}`, headline: false }
@@ -603,7 +607,7 @@ export function botStep(
 	}
 	const seen = new Set<string>()
 	const involvedIids = involved.filter((iid) => {
-		if (seen.has(iid) || iid === SKIP_CONTROL) return false
+		if (seen.has(iid) || iid === SKIP_LOCATION) return false
 		seen.add(iid)
 		return after.cards[iid] !== undefined && shownAfter(iid)
 	}) as CardInstanceId[]

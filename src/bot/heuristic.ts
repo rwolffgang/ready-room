@@ -29,10 +29,9 @@ import { forkState } from '../engine/state'
 import type { Intent } from '../engine/intents'
 import { reduce, legalIntents, firstLegalSelection } from '../engine/intents'
 import type { PendingChoice } from '../engine/resolver/choices'
-import { checkSelection } from '../engine/resolver/choices'
+import { checkSelection, SKIP_LOCATION } from '../engine/resolver/choices'
 import type { Seat } from '../engine/resolver/queries'
 import type { CardInstanceId } from '../engine/ids'
-import { SKIP_CONTROL } from '../engine/phases'
 import { cardDef, hasCardDef } from '../engine/cards'
 import { next, type Rng } from '../engine/rng'
 import type { Bot, BotId } from './types'
@@ -119,7 +118,7 @@ export function priorSelection(
 			return [...choice.offered]
 		case 'CHOOSE_LOCATION': {
 			if (state.phase.k === 'CONTROL') {
-				const take = choice.candidates.find((c) => c !== SKIP_CONTROL)
+				const take = choice.candidates.find((c) => c !== SKIP_LOCATION)
 				if (take !== undefined) return take
 			}
 			return choice.candidates[0]
@@ -281,9 +280,9 @@ export function priorBonus(
 	if (
 		choice.k === 'CHOOSE_LOCATION' &&
 		state.phase.k === 'CONTROL' &&
-		choice.candidates.includes(SKIP_CONTROL)
+		choice.candidates.includes(SKIP_LOCATION)
 	)
-		return intent.selection === SKIP_CONTROL ? 0 : PRIORS.takeControl
+		return intent.selection === SKIP_LOCATION ? 0 : PRIORS.takeControl
 	if (choice.k === 'CHOOSE_CARDS' && choice.from.startsWith('MARKET:')) {
 		const hidden = new Set<string>(choice.hidden ?? [])
 		const best = bestTrack(state, seat)

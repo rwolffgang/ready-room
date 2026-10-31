@@ -28,7 +28,7 @@ import {
 	describe as describeEffect,
 } from '../../engine/describe'
 import { shorthand, shorthandCondition, type Tok } from '../../engine/shorthand'
-import { SKIP_CONTROL } from '../../engine/phases'
+import { SKIP_LOCATION } from '../../engine/resolver/choices'
 import { missionTitle } from '../../data/cardNames'
 
 // ---------------------------------------------------------------------------
@@ -342,7 +342,7 @@ export function choiceCards(choice: PendingChoice): CardInstanceId[] {
 				...(choice.disabled ?? []).map((d) => d.iid),
 			]
 		case 'CHOOSE_LOCATION':
-			return choice.candidates.filter((c) => c !== SKIP_CONTROL)
+			return choice.candidates.filter((c) => c !== SKIP_LOCATION)
 		default:
 			return []
 	}

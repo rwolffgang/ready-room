@@ -6,6 +6,7 @@
 //     accepted one whose cost became unpayable is skipped, not fatal
 //   - "up to N": REPEAT UP_TO asks round by round; WARP count picks
 //     different ships; same-Location removals via bind + bound
+//   - "you may warp": no CONFIRM, the ship/destination pick can decline
 //   - TAKE look → the taker chooses; TAKE `to` + `bind`
 //   - FREE_PLAY lets the player pick the PLAY operation; `from` lists
 //   - CHOOSE_ONE count: N different options
@@ -32,7 +33,7 @@ import {
 	setActions,
 } from './testUtils'
 import { run } from './stack'
-import { applyChoice, type PendingChoice } from './choices'
+import { applyChoice, SKIP_LOCATION, type PendingChoice } from './choices'
 import { evalPredicate } from '../queries/resolveQuery'
 
 const SRC = ID('src')
@@ -518,6 +519,77 @@ describe('"up to N"', () => {
 		expect(s.pendingChoice).toBeNull()
 		expect(s.awayTeamsAt[ID('l0')]).toEqual([0, 1])
 		expect(res(s, 'GLO')).toBe(1)
+	})
+})
+
+// ---------------------------------------------------------------------------
+
+describe('"you may warp": the pick carries the decline (no CONFIRM)', () => {
+	const warpNode: Effect = {
+		k: 'WARP',
+		ship: { zones: [{ k: 'FLEET', seat: 0 }], filter: { suits: ['SHIP'] } },
+		to: { zones: ['LOCATIONS'], filter: { suits: ['LOCATION'] } },
+	}
+	const mayWarp: Effect = { k: 'MAY', body: warpNode }
+	/** `locs` Locations in the Neutral Zone, the ships' tokens on the first */
+	const table = (locs: 2 | 3, ships: string[]): GameState => {
+		let s = fresh()
+		for (const slot of ([0, 1, 2] as const).slice(0, locs))
+			s = place(s, 'cs-loc', ID(`l${slot}`), { k: 'NEUTRAL_ZONE', slot }, null)
+		for (const iid of ships)
+			s = place(s, 'cs-ship', ID(iid), { k: 'FLEET', seat: 0 }, 0, {
+				shipTokenAt: ID('l0'),
+			})
+		return s
+	}
+
+	it('one ship: the destination choice is the only prompt, with a Skip', () => {
+		const s = pushAndRun(table(3, ['s1']), mayWarp, SRC, 0)
+		const loc = pending(s, 'CHOOSE_LOCATION')
+		expect(loc.candidates).toEqual([ID('l1'), ID('l2'), SKIP_LOCATION])
+		expect(loc.prompt).toContain('[[card:cs-ship]]')
+		const skipped = answer(s, SKIP_LOCATION)
+		expect(skipped.pendingChoice).toBeNull()
+		expect(skipped.cards[ID('s1')]!.shipTokenAt).toBe(ID('l0'))
+		const warped = answer(s, ID('l2'))
+		expect(warped.pendingChoice).toBeNull()
+		expect(warped.cards[ID('s1')]!.shipTokenAt).toBe(ID('l2'))
+	})
+
+	it('one ship, one other Location: still asked (not warped unasked)', () => {
+		const s = pushAndRun(table(2, ['s1']), mayWarp, SRC, 0)
+		expect(pending(s, 'CHOOSE_LOCATION').candidates).toEqual([
+			ID('l1'),
+			SKIP_LOCATION,
+		])
+		// a "warp a ship" that must happen moves it without asking
+		const must = pushAndRun(table(2, ['s1']), warpNode, SRC, 0)
+		expect(must.pendingChoice).toBeNull()
+		expect(must.cards[ID('s1')]!.shipTokenAt).toBe(ID('l1'))
+	})
+
+	it('several ships: the ship choice may be left empty', () => {
+		const s = pushAndRun(table(3, ['s1', 's2']), mayWarp, SRC, 0)
+		const pick = pending(s, 'CHOOSE_CARDS')
+		expect([pick.min, pick.max, pick.optional]).toEqual([0, 1, true])
+		const none = answer(s, [])
+		expect(none.pendingChoice).toBeNull()
+		expect(none.cards[ID('s1')]!.shipTokenAt).toBe(ID('l0'))
+		expect(none.cards[ID('s2')]!.shipTokenAt).toBe(ID('l0'))
+		let t = answer(s, [ID('s2')])
+		expect(pending(t, 'CHOOSE_LOCATION').candidates).toContain(SKIP_LOCATION)
+		t = answer(t, ID('l1'))
+		expect(t.cards[ID('s2')]!.shipTokenAt).toBe(ID('l1'))
+	})
+
+	it('a skipped warp does not answer the next one in the same SEQ', () => {
+		const node: Effect = { k: 'SEQ', steps: [mayWarp, mayWarp] }
+		let s = pushAndRun(table(3, ['s1']), node, SRC, 0)
+		s = answer(s, SKIP_LOCATION)
+		pending(s, 'CHOOSE_LOCATION')
+		s = answer(s, ID('l1'))
+		expect(s.pendingChoice).toBeNull()
+		expect(s.cards[ID('s1')]!.shipTokenAt).toBe(ID('l1'))
 	})
 })
 

@@ -14,11 +14,10 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { PendingChoice } from '../../engine/resolver/choices'
-import { checkSelection } from '../../engine/resolver/choices'
+import { checkSelection, SKIP_LOCATION } from '../../engine/resolver/choices'
 import type { CardInstanceId } from '../../engine/ids'
 import type { OperationRef } from '../../engine/state'
 import type { MarketSuit, SpecialtyId } from '../../data/ids'
-import { SKIP_CONTROL } from '../../engine/phases'
 import { zoneKey } from '../../engine/state'
 import type { ZoneRef } from '../../engine/resolver/queries'
 import {
@@ -359,7 +358,7 @@ function PickSheet({
 	const oppDeck = projected.players[viewer === 0 ? 1 : 0]?.deckId
 	const oppName = oppDeck !== undefined ? deckLabel(oppDeck) : 'Opponent'
 	const skip =
-		choice.k === 'CHOOSE_LOCATION' && choice.candidates.includes(SKIP_CONTROL)
+		choice.k === 'CHOOSE_LOCATION' && choice.candidates.includes(SKIP_LOCATION)
 	const selection =
 		choice.k === 'CHOOSE_LOCATION' ? (selected[0] ?? null) : selected
 	const ok = checkSelection(choice, selection).ok
@@ -412,7 +411,7 @@ function PickSheet({
 					)}
 					{optional && <Pill onClick={() => confirmChoice([])}>Decline</Pill>}
 					{skip && (
-						<Pill onClick={() => confirmChoice(SKIP_CONTROL)}>Skip</Pill>
+						<Pill onClick={() => confirmChoice(SKIP_LOCATION)}>Skip</Pill>
 					)}
 					<Pill primary disabled={!ok} onClick={() => confirmChoice(selection)}>
 						Confirm{selected.length > 0 ? ` (${selected.length})` : ''}
