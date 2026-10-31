@@ -182,15 +182,8 @@ export function HeadBar({
 							type="button"
 							className={`btn btn-primary${confirmEnd ? ' btn-warn' : ''}${outOfActions ? ' btn-nudge' : ''}`}
 							onClick={onPrimary}
-							title={
-								action.kind === 'endTurn'
-									? 'Unused actions are lost when the Action Step ends.'
-									: undefined
-							}
 						>
-							{confirmEnd
-								? 'Really end? Unused actions are lost'
-								: action.label}
+							{confirmEnd ? 'Really end?' : action.label}
 						</button>
 					)}
 					<LogButton />
