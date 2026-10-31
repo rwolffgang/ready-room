@@ -879,3 +879,92 @@ BEAM, GAIN LAT 1])` (no COST_BEAM).
   (rules/03 §3.1). Ownership itself is unchanged, so nothing else moves.
 - **Keyed on:** `excludedFromScoring` in `src/engine/scoring.ts`; test "a returned INCIDENT in the
   Incident deck no longer scores for its old owner" in `src/engine/scoring.test.ts`.
+
+## 052 — A Bot flip counts as playing the card
+
+- **Question:** the solo rulebook has the Bot "resolve" Staging cards through its Automated
+  Command (AC) rows and ignore their text. Does that count as playing them, e.g. for your
+  REACTIONs to an opponent playing a card?
+- **Interpretation:** yes. The rulebook's own examples say the Bot "plays" a LOCATION it flips
+  (solo p.6). Each flipped card emits CARD_PLAYED for seat 1. A card resolved as a side effect
+  (`rules/13` §13.8) or a LOCATION taken control of does not, because neither is played.
+- **Keyed on:** `rules/13` §13.4, §13.6, §13.8.
+
+## 053 — The Supplement deck is neither owned nor scored
+
+- **Question:** the Bot scores "5 VP per ENDGAME operation it owns, whether or not the card was in
+  play" (solo p.5). Does that include cards still in its Supplement deck?
+- **Interpretation:** no. The Supplement is the Bot's Reserve deck plus Development pile, and those
+  never score for a player (`rules/07` §7.4, `excludedFromScoring`). The Bot's cards in its deck,
+  row, Staging Area, Discard pile, Log and Control Area all count. The same applies to printed VP.
+- **Keyed on:** `rules/13` §13.13.3.
+
+## 054 — The Bot's Dilithium and Latinum score together, 1 VP per 2
+
+- **Question:** "1 VP for every 2 Dilithium/Latinum" (solo p.5). Is that per resource or combined?
+- **Interpretation:** combined: ⌊(DIL + LAT) / 2⌋. The Burnham Bot scores 1 VP per Dilithium
+  (its `special`), plus ⌊LAT / 2⌋ for any Latinum.
+- **Keyed on:** `rules/13` §13.13.3.
+
+## 055 — The Bot pays its own costs from what it values least
+
+- **Question:** some AC rows make the Bot give something up without saying which: "log a
+  controlled LOCATION and remove 2 Away Teams to take the top ENCOUNTER".
+- **Interpretation:** the solo rulebook's pattern for giving things up (pulling back an Away Team,
+  solo p.9) is the guide.
+  - It logs the controlled LOCATION **least valuable to itself**.
+  - It removes Away Teams from the LOCATION where it has the **fewest** tokens; ties go to the least
+    valuable to itself.
+  - Ties after that go to the leftmost.
+- **Keyed on:** `rules/13` §13.3, §13.11.3.
+
+## 056 — The Bot accepts what your effects offer it, except INCIDENT returns
+
+- **Question:** your effects sometimes offer the opponent an optional benefit ("they may draw a
+  card"). The solo rulebook covers draws (mill the top card, solo p.10) and INCIDENT returns
+  (decline, solo p.7), and says other choices take "the first listed option it legally can".
+- **Interpretation:**
+  - An offered "may" is accepted. The listed action comes first; declining is the absence of a
+    listed option. An offered draw therefore mills the Bot deck top.
+  - INCIDENT returns are declined, as stated.
+  - Every other choice takes the first enabled option.
+- **Keyed on:** `rules/13` §13.9, §13.12.3; `src/engine/solo/policy.ts`.
+
+## 057 — Only neutral LOCATIONs are Bot targets; its own cards' text stays silent
+
+- **Question:**
+  - Can "it engages" pick a LOCATION you control?
+  - Do restrictions printed on LOCATIONs apply to the Bot?
+  - Do keywords on the Bot's own cards ("cannot be promoted", "treated as a LOCATION") affect it?
+- **Interpretation:**
+  - Explore, engage and send only ever target **neutral** LOCATIONs (solo p.9 says "Neutral
+    Zone").
+  - Restrictions printed on a neutral LOCATION are rules of the board and bind the Bot like a
+    player.
+  - Text on the Bot's own cards is ignored entirely (solo p.5), so its rows classify by printed
+    suit and its PERSONs can always be promoted.
+- **Keyed on:** `rules/13` §13.6, §13.11.
+
+## 058 — "Take the top card of the Supplement deck" goes on top of the Bot deck
+
+- **Question:** where does a Supplement card the Bot "takes" go?
+- **Interpretation:** "take" always means "on top of the Bot deck" for the Bot (solo p.8 and the
+  player aid), so the Supplement card does too. It is resolved when it is drawn later, not
+  immediately.
+- **Keyed on:** `rules/13` §13.10.1.
+
+## 059 — Reinforce lets you pick any card of your Reinforcement deck
+
+- **Question:** the solo Directive Reinforce says "take a card from your Reinforcement pile". Is it
+  the top card or a choice?
+- **Interpretation:** a choice. The Reinforcement deck is not shuffled or ordered by any rule,
+  and you built it yourself (`rules/14` §14.4), so the owner may look through it and pick.
+- **Keyed on:** `rules/14` §14.4.
+
+## 060 — The Bot's Captain's Log stays hidden
+
+- **Question:** should the Bot's Log be visible to you? Nobody plays the Bot, so nothing is
+  "secret".
+- **Interpretation:** keep it exactly like a player's Log, which is face down to the opponent. Its
+  size is public. Logged cards only matter at scoring, and the end-of-game breakdown shows them.
+- **Keyed on:** `zoneProps` LOG (`src/engine/state.ts`); `rules/13` §13.2.

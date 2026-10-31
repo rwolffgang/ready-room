@@ -1,7 +1,7 @@
 # TODO 15 — Opponent modes
 
 **Depends on:** `06`, `12`, `13`, `14`.
-**Estimate:** Cadet ½ day · hot-seat 1 day · Bot **blocked**.
+**Estimate:** Cadet ½ day · hot-seat 1 day · Bot: in progress (§3).
 
 ---
 
@@ -50,31 +50,33 @@ Fully specified in `rules/10`. **No opponent AI required.**
       handle `choice.seat !== viewerSeat` as a first-class flow, not an edge case.
 - [ ] A "reveal everything" debug toggle behind a dev flag.
 
-## 3. The Bot — **blocked**
+## 3. The official solo Bot — in progress
 
-> **Blocker B2 (`docs/open-questions.md`):** the solo Bot rules are **not in this rulebook**.
-> The box contains 12 Automated Command cards and 2 Solo cards, but their rules are in a separate
-> solo rulebook. The `SURPRISE` trait and the `botActions` field on Stardate cards are solo-only.
+Unblocked: the solo rulebook is restated in `rules/13` (solo play) and `rules/14` (campaign), and
+STCC publishes the Automated Command card text (`data/bots.json`). The Bot is a **deterministic
+card-driven automaton** in the engine (`src/engine/solo/`, `mode: 'SOLO'`, seat 1). Its turn
+advances one beat per logged `BOT_STEP` intent, so it paces, replays and undoes like any other
+move. Its rows are effect trees in `src/data/cards/solo/bots.json`, keyed to the STCC bot ids.
 
-When you obtain the solo rulebook:
-
-- [ ] Transcribe the 12 Automated Command cards + 2 Solo cards (they already have a data file
-      stub in `docs/data-model.md` §8).
-- [ ] The Bot is a **deterministic card-driven automaton**, not a search AI — it draws an
-      Automated Command card and follows it. That fits the existing engine: implement it as a
-      `ChoicePolicy` that resolves `PendingChoice`s from the Bot's current command card.
-  ```ts
-  type ChoicePolicy = (state: GameState, choice: PendingChoice) => Selection
-  ```
-- [ ] The `botActions` count on Stardate cards throttles the Bot's turn — already captured in the
-      Stardate data (`todo/12` Pass 3).
-- [ ] The `SURPRISE` trait becomes live.
-- [ ] Implement the solo-only **Directive** cards (STCC position "Solo Campaign" / "Solo
-      Challenge"; they need the Bot and its Reinforcement pile). Use the latest STCC errata —
-      the vendored Conspiracy text predates it:
-  - [ ] `1DIR01/2` CONSPIRACY
-  - [ ] `1DIR02/2` REINFORCE
-  - [ ] `2DIR01` / `2DIR02` (box 2)
+- [x] Rules restated (`rules/13`, `rules/14`); open interpretations logged (`docs/card-rulings.md`
+      052–060).
+- [x] `npm run fetch-cards` also fetches `data/bots.json` (vendor only, never committed).
+- [ ] Engine types: `mode: 'SOLO'`, Bot phase/beats, zones `BOT_ROW` / `SUPPLEMENT` /
+      `REINFORCEMENT`, Stardate `botActions`.
+- [ ] New DSL nodes: `TRY`, `ATTACK`, `BOT_DECK`, `BOT_ACQUIRE`, `BOT_JUNK`,
+      `BOT_SEND_AWAY_TEAM`, `BOT_DEPLOY`, `BOT_RESOLVE`; `ADVANCE_SPECIALTY` lower/higher of two.
+- [ ] Automated Command mechanics for the six crews (PIC SHR KOL SEL SIS BUR), crosschecked
+      against `bots.json`.
+- [ ] Bot setup, turn, choice policy, human→Bot hooks, inert Bot cards, end timing, scoring.
+- [ ] Hand-attack outcome choice (`rules/13` §13.12.2).
+- [ ] The `SURPRISE` trait becomes live; solo Directives `1DIR01/2` (Conspiracy) and `1DIR02/2`
+      (Reinforce), minted only in SOLO games. Use the latest STCC errata.
+- [ ] House AI: determinize, SOLO evaluation, `tools/arena.ts --solo`, retrained weights.
+- [ ] UI: Solo vs Bot setup, Bot area, Automated Command panel (rendered from STCC text), paced
+      Bot turn, end screen.
+- [ ] Five-Year Mission campaign (`rules/14`): Reinforcement deck, boosts, challenges, campaign
+      record and screens.
+- Out of scope until we have their decks: the other 10 STCC Bots (box 2/3 crews), `2DIR01`/`2DIR02`.
 
 ## 4. A heuristic opponent (optional, later) — done as the house AI
 

@@ -11,10 +11,24 @@ import {
 	STCC_BOXES,
 	addCustomPacks,
 	buildStccIndex,
+	parseStccBots,
+	type StccBot,
 	type StccBox,
 	type StccCard,
 } from '../src/data/stcc'
 import { setCardNameIndex } from '../src/data/cardNames'
+
+/** The fetched Automated Command card text (vendor/stcc/bots.json) by STCC bot
+ *  id, or an empty map when it hasn't been fetched. */
+export async function loadStccBotsNode(): Promise<Map<string, StccBot>> {
+	try {
+		return parseStccBots(
+			JSON.parse(await readFile(join(VENDOR_DIR, 'bots.json'), 'utf8')),
+		)
+	} catch {
+		return new Map()
+	}
+}
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
 

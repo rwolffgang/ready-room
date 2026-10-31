@@ -137,6 +137,63 @@ export function buildStccIndex(
 	return index
 }
 
+// ---------------------------------------------------------------------------
+// Automated Command cards: the solo Bot's lookup tables (`data/bots.json`,
+// rules/13 §13.6). Text only — our mechanics for every row live in
+// src/data/cards/solo/bots.json, keyed by our deck id. The two meet through
+// `captain`, which is the STCC `source` of that crew deck's cards.
+// ---------------------------------------------------------------------------
+
+const StccBotRewardSchema = z.object({
+	/** the traits/suits of Market cards that may join your Reinforcement deck */
+	cards: z.string(),
+	/** the alternative bonuses (rules/14 §14.3), "BOOST: …" and the like */
+	bonus: z.array(z.string()).default([]),
+})
+
+export const StccBotSchema = z.object({
+	/** STCC's own id for the Bot (a variant has a suffixed id) */
+	id: z.string(),
+	/** equals the STCC `source` of the crew deck's cards */
+	captain: z.string(),
+	variant: z.string().nullable().optional(),
+	/** TRAITS card rows, top to bottom; `key` is "[[klingon]]" or "[[synthetic]] / [[android]]" */
+	traits: z.array(z.object({ key: z.string(), text: z.string() })),
+	/** SUITS card rows; `text` is the "no Duty Officer" side, `do_text` the other */
+	suits: z.array(
+		z.object({ suit: z.string(), text: z.string(), do_text: z.string() }),
+	),
+	special: z.string().nullable().optional(),
+	campaign: z
+		.object({ win: StccBotRewardSchema, loss: StccBotRewardSchema })
+		.nullable()
+		.optional(),
+})
+export type StccBot = z.infer<typeof StccBotSchema>
+
+/** Parse a fetched `bots.json` into an id → Bot map; malformed entries are
+ *  skipped (and a missing file is simply an empty map). */
+export function parseStccBots(raw: unknown): Map<string, StccBot> {
+	const out = new Map<string, StccBot>()
+	if (!Array.isArray(raw)) return out
+	for (const entry of raw) {
+		const parsed = StccBotSchema.safeParse(entry)
+		if (parsed.success) out.set(parsed.data.id, parsed.data)
+	}
+	return out
+}
+
+/** The standard (non-variant) Bot of the crew whose cards carry STCC
+ *  `source`, or null. */
+export function stccBotForSource(
+	bots: ReadonlyMap<string, StccBot>,
+	source: string,
+): StccBot | null {
+	for (const bot of bots.values())
+		if (bot.captain === source && (bot.variant ?? null) === null) return bot
+	return null
+}
+
 const nameKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
 
 /** A later box reprints some earlier cards as "updated" variants marked `†`

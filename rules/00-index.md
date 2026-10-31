@@ -26,6 +26,8 @@ rulebook; page references point back to it.
 | [10-cadet-training-mode.md](10-cadet-training-mode.md)                   | Solo practice mode                                           | 28               |
 | [11-crew-decks.md](11-crew-decks.md)                                     | The six captains, complexity, Burnham's special rules        | 34–35            |
 | [12-edge-cases-and-rulings.md](12-edge-cases-and-rulings.md)             | Cross-cutting edge cases collected from all pages            | —                |
+| [13-solo-mode.md](13-solo-mode.md)                                       | Solo play vs the Bot (Automated Command cards)               | solo 1–15, 20    |
+| [14-five-year-mission.md](14-five-year-mission.md)                       | The Five-Year Mission solo campaign                          | solo 16–19       |
 
 ## Reading order for an implementer
 
@@ -36,8 +38,8 @@ rulebook; page references point back to it.
 
 ## Not covered here
 
-- **Solo / Bot rules.** The Bot (12 Automated Command cards + 2 Solo cards) is specified in a
-  _separate_ solo rulebook that is not in this PDF. See `docs/open-questions.md`.
+- **Solo rulebook text.** `13` and `14` restate the separate solo rulebook ("solo p.N"); the
+  Automated Command card text itself lives in the fetched STCC data (`data/bots.json`).
 - **Expansions.** _To Boldly Go_ and _Second Contact_ have their own rulebooks.
 - **Individual card text.** Card-by-card effects come from your spritesheets; see
   `todo/11-card-authoring-tool.md`.

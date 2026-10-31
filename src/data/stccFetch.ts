@@ -12,7 +12,7 @@
 
 import { STCC_BOXES } from './stcc'
 
-const DATA_FILES = ['errata', 'faq', 'tokens'] as const
+const DATA_FILES = ['errata', 'faq', 'tokens', 'bots'] as const
 // Be gentle with their host.
 const CONCURRENCY = 6
 
@@ -32,6 +32,9 @@ export interface StccManifest {
 	/** scans the boxes reference */
 	imagesTotal: number
 	icons: number
+	/** Bots in data/bots.json; absent in a fetch from before the solo mode,
+	 *  which therefore counts as out of date (stccUpToDate). */
+	bots?: number
 }
 
 export interface StccIo {
@@ -144,9 +147,14 @@ export async function fetchStcc(
 		progress({ phase: 'data', done: ++dataDone, total: dataTotal })
 	}
 
+	let bots = 0
 	for (const name of DATA_FILES) {
 		const text = await retry(() => io.fetchText(raw(`data/${name}.json`)))
 		await io.writeText(`vendor/${name}.json`, text)
+		if (name === 'bots') {
+			const parsed = JSON.parse(text) as unknown
+			bots = Array.isArray(parsed) ? parsed.length : 0
+		}
 		progress({ phase: 'data', done: ++dataDone, total: dataTotal })
 	}
 
@@ -201,6 +209,7 @@ export async function fetchStcc(
 		images: images.length - failed.length,
 		imagesTotal: images.length,
 		icons,
+		bots,
 	}
 	await io.writeText(
 		'vendor/manifest.json',
@@ -217,6 +226,7 @@ export function stccUpToDate(
 	return (
 		manifest !== null &&
 		manifest.sha === source.sha &&
+		manifest.bots !== undefined &&
 		manifest.imagesTotal !== undefined &&
 		manifest.images >= manifest.imagesTotal
 	)
