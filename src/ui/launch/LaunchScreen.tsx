@@ -5,10 +5,12 @@
 // seats the captains: a dossier per seat and a roster that fills the seat
 // being chosen (picking the other seat's captain swaps the two, so the two
 // captains always differ). Mode and seat controllers are remembered per device.
+// The frame stays put; only the page inside it scrolls.
 
 import {
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 	type CSSProperties,
 	type ReactNode,
@@ -152,9 +154,12 @@ export function LaunchScreen({ catalogReady }: { catalogReady: boolean }) {
 		if (okA !== a || okB !== b) setPick([okA, okB])
 	}, [decks, pick])
 
+	// a new mode opens at its top
+	const page = useRef<HTMLDivElement>(null)
 	const setMode = (m: Mode) => {
 		setModeState(m)
 		writeKey(MODE_KEY, m)
+		if (page.current !== null) page.current.scrollTop = 0
 	}
 	const setSeat = (seat: Seat, c: SeatController) => {
 		const next: [SeatController, SeatController] =
@@ -453,33 +458,37 @@ export function LaunchScreen({ catalogReady }: { catalogReady: boolean }) {
 	return (
 		<main className={`launch lr-mode-${mode}`}>
 			<LaunchHead />
-			<nav className="lr-rail lr-modes" aria-label="Ways to play">
-				{MODES.map((m, i) => (
-					<button
-						key={m.v}
-						type="button"
-						className={`lr-block lr-mode-${m.v}${mode === m.v ? ' is-lit' : ''}`}
-						style={{ '--i': i } as CSSProperties}
-						aria-pressed={mode === m.v}
-						onClick={() => setMode(m.v)}
-					>
-						<span className="lr-block-code">{m.code}</span>
-						<span className="lr-block-label">{m.label}</span>
-					</button>
-				))}
-			</nav>
-			<Utilities />
-			<section className="lr-main" aria-label={label}>
-				{stage}
-				{error !== null && (
-					<p className="error-text lr-error" role="alert">
-						{error}
-					</p>
-				)}
-			</section>
-			<aside className="lr-log">
-				{ready ? <SavedGamesPanel catalog={catalog} /> : null}
-			</aside>
+			<div className="lr-body">
+				<nav className="lr-rail lr-modes" aria-label="Ways to play">
+					{MODES.map((m, i) => (
+						<button
+							key={m.v}
+							type="button"
+							className={`lr-block lr-mode-${m.v}${mode === m.v ? ' is-lit' : ''}`}
+							style={{ '--i': i } as CSSProperties}
+							aria-pressed={mode === m.v}
+							onClick={() => setMode(m.v)}
+						>
+							<span className="lr-block-code">{m.code}</span>
+							<span className="lr-block-label">{m.label}</span>
+						</button>
+					))}
+				</nav>
+				<Utilities />
+				<div className="lr-page" ref={page}>
+					<section className="lr-main" aria-label={label}>
+						{stage}
+						{error !== null && (
+							<p className="error-text lr-error" role="alert">
+								{error}
+							</p>
+						)}
+					</section>
+					<aside className="lr-log">
+						{ready ? <SavedGamesPanel catalog={catalog} /> : null}
+					</aside>
+				</div>
+			</div>
 			<LaunchFoot note={undoPolicyLabel(savedMode)} />
 		</main>
 	)

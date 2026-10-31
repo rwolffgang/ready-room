@@ -254,7 +254,7 @@ on the viewscreen (V).
 
 The one screen with the full frame (`src/ui/launch/`): an elbow at each end of a left rail,
 capped bars across the head and the foot. The table isn't on screen yet, so the frame can take
-the width.
+the width. The frame fills the screen and never scrolls; only the page inside it does.
 
 - **The rail picks the mode.** One block per way to play: the open one is lit, the others are
   unlit versions of their hue, and the head and foot bars end in the open mode's hue. The hues
@@ -262,11 +262,16 @@ the width.
   Five-Year Mission the time/score axis (lilac), Online contested space (periwinkle). Reference
   blocks (Rules, Card list, decks, glyphs, Settings) sit at the rail's foot.
 - **The stage seats the captains.** A dossier per seat, in the seat colour, with the face from
-  the captain card's art (the deck code in the code-only builds), the captain's operations and
-  the seat's controls. A roster fills the seat being chosen; picking the other seat's captain
-  swaps the two, so the captains always differ.
+  the captain card's art (the deck code in the code-only builds), their traits and the seat's
+  controls; no card text, which Review decks and the Card list carry. A roster fills the seat
+  being chosen; picking the other seat's captain swaps the two, so the captains always differ.
+- **Portraits frame the face.** `faces.ts` holds each captain card's face position and size,
+  measured on the scans, and the CSS scales and slides the art so the face lands in the same
+  place in every dossier, roster tile and save avatar. A captain card missing from that table
+  (a new box or crew) gets a generic framing until it is measured.
 - **Saved games sit beside the stage** at 1280px and up, under it below that. Under 768px the
-  rail becomes a 2×2 grid of mode blocks and the start buttons stick to the foot of the screen.
+  rail becomes a 2×2 grid of mode blocks that scrolls with the page between the fixed head and
+  foot, and the start buttons stick just above the foot.
 - The viewscreen behind the dossiers drifts a starfield and the frame powers up on load; both
   stop under `prefers-reduced-motion`.
 

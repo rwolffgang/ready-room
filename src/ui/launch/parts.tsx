@@ -4,14 +4,15 @@
 // the roster that fills the seat being chosen, and the small controls the
 // panels share (segmented buttons, rank pips).
 
-import { useState, type ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import type { CardCatalog } from '../../engine/setup'
 import type { DeckId } from '../../data/ids'
 import type { CardDef } from '../../data/schema'
 import type { Seat } from '../../engine/resolver/queries'
 import { deckLabel } from '../../data/cardNames'
-import { OpText, safeDescribe } from '../cards'
-import { cardImageUrl, stccCard } from '../stcc'
+import { OpText } from '../cards'
+import { cardImageUrl } from '../stcc'
+import { FACES, FALLBACK } from './faces'
 
 /** A crew deck's captain card. */
 export function captainOf(
@@ -23,8 +24,9 @@ export function captainOf(
 	)
 }
 
-/** The captain's face, cropped from the card art; the deck code when there is
- *  no scan (code-only builds) or it fails to load. */
+/** The captain's face, framed on its measured position in the card art
+ *  (faces.ts; launch.css does the arithmetic per frame); the deck code when
+ *  there is no scan (code-only builds) or it fails to load. */
 export function Portrait({
 	catalog,
 	deck,
@@ -38,35 +40,26 @@ export function Portrait({
 	const url = def !== null ? cardImageUrl(def) : null
 	const [failed, setFailed] = useState<string | null>(null)
 	const show = url !== null && failed !== url
+	const face = FACES[def?.cardId ?? ''] ?? FALLBACK
+	const focus = {
+		'--fx': face.x,
+		'--fy': face.y,
+		'--fh': face.h,
+	} as CSSProperties
 	return (
 		<span className={`lr-portrait ${className}`} aria-hidden="true">
 			{show ? (
-				<img src={url} alt="" decoding="async" onError={() => setFailed(url)} />
+				<img
+					src={url}
+					alt=""
+					decoding="async"
+					style={focus}
+					onError={() => setFailed(url)}
+				/>
 			) : (
 				<span className="lr-portrait-code">{deck}</span>
 			)}
 		</span>
-	)
-}
-
-/** The captain's own operations: the printed text from the fetched STCC
- *  data, else our description of their mechanics. */
-export function CaptainAbility({ def }: { def: CardDef | null }) {
-	if (def === null) return null
-	const printed = stccCard(def)?.text
-	const lines =
-		printed !== undefined
-			? [printed.table, printed.goal, printed.reward].filter((t) => t !== '')
-			: def.operations.map(safeDescribe).filter((t): t is string => t !== null)
-	if (lines.length === 0) return null
-	return (
-		<div className="lr-ability">
-			{lines.map((t, i) => (
-				<p key={i}>
-					<OpText text={t} plain />
-				</p>
-			))}
-		</div>
 	)
 }
 
@@ -127,7 +120,6 @@ export function Dossier({
 					)}
 				</span>
 			</button>
-			<CaptainAbility def={def} />
 			{children !== undefined && (
 				<div className="lr-dossier-controls">{children}</div>
 			)}

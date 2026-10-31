@@ -8,8 +8,10 @@
  * Mission the time/score axis (lilac), Online contested space (periwinkle).
  * Seats keep theirs: ice is Player 1 / you, salmon Player 2 / the Bot.
  *
- * Layout: rail | stage | log at 1280px and up; the log drops under the stage
- * below that; under 768px the rail turns into a 2×2 grid of mode blocks. */
+ * Layout: the frame fills the screen and never scrolls; the page inside it
+ * does. Rail | stage | log at 1280px and up; the log drops under the stage
+ * below that; under 768px the rail turns into a 2×2 grid of mode blocks that
+ * scrolls with the page, between the fixed head and foot. */
 
 .launch {
 	--rw: 196px; /* rail width */
@@ -19,18 +21,44 @@
 	--frame-dim: color-mix(in oklab, var(--orange) 52%, var(--ground));
 
 	display: grid;
-	grid-template-columns: var(--rw) minmax(0, 1fr) minmax(300px, 380px);
-	grid-template-rows: auto auto 1fr auto;
-	grid-template-areas:
-		'head head head'
-		'modes main log'
-		'utils main log'
-		'foot foot foot';
-	column-gap: 28px;
+	grid-template-rows: auto minmax(0, 1fr) auto;
 	row-gap: var(--gap);
-	min-height: 100%;
+	height: 100%;
+	overflow: hidden;
 	padding: 14px 18px 14px 14px;
 	color: var(--text);
+}
+.lr-body {
+	display: grid;
+	grid-template-columns: var(--rw) minmax(0, 1fr);
+	grid-template-rows: auto minmax(0, 1fr);
+	grid-template-areas:
+		'modes page'
+		'utils page';
+	column-gap: 28px;
+	row-gap: var(--gap);
+	min-height: 0;
+}
+.lr-page {
+	grid-area: page;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+	grid-template-areas: 'main log';
+	column-gap: 28px;
+	min-height: 0;
+	padding: 0 12px 24px 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-width: thin;
+	scrollbar-color: var(--hair-2) transparent;
+	/* the page slides under the frame's edges instead of being cut off */
+	mask-image: linear-gradient(
+		to bottom,
+		transparent,
+		#000 16px,
+		#000 calc(100% - 16px),
+		transparent
+	);
 }
 
 .lr-mode-skirmish {
@@ -54,7 +82,6 @@
 
 /* ------------------------------------------------------------- the frame */
 .lr-head {
-	grid-area: head;
 	display: grid;
 	grid-template-columns: var(--rw) minmax(0, 1fr);
 	column-gap: 0;
@@ -203,6 +230,8 @@
 }
 .lr-utils {
 	grid-area: utils;
+	min-height: 0;
+	overflow: hidden;
 }
 .lr-block {
 	--h: var(--orange);
@@ -210,7 +239,7 @@
 	display: flex;
 	align-items: flex-end;
 	justify-content: flex-end;
-	min-height: 70px;
+	min-height: clamp(48px, 8vh, 70px);
 	padding: 8px 14px;
 	border: 0;
 	border-radius: 0;
@@ -282,7 +311,7 @@
 	background: var(--frame-dim);
 }
 .lr-util {
-	min-height: 40px;
+	min-height: clamp(32px, 4.5vh, 40px);
 	padding: 6px 14px;
 	background: color-mix(in oklab, var(--orange) 36%, var(--ground));
 	color: color-mix(in oklab, var(--orange) 55%, var(--text));
@@ -296,7 +325,6 @@
 }
 
 .lr-foot {
-	grid-area: foot;
 	display: grid;
 	grid-template-columns: var(--rw) minmax(0, 1fr);
 	margin-top: 0;
@@ -576,7 +604,7 @@
 			transparent 48%
 		),
 		radial-gradient(
-			ellipse 62% 78% at 47% 40%,
+			ellipse 62% 78% at 56% 38%,
 			transparent 55%,
 			color-mix(in oklab, var(--panel) 88%, transparent) 100%
 		),
@@ -619,18 +647,7 @@
 	font-size: 11px;
 }
 .lr-dossier-face:hover .lr-portrait img {
-	transform: scale(calc(var(--z) * 1.06));
-}
-.lr-ability {
-	display: grid;
-	gap: 6px;
-	padding: 12px 18px 0;
-	color: color-mix(in oklab, var(--text) 82%, var(--dim));
-	font-size: 12.5px;
-	line-height: 1.45;
-}
-.lr-ability p {
-	margin: 0;
+	transform: scale(1.05);
 }
 .lr-dossier-controls {
 	display: grid;
@@ -641,6 +658,7 @@
 
 /* portraits: the face from the captain card's art; the deck code without */
 .lr-portrait {
+	position: relative;
 	display: block;
 	overflow: hidden;
 	container-type: inline-size; /* the deck code scales with the frame */
@@ -656,31 +674,43 @@
 			color-mix(in oklab, var(--sc, var(--orange)) 8%, transparent) 6px 7px
 		),
 		#0a0a14;
+	/* the frame: its width / height, the face height wanted as a share of
+	 * it, and where the face's centre goes */
+	--a: 1;
+	--F: 0.5;
+	--cx: 0.5;
+	--cy: 0.45;
 }
+/* The art is scaled so the face (--fx, --fy, --fh: its centre and height as
+ * shares of the card, set inline from faces.ts) comes out --F tall without
+ * ever leaving the frame uncovered, then slid so the face lands on
+ * (--cx, --cy) as far as the card's edges allow. */
 .lr-portrait img {
-	/* the card art's faces sit 25–50% down the card, a little left of
-	 * centre: frame 40% down, zoomed gently, so every face clears both the
-	 * name plate above and the name overlay below */
-	--py: 30%;
-	--oy: 50%;
-	--z: 1.1;
-	display: block;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	object-position: 48% var(--py);
-	transform: scale(var(--z));
-	transform-origin: 48% var(--oy);
+	--r: 1.397; /* card height / width */
+	--h: max(var(--F) / var(--fh), var(--r) * var(--a), 1);
+	--w: calc(var(--h) / (var(--r) * var(--a)));
+	position: absolute;
+	left: calc(clamp(1 - var(--w), var(--cx) - var(--fx) * var(--w), 0) * 100%);
+	top: calc(clamp(1 - var(--h), var(--cy) - var(--fy) * var(--h), 0) * 100%);
+	width: calc(var(--w) * 100%);
+	height: calc(var(--h) * 100%);
+	max-width: none;
+	transform-origin: calc(var(--fx) * 100%) calc(var(--fy) * 100%);
 	transition: transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.lr-tile .lr-portrait img {
-	--py: 8%;
-	--z: 1.55;
+.lr-dossier-face .lr-portrait {
+	--a: calc(16 / 11);
+	--F: 0.48;
+	--cx: 0.56;
+	--cy: 0.37;
 }
-.lr-avatar img {
-	--py: 0%;
-	--oy: 34%;
-	--z: 1.9;
+.lr-tile .lr-portrait {
+	--F: 0.46;
+	--cy: 0.44;
+}
+.lr-avatar {
+	--F: 0.6;
+	--cy: 0.5;
 }
 .lr-portrait-code {
 	display: grid;
@@ -922,7 +952,7 @@
 	position: absolute;
 	inset: 0;
 	background: radial-gradient(
-		ellipse 60% 64% at 48% 46%,
+		ellipse 60% 64% at 50% 44%,
 		transparent 58%,
 		color-mix(in oklab, var(--panel) 85%, transparent) 100%
 	);
@@ -934,7 +964,7 @@
 		0 10px 22px -12px color-mix(in oklab, var(--sc) 60%, transparent);
 }
 .lr-tile:hover:not(:disabled) .lr-portrait img {
-	transform: scale(calc(var(--z) * 1.08));
+	transform: scale(1.08);
 }
 .lr-tile.is-picked {
 	box-shadow:
@@ -1468,7 +1498,7 @@
 	margin: 0;
 	max-width: none;
 	position: sticky;
-	top: 14px;
+	top: 22px;
 	animation: lr-rise 480ms cubic-bezier(0.2, 0.7, 0.2, 1) 160ms backwards;
 }
 .lr-log .saved-head {
@@ -1643,15 +1673,11 @@
 
 /* ------------------------------------------------------------- tablet */
 @media (max-width: 1279.98px) {
-	.launch {
-		grid-template-columns: var(--rw) minmax(0, 1fr);
-		grid-template-rows: auto auto 1fr auto auto;
+	.lr-page {
+		grid-template-columns: minmax(0, 1fr);
 		grid-template-areas:
-			'head head'
-			'modes main'
-			'utils main'
-			'utils log'
-			'foot foot';
+			'main'
+			'log';
 	}
 	.lr-log {
 		padding-top: 28px;
@@ -1663,6 +1689,8 @@
 @media (max-width: 1023.98px) {
 	.launch {
 		--rw: 150px;
+	}
+	.lr-body {
 		column-gap: 20px;
 	}
 	.lr-matchup {
@@ -1682,18 +1710,30 @@
 		--rw: 64px;
 		--bar: 18px;
 		--fillet: 22px;
-		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: none;
-		grid-template-areas:
-			'head'
-			'modes'
-			'main'
-			'log'
-			'utils'
-			'foot';
 		row-gap: 0;
 		/* .app already keeps out of the notch and the home indicator */
 		padding: 10px 12px 12px;
+	}
+	/* the whole body scrolls here: the rail is a grid of mode blocks, not
+	 * frame, and the screen is too short to keep it pinned */
+	.lr-body {
+		display: flex;
+		flex-direction: column;
+		margin: 0 -12px;
+		padding: 0 12px;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+	.lr-page {
+		display: block;
+		order: 1;
+		padding: 0;
+		overflow: visible;
+		mask-image: none;
+	}
+	.lr-utils {
+		order: 2;
+		overflow: visible;
 	}
 	.lr-head {
 		grid-template-columns: var(--rw) minmax(0, 1fr);
@@ -1719,11 +1759,13 @@
 		display: none;
 	}
 	.lr-modes {
+		flex: none;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		margin-top: 12px;
 	}
 	.lr-modes .lr-block {
+		flex: none;
 		min-height: 56px;
 		padding: 6px 12px;
 	}
@@ -1771,12 +1813,8 @@
 	.lr-dossier-face {
 		aspect-ratio: 16 / 10;
 	}
-	.lr-dossier-face .lr-portrait img {
-		--py: 32%;
-	}
-	.lr-ability {
-		padding: 10px 14px 0;
-		font-size: 12px;
+	.lr-dossier-face .lr-portrait {
+		--a: 1.6;
 	}
 	.lr-dossier-controls {
 		padding: 12px 14px 14px;
@@ -1850,9 +1888,10 @@
 		padding-top: 26px;
 	}
 	.lr-utils {
+		flex: none;
 		flex-direction: row;
 		flex-wrap: wrap;
-		margin-top: 26px;
+		margin: 26px 0 16px;
 	}
 	.lr-utils .lr-util {
 		flex: 1 1 30%;
@@ -1870,10 +1909,11 @@
 		margin-top: var(--gap);
 	}
 	.lr-elbow-bottom {
-		min-height: 44px;
-		border-bottom-left-radius: 30px;
+		min-height: 36px;
+		border-bottom-left-radius: 28px;
 	}
+	/* the foot stays thin on a phone; the saved games say how saving works */
 	.lr-foot-note {
-		font-size: 11px;
+		display: none;
 	}
 }
