@@ -23,14 +23,25 @@ export default defineConfig({
 					environment: 'node',
 					// Session tests load the real card catalog (node:fs + file:// URLs),
 					// so they run headless in node too — todo/17 DoD. So do the bot
-					// tests, which play full games on it.
+					// tests, which decide on states of real games.
 					include: [
 						'src/engine/**/*.test.ts',
 						'src/data/**/*.test.ts',
 						'src/session/**/*.test.ts',
 						'src/bot/**/*.test.ts',
+						'!src/bot/**/*.games.test.ts',
 						'server/**/*.test.ts',
 					],
+				},
+			},
+			{
+				test: {
+					// The bot tests that play whole games (strength, legality across
+					// games, the arena smoke): about a minute of CPU, so `npm test`
+					// leaves them out and `npm run test:all` runs them.
+					name: 'bot-games',
+					environment: 'node',
+					include: ['src/bot/**/*.games.test.ts'],
 				},
 			},
 			{

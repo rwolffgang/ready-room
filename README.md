@@ -137,6 +137,7 @@ tools/        fetch-stcc, card validation, STCC cross-check, publish audit
 
 ```bash
 npm test                          # vitest (runs without fetched data)
+npm run test:all                  # also the bot tests that play whole games
 npm run lint
 npm run build                     # validates cards, runs the publish audit, type-checks, builds
 npx tsx tools/crosscheck-stcc.ts  # compare our card defs against the STCC database

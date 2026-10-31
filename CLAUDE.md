@@ -13,10 +13,12 @@ npm run fetch-cards               # download the STCC card database into vendor/
 npm run dev                       # Vite app on :5173
 npm run server                    # game/session server on :8787 (tsx server/main.ts)
 npm run game                      # replay + summarise the newest game being tested (see below)
-npm test                          # vitest run (two projects: engine-node and dom)
+npm test                          # vitest, the quick projects (engine-node, dom)
+npm run test:all                  # all projects, including bot-games (bot tests that play whole games)
 npx vitest run src/engine/scoring.test.ts      # a single test file
 npx vitest run -t "some test name"             # tests matching a name
 npx vitest run --project engine-node           # only the node (DOM-free) project
+npx vitest related --run src/ui/mobile/MobileShell.tsx  # only tests that import these files
 npm run lint                      # eslint src tools server
 npm run build                     # validate:cards + audit:publish + tsc -b + vite build
 npm run validate:cards            # Zod-parse every card JSON, ID uniqueness, group counts
@@ -39,6 +41,12 @@ ask for pasted session JSON: run `npm run game` (newest game: turn, phase, zones
 pending choice, log tail), `-- --list`, `-- <id>`, `-- --at N` (replay the first N intents),
 `-- --intents` or `-- --state` (full GameState JSON). Online games live on the game server instead
 (`server/data/`).
+
+**Checks:** while iterating, run only the affected tests (a test file, `-t`, or
+`vitest related --run <changed files>`). Run `npm test`, `npm run lint` and `npx tsc -b` once,
+before committing. Before merging a change to `src/engine/`, `src/data/` (cards included) or
+`src/bot/`, run `npm run test:all`: the bot-games project plays whole games, which also fuzzes
+the engine. CI runs `test:all`.
 
 A husky pre-commit hook runs lint-staged (Prettier on staged files). Prettier style: tabs, no
 semicolons, single quotes.
