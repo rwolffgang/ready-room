@@ -1,4 +1,6 @@
-node_modules/
+# The local-only paths below have no trailing slash, so they stay ignored when
+# a worktree makes them symlinks into the main checkout.
+node_modules
 dist/
 cards/raw/
 cards/ocr/
@@ -15,13 +17,13 @@ __pycache__/
 server/data/
 
 # STCC card database, fetched locally by `npm run fetch-cards` (never committed)
-vendor/stcc/
-public/stcc/
+vendor/stcc
+public/stcc
 
 # Fan-made custom decks: source images downloaded and card faces rendered
 # locally by `npm run custom-cards` (tools/custom/) — never committed
-vendor/custom/
-public/custom/
+vendor/custom
+public/custom
 
 # Copyrighted source material (WizKids/CBS) — kept locally, never published:
 # OCR card records and reports, rulebook/Cyclopedia PDFs, card image scratch.

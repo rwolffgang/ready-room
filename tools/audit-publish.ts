@@ -40,6 +40,7 @@ const ALLOWED_BINARIES = new Set<string>([
 
 const BINARY = /\.(png|jpe?g|gif|webp|bmp|tiff?|pdf|psd|icns|ico)$/i
 const LOCAL_ONLY = [
+	'node_modules/',
 	'vendor/stcc/',
 	'public/stcc/',
 	'vendor/custom/',
@@ -176,7 +177,12 @@ async function main(): Promise<void> {
 			!file.endsWith('.md')
 		)
 			nameHits(file, names, errors)
-		if (LOCAL_ONLY.some((dir) => file.startsWith(dir)))
+		// the folder itself counts too: a worktree's symlink to it is a file
+		if (
+			LOCAL_ONLY.some(
+				(dir) => file.startsWith(dir) || file === dir.slice(0, -1),
+			)
+		)
 			errors.push(`${file}: local-only folder is tracked`)
 		else if (BINARY.test(file) && !ALLOWED_BINARIES.has(file))
 			errors.push(`${file}: image/PDF is tracked`)
