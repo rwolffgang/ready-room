@@ -104,6 +104,40 @@ describe('CHOOSE_CARDS from the Market', () => {
 		expect(actions).toBeGreaterThan(cards)
 	})
 
+	it('draws a greyed offer once when it is also a candidate (JUNK)', () => {
+		act(() => {
+			useGameStore.getState().resumeGame(startedSession())
+		})
+		const projected = useGameStore.getState().projected!
+		const person = projected.zones['MARKET_OFFER:PERSON']![0]! as CardInstanceId
+		const ally = projected.zones['MARKET_OFFER:ALLY']![0]! as CardInstanceId
+		act(() => {
+			useGameStore.setState({
+				pendingChoice: {
+					k: 'CHOOSE_CARDS',
+					id: 'c-test',
+					seat: 0,
+					prompt: 'Junk a card',
+					candidates: [person, ally],
+					disabled: [{ iid: person, reason: 'bears resource tokens' }],
+					min: 1,
+					max: 1,
+					from: 'MARKET',
+					sourceCard: null,
+				},
+			} as never)
+		})
+		const host = document.createElement('div')
+		document.body.appendChild(host)
+		act(() => {
+			createRoot(host).render(<ChoicePanel />)
+		})
+		const panel = host.querySelector('.choice-panel')!
+		expect(panel.querySelectorAll('.candidate-tile')).toHaveLength(2)
+		expect(panel.querySelectorAll('.candidate-disabled')).toHaveLength(1)
+		expect(panel.querySelectorAll('.why-not')).toHaveLength(1)
+	})
+
 	it("takes a deck's top card from the deck itself, not a group of its own", () => {
 		act(() => {
 			useGameStore.getState().resumeGame(startedSession())

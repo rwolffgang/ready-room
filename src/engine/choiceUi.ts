@@ -33,7 +33,7 @@ export interface ChoiceOptionUi extends ChoiceUiBase<'CHOOSE_OPTION'> {
 	options: ChoiceOption[] // enabled=false rows are greyed with `reason`
 }
 export interface ChoiceCardsUi extends ChoiceUiBase<'CHOOSE_CARDS'> {
-	candidates: CardInstanceId[] // already filtered to legal
+	candidates: CardInstanceId[] // may also list `disabled` cards
 	disabled?: ChoiceDisabledCard[] // greyed with a tooltip (todo/07 §5)
 	hidden?: CardInstanceId[] // face-down candidates ("top of the X deck (unknown)")
 	min: number
