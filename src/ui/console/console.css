@@ -347,6 +347,31 @@
 .nz-head + .nz-row {
 	padding-top: 0;
 }
+/* The Market's label is its close-up's door (M): its suits fill the row a
+ * button would take. It reads like the label, brightening under the pointer. */
+.panel-door {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	letter-spacing: inherit;
+	text-transform: inherit;
+	writing-mode: inherit;
+	cursor: pointer;
+}
+.panel-door:hover,
+.panel-door[aria-expanded='true'] {
+	filter: brightness(1.35);
+}
+.panel-door:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 2px;
+	border-radius: 3px;
+}
 .location-slot {
 	align-items: stretch;
 }
@@ -401,7 +426,8 @@
 	align-items: stretch;
 }
 .own-row .player-area,
-.viewscreen .player-area {
+.viewscreen .player-area,
+.closeup .player-area {
 	padding: 6px 10px;
 }
 .own-row .crew-board {
@@ -418,6 +444,10 @@
 }
 .area-zone {
 	min-width: 0;
+}
+/* the close-up button (B) ends the first line, or takes one of its own */
+.area-aside {
+	margin-left: auto;
 }
 .area-full {
 	flex-basis: 100%;
@@ -764,18 +794,38 @@ kbd {
 	align-items: start;
 }
 
-/* The Neutral Zone close-up (N): the three Locations as large as the board
- * leaves room for. The height pays for the frame's head, the readout under
+/* The close-ups (N, M, B), each framed in its system's colour, with the cards
+ * as large as the board leaves room for. Everything on a card steps on
+ * --card-w, so this one number scales the faces, and the markers and
+ * standees stay where they stand on the table.
+ *
+ * The Neutral Zone: the height pays for the frame's head, the readout under
  * each card and the standees' lower half; three cards and their gaps share
- * the width. Everything on a card steps on --card-w, so this one number scales
- * the faces, and the markers and standees stay where they stand on the table. */
-.closeup {
+ * the width. */
+.closeup-neutral-zone {
 	--screen: var(--periwinkle);
 	--card-w: clamp(
 		132px,
 		min((100cqh - var(--dock-h) - 250px) / 1.397, (100cqw - 140px) / 3),
 		360px
 	);
+}
+/* The Market: the suit over each card and the readout under it; four cards
+ * share the width. */
+.closeup-market {
+	--screen: var(--sunflower);
+	--card-w: clamp(
+		120px,
+		min((100cqh - var(--dock-h) - 270px) / 1.397, (100cqw - 150px) / 4),
+		340px
+	);
+}
+/* Your area: two lines of cards (the zones, then the Staging Area) under
+ * their labels, the Fleet's ship tabs and the frame's head; a late game that
+ * runs out of width wraps, and the frame scrolls. */
+.closeup-area {
+	--screen: var(--ice);
+	--card-w: clamp(110px, (100cqh - var(--dock-h) - 190px) / 2.8, 240px);
 }
 .closeup-row {
 	display: grid;
@@ -786,11 +836,19 @@ kbd {
 	align-items: start;
 	padding: 4px 18px 6px;
 }
+.closeup-market-row {
+	grid-template-columns: repeat(4, var(--card-w));
+	gap: 24px;
+}
 .closeup-slot {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
 	min-width: 0;
+}
+.closeup-suit {
+	align-self: stretch;
+	justify-content: center;
 }
 .board .closeup-slot .empty-slot {
 	box-sizing: border-box;

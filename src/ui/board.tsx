@@ -123,10 +123,12 @@ export function DeckPiles({ seat }: { seat: Seat }) {
 // Market
 // ---------------------------------------------------------------------------
 
-export function Market() {
+/** `label` stands in for the heading (the console makes it the close-up's
+ *  door: the suits fill the top row, so a button has no room there). */
+export function Market({ label }: { label?: ReactNode | undefined }) {
 	return (
 		<section className="panel market" aria-label="Market" data-anchor="supply">
-			<h3>Market</h3>
+			<h3>{label ?? 'Market'}</h3>
 			<div className="market-row">
 				{MARKET_SUITS_FOUR.map((suit) => (
 					<MarketSuitCol key={suit} suit={suit} />
@@ -316,11 +318,15 @@ function ZoneRow({
 export function PlayerArea({
 	seat,
 	head = true,
+	aside,
 }: {
 	seat: Seat
 	/** The seat heading and action tray; the console's own area drops it,
 	 *  since the head bar already carries both. */
 	head?: boolean
+	/** At the end of the first line of zones (the console's close-up
+	 *  button); a full line pushes it onto its own. */
+	aside?: ReactNode | undefined
 }) {
 	const state = useStateGame()
 	const viewer = useViewerSeat()
@@ -355,6 +361,7 @@ export function PlayerArea({
 					}
 				/>
 				<ZoneRow seat={seat} k="LOCATION_AREA" title="Location Area" />
+				{aside !== undefined && <div className="area-aside">{aside}</div>}
 				<ZoneRow seat={seat} k="STAGING" title="Staging Area" full />
 			</div>
 		</section>

@@ -1,8 +1,8 @@
 // The console's keyboard shortcuts (docs/ui-lcars.md §4.2) share one guard:
 // a bare key only — no Cmd/Ctrl/Option, no auto-repeat — and never while the
 // player is typing in a field. Esc is a stack: it closes the topmost open
-// layer (menu, log drawer, viewscreen, Neutral Zone close-up, move history)
-// and nothing under it.
+// layer (menu, log drawer, viewscreen, close-up, move history) and nothing
+// under it.
 
 import { useEffect, useRef } from 'react'
 

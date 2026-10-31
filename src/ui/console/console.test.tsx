@@ -1,7 +1,7 @@
 // The console laid out across the table (docs/ui-lcars.md §4): the opponent
 // band, the decks on the table, the hand dock, and the layers that open only
-// on request — the viewscreen (V), the Neutral Zone close-up (N), the log
-// drawer (L), the menu.
+// on request — the viewscreen (V), the close-ups of the Neutral Zone (N), the
+// Market (M) and your area (B), the log drawer (L), the menu.
 
 import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'
@@ -148,7 +148,7 @@ describe('console across the table', () => {
 		expect(closeup()).toBeNull()
 		// the button over the three Locations opens it too
 		const button = host.querySelector(
-			'.neutral-zone .nz-closeup-btn',
+			'.neutral-zone .closeup-btn',
 		) as HTMLElement
 		act(() => {
 			button.click()
@@ -203,17 +203,122 @@ describe('console across the table', () => {
 		)
 	})
 
-	it('the close-up and the viewscreen share the screen: one puts the other away', () => {
+	it('M brings the Market close up: each suit, its card and its deck', () => {
 		const host = renderGame()
+		const p = useGameStore.getState().projected!
+		key('m')
+		const closeup = host.querySelector('.closeup-market')!
+		expect(closeup).not.toBeNull()
+		const slots = [...closeup.querySelectorAll('.closeup-slot')]
+		expect(
+			slots.map((s) => s.querySelector('.closeup-suit')!.textContent),
+		).toEqual(['PERSON', 'CARGO', 'SHIP', 'ALLY'])
+		for (const [i, suit] of (
+			['PERSON', 'CARGO', 'SHIP', 'ALLY'] as const
+		).entries()) {
+			const deck = p.zones[zoneKey({ k: 'MARKET_DECK', suit })]!.length
+			expect(slots[i]!.querySelectorAll('.card')).toHaveLength(1)
+			expect(slots[i]!.querySelector('.closeup-status')!.textContent).toBe(
+				`${deck} in the deck`,
+			)
+		}
+		key('Escape')
+		expect(host.querySelector('.closeup')).toBeNull()
+		// the panel's label is its door
+		act(() => {
+			;(host.querySelector('.market .panel-door') as HTMLElement).click()
+		})
+		expect(host.querySelector('.closeup-market')).not.toBeNull()
+		key('m')
+		expect(host.querySelector('.closeup')).toBeNull()
+	})
+
+	it('the Market close-up says what comes with each card', () => {
+		const host = renderGame()
+		const p = useGameStore.getState().projected!
+		const offer = (suit: 'PERSON' | 'CARGO') =>
+			p.zones[zoneKey({ k: 'MARKET_OFFER', suit })]![0]!
+		const person = offer('PERSON')
+		const cargo = offer('CARGO')
+		// UI-only: the view is patched directly
+		act(() => {
+			useGameStore.setState({
+				projected: {
+					...p,
+					cards: {
+						...p.cards,
+						[cargo]: { ...p.cards[cargo]!, resourceTokens: { GLO: 2 } },
+					},
+					zones: {
+						...p.zones,
+						[zoneKey({ k: 'MARKET_OFFER', suit: 'PERSON' })]: [],
+						JUNK: [person],
+						[zoneKey({ k: 'MARKET_DECK', suit: 'SHIP' })]: [],
+					},
+				},
+			})
+		})
+		key('m')
+		const slots = [...host.querySelectorAll('.closeup-market .closeup-slot')]
+		const note = (i: number) =>
+			slots[i]!.querySelector('.closeup-note')!.textContent
+		// the PERSON card went to the Junk, and its slot waits
+		expect(slots[0]!.querySelector('.card')).toBeNull()
+		expect(slots[0]!.textContent).toContain('In the Junk1')
+		expect(note(0)).toBe('Nothing on offer.')
+		// the Glory on the CARGO card goes with it
+		expect(slots[1]!.querySelector('[title="2 Glory"]')).not.toBeNull()
+		expect(note(1)).toBe(
+			'Whoever gains it takes its tokens too, and while it carries them it can’t be junked.',
+		)
+		expect(slots[2]!.querySelector('.closeup-status')!.textContent).toBe(
+			'Deck empty',
+		)
+		expect(note(2)).toBe(
+			'Its deck is empty: once it goes, the slot stays empty.',
+		)
+		expect(note(3)).toBe(
+			'Once it goes, the next card of the deck takes its place.',
+		)
+	})
+
+	it('B brings your own area close up', () => {
+		const host = renderGame()
+		key('b')
+		const closeup = host.querySelector('.closeup-area')!
+		expect(closeup).not.toBeNull()
+		expect(closeup.querySelector('[aria-label="Player 1 area"]')).not.toBeNull()
+		expect(closeup.querySelector('.card')).not.toBeNull()
+		// no door to itself inside
+		expect(closeup.querySelector('.closeup-btn')).toBeNull()
+		key('b')
+		expect(host.querySelector('.closeup')).toBeNull()
+		// the button at the end of your area's zones opens it too
+		act(() => {
+			;(
+				host.querySelector('.own-row .player-area .closeup-btn') as HTMLElement
+			).click()
+		})
+		expect(host.querySelector('.closeup-area')).not.toBeNull()
+	})
+
+	it('the close-ups and the viewscreen share the screen: one puts the other away', () => {
+		const host = renderGame()
+		const open = () =>
+			[...host.querySelectorAll('.closeup, .viewscreen')].map(
+				(el) => el.className,
+			)
 		key('n')
+		key('m')
+		expect(open()).toEqual(['closeup closeup-market'])
+		key('b')
+		expect(open()).toEqual(['closeup closeup-area'])
 		key('v')
-		expect(host.querySelector('.closeup')).toBeNull()
-		expect(host.querySelector('.viewscreen')).not.toBeNull()
+		expect(open()).toEqual(['viewscreen'])
 		key('n')
-		expect(host.querySelector('.closeup')).not.toBeNull()
-		expect(host.querySelector('.viewscreen')).toBeNull()
+		expect(open()).toEqual(['closeup closeup-neutral-zone'])
 		key('n')
-		expect(host.querySelector('.closeup')).toBeNull()
+		expect(open()).toEqual([])
 	})
 
 	it('the log opens only on request, and Esc closes the top layer first', () => {
