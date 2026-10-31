@@ -156,8 +156,8 @@ Taken cards go **directly into your hand**.
 - **`INCIDENT`** — taken either as a **cost** of your own effects, or as a **penalty** from an
   opponent's `ATTACK`. Add the Incident deck's **top card, unseen,** to your
   hand.
-- **Returning an INCIDENT** (by playing it, or via another card's effect) → place it **facedown
-  on the bottom of the Incident deck**.
+- **Returning an INCIDENT**, whether you play it or another card's effect sends it back: it goes
+  **face down under the Incident deck**.
 - REACTIONs worded "when you **gain** a [particular card]" **do NOT** fire on a `take`.
 
 ## 5.6 Junk pile (p.31)
