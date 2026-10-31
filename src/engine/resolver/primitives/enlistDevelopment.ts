@@ -1,6 +1,6 @@
 import type { Effect } from '../nodes'
 import type { Primitive } from './index'
-import { pickCards, moveCard } from '../runtime'
+import { pickCards, moveCard, withoutDecline } from '../runtime'
 import { evalAmount, resolveQuery } from '../../queries/resolveQuery'
 import { canPayAll } from './index'
 import { cardDef } from '../../cards'
@@ -18,12 +18,15 @@ export const enlistDevelopment: Primitive<
 	canResolve(state, node, ctx) {
 		return legalCandidates(state, node, ctx).length > 0
 	},
+	// "You may enlist a Development": the pick carries the decline.
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		// A picked Development (several candidates) resumes here too: pickCards
 		// returns the answer, and it pays exactly like an auto-picked one.
 		const cands = legalCandidates(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'enlist.dev', {
 			prompt: 'Enlist a Development',
+			declinable: true,
 			candidates: cands,
 			min: 1,
 			max: 1,
@@ -60,7 +63,10 @@ export const enlistDevelopment: Primitive<
 		state.stack.push({
 			k: 'EFFECT',
 			node: effect,
-			ctx: { ...ctx, bindings: { ...ctx.bindings, 'enlist.pick': iid } },
+			ctx: {
+				...withoutDecline(ctx),
+				bindings: { ...ctx.bindings, 'enlist.pick': iid },
+			},
 			ip: 0,
 		})
 		return state

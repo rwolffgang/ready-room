@@ -118,4 +118,49 @@ describe('ENLIST_DEVELOPMENT', () => {
 		expect(out.zones['DRAW:0']?.[0]).toBe('dw')
 		expect(out.zones['DEVELOPMENT:0']).toEqual(['dv'])
 	})
+
+	it('"you may enlist" asks the pick with a Decline, even for one Development', () => {
+		const s = devState('dv')
+		const may: Effect = { k: 'MAY', body: { k: 'ENLIST_DEVELOPMENT' } }
+		const halted = pushAndRun(s, may, ID('src'), 0)
+		const c = halted.pendingChoice
+		expect(c?.k).toBe('CHOOSE_CARDS')
+		if (c?.k !== 'CHOOSE_CARDS') return
+		expect([c.candidates, c.optional, c.mayDecline]).toEqual([
+			['dv'],
+			true,
+			true,
+		])
+		const declined = answer(halted, [])
+		expect(declined.pendingChoice).toBeNull()
+		expect(lat(declined)).toBe(5)
+		expect(declined.zones['DEVELOPMENT:0']).toEqual(['dv'])
+		expect(declined.stack).toHaveLength(0)
+		const accepted = answer(halted, ['dv'])
+		expect(lat(accepted)).toBe(3)
+		expect(accepted.zones['DRAW:0']?.[0]).toBe('dv')
+	})
+
+	it('after the "you may" pick the discount split has no Decline', () => {
+		let s = place(devState(), 'enl-dev2', ID('dx'), {
+			k: 'DEVELOPMENT',
+			seat: 0,
+		})
+		s = setResources(setResources(s, 0, 'DIL', 2), 0, 'LAT', 2)
+		const may: Effect = {
+			k: 'MAY',
+			body: {
+				k: 'ENLIST_DEVELOPMENT',
+				discount: [{ res: ['DIL', 'LAT'], amount: 1 }],
+			},
+		}
+		const split = answer(pushAndRun(s, may, ID('src'), 0), ['dx'])
+		const c = split.pendingChoice
+		expect(c?.k).toBe('CHOOSE_OPTION')
+		if (c?.k !== 'CHOOSE_OPTION') return
+		expect(c.options.map((o) => o.label)).toEqual([
+			'Reduce the cost by 1 DIL',
+			'Reduce the cost by 1 LAT',
+		])
+	})
 })
