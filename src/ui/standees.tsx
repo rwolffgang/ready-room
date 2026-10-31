@@ -142,8 +142,9 @@ export function ShipStandees({
 }
 
 /** On a Fleet ship card (desktop, via ShipCard): which Location its standee
- *  stands on — a click opens that Location's detail — or, muted, that the
- *  token is on the card or in the supply. Same words as the phone tile's chip
+ *  stands on — a click opens that Location's detail. Nothing while the token
+ *  is on the card or in the supply, and nothing on a Fleet card that is not a
+ *  ship (a deployed Cargo). Same words as the phone tile's chip
  *  (tile/CardTile.tsx). */
 export function ShipPosition({ ship }: { ship: CardInstanceId }) {
 	const projected = useProjected()
@@ -152,18 +153,7 @@ export function ShipPosition({ ship }: { ship: CardInstanceId }) {
 	if (projected === null || card === undefined) return null
 	const at = card.shipTokenAt
 	const owner = card.owner ?? 0
-	if (at === null || at === 'SUPPLY') {
-		const where = at === null ? 'token on card' : 'token in supply'
-		return (
-			<span
-				className={`ship-at ship-at-idle standee-seat-${owner}`}
-				aria-label={where}
-			>
-				<ShipIcon />
-				<span className="ship-at-name">{where}</span>
-			</span>
-		)
-	}
+	if (at === null || at === 'SUPPLY') return null
 	const name = nameOf(projected, index, at)
 	return (
 		<button

@@ -213,22 +213,9 @@ function StateChips({
 			</span>,
 		)
 	if (z.k === 'FLEET') {
+		// only a ship standing on a Location says so (a deployed Cargo never)
 		const at = card.shipTokenAt
-		if (at === null)
-			chips.push(
-				<span key="ship" className="pb-chip">
-					<SuitGl suit="SHIP" />
-					token on card
-				</span>,
-			)
-		else if (at === 'SUPPLY')
-			chips.push(
-				<span key="ship" className="pb-chip">
-					<SuitGl suit="SHIP" />
-					token in supply
-				</span>,
-			)
-		else
+		if (at !== null && at !== 'SUPPLY')
 			chips.push(
 				<span key="ship" className="pb-chip pb-chip-seat">
 					<SuitGl suit="LOCATION" />
