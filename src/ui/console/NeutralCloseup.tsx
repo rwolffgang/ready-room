@@ -1,12 +1,9 @@
-// The Neutral Zone close up (N, or the button over the three Locations): the
-// Locations at a size you can read, each with its Away Teams, ships and beamed
-// cards as on the table, and under it the secure rule worked out for both
-// sides (rules/03 §3.4.1) — who holds it, the token count, what it takes from
-// here. Framed like the viewscreen (V) and sharing its place: opening one puts
-// the other away. N, Esc or a click outside the frame closes it; a click on a
-// Location does what it does on the table.
+// The Neutral Zone close up (N, or the button over the three Locations; the
+// frame is Closeup.tsx): the Locations at a size you can read, each with its
+// Away Teams, ships and beamed cards as on the table, and under it the secure
+// rule worked out for both sides (rules/03 §3.4.1) — who holds it, the token
+// count, what it takes from here.
 
-import { useCallback } from 'react'
 import type { GameState } from '../../engine/state'
 import { otherSeat, zoneKey } from '../../engine/state'
 import type { CardInstanceId } from '../../engine/ids'
@@ -17,55 +14,13 @@ import { LocationCard } from '../location'
 import { Icon } from '../icons'
 import { seatLabel } from '../format'
 import { secureCopy, secureStatus } from '../mobile/facts'
-import { useConsoleUi } from './consoleUi'
-import { useEscape, useShortcut } from './useShortcut'
-
-/** The panel's door to the close-up; N works wherever the console is. */
-export function CloseupButton() {
-	const open = useConsoleUi((s) => s.closeup)
-	const setCloseup = useConsoleUi((s) => s.setCloseup)
-	const toggle = () => setCloseup(!open)
-	useShortcut('n', toggle)
-	return (
-		<button
-			type="button"
-			className={`btn micro nz-closeup-btn${open ? ' btn-active' : ''}`}
-			onClick={toggle}
-			aria-expanded={open}
-			title="The Neutral Zone close up (N)"
-		>
-			Close up <kbd>N</kbd>
-		</button>
-	)
-}
 
 export function NeutralCloseup() {
-	const open = useConsoleUi((s) => s.closeup)
-	const setCloseup = useConsoleUi((s) => s.setCloseup)
-	const close = useCallback(() => setCloseup(false), [setCloseup])
-	useEscape(open, close)
-	if (!open) return null
 	return (
-		<div className="closeup-backdrop" onClick={close}>
-			<section
-				className="closeup"
-				role="dialog"
-				aria-label="Neutral Zone close up"
-				onClick={(e) => e.stopPropagation()}
-			>
-				<div className="viewscreen-head">
-					<span className="viewscreen-cap" aria-hidden="true" />
-					<strong>Neutral Zone · close up</strong>
-					<button type="button" className="btn micro" onClick={close}>
-						Close <kbd>N</kbd>
-					</button>
-				</div>
-				<div className="closeup-row">
-					{([0, 1, 2] as const).map((slot) => (
-						<CloseupSlot key={slot} slot={slot} />
-					))}
-				</div>
-			</section>
+		<div className="closeup-row">
+			{([0, 1, 2] as const).map((slot) => (
+				<CloseupSlot key={slot} slot={slot} />
+			))}
 		</div>
 	)
 }

@@ -104,9 +104,9 @@ The split is itself informational: **condensed caps = system chrome, normal-widt
 │ OPPONENT BAND  [hand, face down] [Draw][Discard]  pool · ~VP · tracks · missions · AI ticker · On screen (V)    │
 │                Captain · Fleet · Duty · Locations · Staging — every card they have in play, small             │
 ├────────────────────────────────────────┬──────────────────────────────┬──────────────────────────────────────┤
-│ MARKET  [deck] ×4                       │ NEUTRAL ZONE ×3 · Close up (N)│ PILES  [Stardates] [Incidents] [Junk]│
+│ MARKET (M)  [deck] ×4                   │ NEUTRAL ZONE ×3 · Close up (N)│ PILES  [Stardates] [Incidents] [Junk]│
 ├────────────────────────────────────────┴──────────────────────────────┼──────────────────────────────────────┤
-│ YOUR AREA  Captain · Fleet · Duty Officer · Location Area              │ CREW CONSOLE  tracks · piles ·       │
+│ YOUR AREA  Captain · Fleet · Duty Officer · Location Area  Close up (B)│ CREW CONSOLE  tracks · piles ·       │
 │            Staging Area                                                 │               missions               │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ [Draw][Discard] [Hand · H]  the hand, peeking up from the bottom edge                                         │
@@ -150,18 +150,29 @@ What the layout follows:
   full size and covered most of your area.
 - **Four layers open only on request.** The hand (above), the opponent **on screen** (**V**, or a
   click on the band: their full area and crew console at your card size, framed like the main
-  viewscreen), the **Neutral Zone close up** (**N**, or the Close up button over the three
-  Locations) and the **log drawer** (**L** or the Log button; it never opens by itself, and the
-  button counts what the other side did since you last looked). **Esc** closes the topmost one.
-- **The Neutral Zone close up** draws the three Locations as large as the board leaves room for
-  (about 280px wide on a 1180×760 iPad, 330px on a laptop, against 85–104px on the table): the
-  same `<LocationCard>` with its Away Teams, ships and beamed cards, only with `--card-w` set
-  higher. Under each card a readout works out the secure rule for both sides (rules/03 §3.4.1,
-  `secureStatus` / `secureCopy` in `mobile/facts.ts`, shared with the phone's Sector): who holds
-  it, the token count, each side's Away Teams and ships, and how many more tokens you need. It
-  takes the viewscreen's place in its own colour (periwinkle, the Neutral Zone's), so opening one
-  puts the other away. A click on a Location does what it does on the table, so a choice that
-  asks for a Location can be answered from the close-up.
+  viewscreen), a **close-up** of one part of the table (**N** the Neutral Zone, **M** the Market,
+  **B** your area) and the **log drawer** (**L** or the Log button; it never opens by itself, and
+  the button counts what the other side did since you last looked). **Esc** closes the topmost
+  one.
+- **The close-ups** draw the same components as the table, only with `--card-w` set as high as
+  the board leaves room for, in a frame that takes the viewscreen's place in the system's own
+  colour; one shows at a time, and opening one puts the viewscreen away (`Closeup.tsx`). A click
+  on a card does what it does on the table, so a choice that asks for one can be answered from
+  the close-up. Their doors: the Close up button over the three Locations (N), the Market's own
+  label (M, since its suits fill the row a button would take) and the Close up button at the end
+  of your area's first line (B).
+  - **Neutral Zone** (periwinkle; about 280px wide on a 1180×760 iPad, 330px on a laptop,
+    against 85–104px on the table): the three `<LocationCard>`s with their Away Teams, ships and
+    beamed cards. Under each a readout works out the secure rule for both sides (rules/03
+    §3.4.1, `secureStatus` / `secureCopy` in `mobile/facts.ts`, shared with the phone's Sector):
+    who holds it, the token count, each side's Away Teams and ships, and how many more tokens you
+    need.
+  - **Market** (sunflower; about 250px on the iPad, 320px on a laptop): each suit over its faceup
+    card and a readout of what comes with it — the cards left in its deck, the resource tokens
+    on it (whoever gains it takes them, and while it carries any it can't be junked: rules/05
+    §5.4.4, §5.6) and that suit's cards in the Junk.
+  - **Your area** (ice; about 160px on the iPad, 190px on a laptop): your `<PlayerArea>`, sized
+    so its two lines fit; a late game that runs out of width wraps and the frame scrolls.
 - **Cards fit the screen.** One number, `--card-w`, sizes every card on the table from the
   board's height: the shared row is one card high and your area two, and a card's face keeps the
   printed proportions (1170×1635, 1:1.397 — any other box crops the art's edges), so 4.19 card
@@ -186,6 +197,8 @@ What the layout follows:
 | H          | pin the hand up / let it drop        |
 | V          | the opponent on screen               |
 | N          | the Neutral Zone close up            |
+| M          | the Market close up                  |
+| B          | your area close up                   |
 | L          | the log drawer                       |
 | F          | fullscreen                           |
 | Option     | hold over a card to zoom it          |

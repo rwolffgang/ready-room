@@ -9,10 +9,10 @@
 //   hand dock   your Draw and Discard, your hand peeking up from the edge
 //
 // with layers that open only on request: the hand lifted (hover, tap, H), the
-// opponent on the viewscreen (V), the Neutral Zone close up (N) and the log
-// drawer (L). Cards size
-// themselves to the height the board has (--card-w in console.css), so on a
-// laptop or an iPad everything a turn needs is on one screen.
+// opponent on the viewscreen (V), a close-up of the Neutral Zone (N), the
+// Market (M) or your area (B), and the log drawer (L). Cards size themselves
+// to the height the board has (--card-w in console.css), so on a laptop or an
+// iPad everything a turn needs is on one screen.
 
 import { useEffect } from 'react'
 import type { GameState } from '../../engine/state'
@@ -37,7 +37,7 @@ import { useConsoleUi } from './consoleUi'
 import { HandDock } from './HandDock'
 import { HeadBar } from './HeadBar'
 import { LogDrawer } from './LogDrawer'
-import { CloseupButton, NeutralCloseup } from './NeutralCloseup'
+import { CloseupButton, CloseupLabel, Closeups } from './Closeup'
 import { OpponentBand } from './OpponentBand'
 import { Viewscreen } from './Viewscreen'
 import './console.css'
@@ -83,18 +83,22 @@ function Board() {
 			<div className="table">
 				<OpponentBand seat={opponent} />
 				<div className="shared-row">
-					<Market />
-					<NeutralZone aside={<CloseupButton />} />
+					<Market label={<CloseupLabel kind="market">Market</CloseupLabel>} />
+					<NeutralZone aside={<CloseupButton kind="neutral-zone" />} />
 					<CentrePiles />
 				</div>
 				<div className="own-row">
-					<PlayerArea seat={viewer} head={false} />
+					<PlayerArea
+						seat={viewer}
+						head={false}
+						aside={<CloseupButton kind="area" />}
+					/>
 					<CrewBoard seat={viewer} />
 				</div>
 			</div>
 			<HandDock seat={viewer} />
 			<Viewscreen seat={opponent} />
-			<NeutralCloseup />
+			<Closeups />
 			<LogDrawer />
 		</main>
 	)
