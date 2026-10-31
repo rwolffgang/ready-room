@@ -251,6 +251,8 @@ export function describeIntent(
 			return `Complete mission ${intent.index + 1}`
 		case 'RESOLVE_CHOICE':
 			return `Resolve ${intent.choiceId}`
+		case 'BOT_STEP':
+			return 'Bot step'
 	}
 }
 

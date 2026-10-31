@@ -8,6 +8,7 @@ import {
 	moveCard,
 	emit,
 	thisOnly,
+	discardProtected,
 } from '../runtime'
 import { resolveQuery } from '../../queries/resolveQuery'
 import { cardDef, isLocationDef } from '../../cards'
@@ -42,7 +43,9 @@ function candidatesOf(
 		node,
 		ctx,
 	).filter(
-		(iid) => !isLocationDef(cardDef(state.cards[iid]!.def)), // rules/06 §6.4.2
+		(iid) =>
+			!isLocationDef(cardDef(state.cards[iid]!.def)) && // rules/06 §6.4.2
+			!discardProtected(state, iid),
 	)
 }
 

@@ -1,7 +1,7 @@
 # House AI
 
-The opponents in `src/bot/`. This is a house AI. It is not the official solo Bot, which needs the
-separate solo rulebook (`docs/open-questions.md` Blocker B2). Every level is a `Bot`
+The opponents in `src/bot/`. This is a house AI. It is not the official solo Bot (`rules/13`,
+`src/engine/solo/`), which is part of the rules engine, not an AI. Every level is a `Bot`
 (`src/bot/types.ts`): a pure `decide(state, seat, legal) → Intent` under a no-cheat contract.
 Hidden information is read only through `determinize`, and randomness is seeded from
 `seedFromView`.
@@ -406,6 +406,30 @@ training run ≈ 0.5 min (a 6-way `--search` ≈ 1 min), a 200-game gate at 100 
 **Expert Iteration status.** Only iteration 0 (heuristic self-play) was run. The ISMCTS
 self-play round is implemented (`--ei-games`), but the task brief made it conditional on a
 passed iteration-0 gate, and neither gate passed within the time box.
+
+## Against the official solo Bot
+
+In a solo game the house AI can play your seat. The official Bot's own turn is rules: `playBots`
+dispatches its `BOT_STEP`s without asking a bot, and its choices are piloted inside `reduce`. The
+learned value was trained on two-player games only, so solo positions use the hand-tuned
+evaluation. Determinization pools the Bot's face-down Staging row with its deck and Log, and
+keeps its Supplement deck as a pool of its own. A no-cheat test covers solo
+(`determinize.test.ts`).
+
+`npx tsx tools/solo-arena.ts --bot <spec> --games N` plays the house bot (as you) against every Bot
+crew × level and reports the win rate per level. `npm run bot:check` runs one game per cell.
+
+| Run (2026-10-31, seed 3, 1 game per crew × level) | Ensign | Lieutenant | Commander | Captain | Admiral |
+| ------------------------------------------------- | ------ | ---------- | --------- | ------- | ------- |
+| `normal` (as you): games won                      | 0/6    | 0/6        | 0/6       | 0/6     | 0/6     |
+| `normal` (as you): mean VP margin                 | −13.2  | −23.7      | −30.8     | −47.3   | −46.7   |
+
+The margin worsens with every level, so the difficulty ladder works. The house AI loses even at
+Ensign, and the score breakdowns show why: it never completes a mission against the Bot, so it
+scores no Focus and no mission VP. The Bot scores its Focus without a mission and 5 VP per
+ENDGAME card (both are rules). That is a house AI weakness to work on (a solo-aware value or
+mission priority), not a Bot bug: the rulebook's complete Bot turn is replayed exactly in
+`src/engine/solo/rulebook-turn.test.ts`.
 
 ## Maintaining the house AI
 

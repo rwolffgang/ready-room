@@ -879,3 +879,204 @@ BEAM, GAIN LAT 1])` (no COST_BEAM).
   (rules/03 §3.1). Ownership itself is unchanged, so nothing else moves.
 - **Keyed on:** `excludedFromScoring` in `src/engine/scoring.ts`; test "a returned INCIDENT in the
   Incident deck no longer scores for its old owner" in `src/engine/scoring.test.ts`.
+
+## 052 — A Bot flip counts as playing the card
+
+- **Question:** the solo rulebook has the Bot "resolve" Staging cards through its Automated
+  Command (AC) rows and ignore their text. Does that count as playing them, e.g. for your
+  REACTIONs to an opponent playing a card?
+- **Interpretation:** yes. The rulebook's own examples say the Bot "plays" a LOCATION it flips
+  (solo p.6). Each flipped card emits CARD_PLAYED for seat 1. A card resolved as a side effect
+  (`rules/13` §13.8) or a LOCATION taken control of does not, because neither is played.
+- **Keyed on:** `rules/13` §13.4, §13.6, §13.8.
+
+## 053 — The Supplement deck is neither owned nor scored
+
+- **Question:** the Bot scores "5 VP per ENDGAME operation it owns, whether or not the card was in
+  play" (solo p.5). Does that include cards still in its Supplement deck?
+- **Interpretation:** no. The Supplement is the Bot's Reserve deck plus Development pile, and those
+  never score for a player (`rules/07` §7.4, `excludedFromScoring`). The Bot's cards in its deck,
+  row, Staging Area, Discard pile, Log and Control Area all count. The same applies to printed VP.
+- **Keyed on:** `rules/13` §13.13.3.
+
+## 054 — The Bot's Dilithium and Latinum score together, 1 VP per 2
+
+- **Question:** "1 VP for every 2 Dilithium/Latinum" (solo p.5). Is that per resource or combined?
+- **Interpretation:** combined: ⌊(DIL + LAT) / 2⌋. The Burnham Bot scores 1 VP per Dilithium
+  (its `special`), plus ⌊LAT / 2⌋ for any Latinum.
+- **Keyed on:** `rules/13` §13.13.3.
+
+## 055 — The Bot pays its own costs from what it values least
+
+- **Question:** some AC rows make the Bot give something up without saying which: "log a
+  controlled LOCATION and remove 2 Away Teams to take the top ENCOUNTER".
+- **Interpretation:** the solo rulebook's pattern for giving things up (pulling back an Away Team,
+  solo p.9) is the guide.
+  - It logs the controlled LOCATION **least valuable to itself**.
+  - It removes Away Teams from the LOCATION where it has the **fewest** tokens; ties go to the least
+    valuable to itself.
+  - Ties after that go to the leftmost.
+- **Keyed on:** `rules/13` §13.3, §13.11.3.
+
+## 056 — The Bot accepts what your effects offer it, except INCIDENT returns
+
+- **Question:** your effects sometimes offer the opponent an optional benefit ("they may draw a
+  card"). The solo rulebook covers draws (mill the top card, solo p.10) and INCIDENT returns
+  (decline, solo p.7), and says other choices take "the first listed option it legally can".
+- **Interpretation:**
+  - An offered "may" is accepted. The listed action comes first; declining is the absence of a
+    listed option. An offered draw therefore mills the Bot deck top.
+  - INCIDENT returns are declined, as stated.
+  - Every other choice takes the first enabled option.
+- **Keyed on:** `rules/13` §13.9, §13.12.3; `src/engine/solo/policy.ts`.
+
+## 057 — Only neutral LOCATIONs are Bot targets; its own cards' text stays silent
+
+- **Question:**
+  - Can "it engages" pick a LOCATION you control?
+  - Do restrictions printed on LOCATIONs apply to the Bot?
+  - Do keywords on the Bot's own cards ("cannot be promoted", "treated as a LOCATION") affect it?
+- **Interpretation:**
+  - Explore, engage and send only ever target **neutral** LOCATIONs (solo p.9 says "Neutral
+    Zone").
+  - Restrictions printed on a neutral LOCATION are rules of the board and bind the Bot like a
+    player.
+  - Text on the Bot's own cards is ignored entirely (solo p.5), so its rows classify by printed
+    suit and its PERSONs can always be promoted.
+- **Keyed on:** `rules/13` §13.6, §13.11.
+
+## 058 — "Take the top card of the Supplement deck" goes on top of the Bot deck
+
+- **Question:** where does a Supplement card the Bot "takes" go?
+- **Interpretation:** "take" always means "on top of the Bot deck" for the Bot (solo p.8 and the
+  player aid), so the Supplement card does too. It is resolved when it is drawn later, not
+  immediately.
+- **Keyed on:** `rules/13` §13.10.1.
+
+## 059 — Reinforce lets you pick any card of your Reinforcement deck
+
+- **Question:** the solo Directive Reinforce says "take a card from your Reinforcement pile". Is it
+  the top card or a choice?
+- **Interpretation:** a choice. The Reinforcement deck is not shuffled or ordered by any rule,
+  and you built it yourself (`rules/14` §14.4), so the owner may look through it and pick.
+- **Keyed on:** `rules/14` §14.4.
+
+## 060 — The Bot's Captain's Log stays hidden
+
+- **Question:** should the Bot's Log be visible to you? Nobody plays the Bot, so nothing is
+  "secret".
+- **Interpretation:** keep it exactly like a player's Log, which is face down to the opponent. Its
+  size is public. Logged cards only matter at scoring, and the end-of-game breakdown shows them.
+- **Keyed on:** `zoneProps` LOG (`src/engine/state.ts`); `rules/13` §13.2.
+
+## 061 — Bot Market preferences: printed traits only; "most {DIL}" needs one
+
+- **Question:** two corners of the Bot's Market preferences.
+  - Does a WILDCARD card in the Market count as "a KLINGON" for "gain a KLINGON > …"?
+  - What does "the card in the Market with the most {DIL} > most {GLO}" gain when no Market card
+    holds either token?
+- **Interpretation:**
+  - **WILDCARD:** the solo rulebook gives WILDCARD meaning only for the card the Bot resolves (it
+    takes the first TRAITS row). A Market card belongs to nobody, and nobody declares what it
+    counts as. So preferences match printed traits, suits and Focus icons only.
+  - **"Most" terms:** a "most {X}" step needs a card holding at least one {X}, otherwise the
+    chain falls through to its next step. When nothing is left, the Bot gains nothing, so "if
+    able" rows take their "otherwise" branch.
+- **Keyed on:** `src/engine/resolver/primitives/botAcquire.ts`; `src/engine/solo/nodes.test.ts`
+  ("Market preferences").
+
+## 062 — A destroyed card never scores
+
+- **Question:** DESTROY sends a card "to the box" (rules/08 → destroy), but the engine kept its
+  `owner`, so a destroyed card's printed VP still counted for its last owner at final scoring.
+- **Interpretation:** the box is out of the game, so a card in it scores for nobody, like a
+  card returned to a shared supply (051). This applies in every mode. It surfaced with the solo
+  Conspiring Admirals card, which destroys itself before scoring when the Bot owns it.
+- **Keyed on:** `excludedFromScoring` in `src/engine/scoring.ts`;
+  `src/engine/solo/admirals-challenge.test.ts`.
+
+## 063 — Your hand attacks on the Bot: what "you choose the outcome" means in the engine
+
+- **Question:** the solo rulebook (p.10) has hand attacks, and attacks that make the Bot choose
+  from its own Discard pile, do nothing, with **you** freely choosing whether they succeeded.
+  Which of our card shapes does that cover, and how is the choice asked?
+- **Interpretation:** the engine handles three shapes.
+  - A forced discard (or log) with nothing depending on it simply does nothing; no question is
+    asked.
+  - "You may make them discard … to gain …" is a cost on the Bot's hand inside a "may".
+    Accepting the "may" is the choice that it succeeded: the cost counts as paid, and nothing
+    moves (rulebook Example 1).
+  - An "if they can … / if they cannot …" of your card that tests the Bot's hand or Discard
+    pile asks you which branch happens. A step inside that branch which binds "the card they
+    logged/discarded" for a later "if they did" follows your answer (rulebook Example 2). When
+    no branch decided it, you are asked at that step.
+- **Keyed on:** `src/engine/solo/outcome.ts`, `COST_DISCARD` in
+  `src/engine/resolver/primitives/costDiscard.ts`; `src/engine/solo/outcome.test.ts`.
+
+## 064 — The Conspiring Admirals card's "discard this card"
+
+- **Question:** its play operation says "discard a PERSON from your hand to discard this card
+  and draw a card", and a SPECIAL forbids any other effect from beaming or discarding it ("not
+  even in the Clean-up Step", per the STCC errata).
+- **Interpretation:**
+  - A played card sits in your Staging Area and goes to your Discard pile at Clean-up. That
+    _is_ "discard this card", so the play operation is the PERSON-discard cost and the draw.
+  - The protection is a card flag, `discardProtected`. The card is never a candidate for a
+    hand discard, a cost discard, a beam, or the Clean-up "discard any cards from hand".
+- **Keyed on:** `src/data/cards/solo/directives.json`, `discardCandidates` in
+  `src/engine/resolver/runtime.ts`.
+
+## 065 — Five-Year Mission boosts "before drawing the starting hand"
+
+- **Question:** two Bots' campaign bonuses let you find cards (or find a LOCATION and free play
+  it) before you draw your starting hand. Where do you look, and when do they resolve?
+- **Interpretation:**
+  - Setup holds your opening hand back. The boosts resolve as the game starts, before your first
+    Resupply step. Then you draw your hand, and then the other boosts ("gain 3 Research", "after
+    drawing the starting hand, draw 2") resolve.
+  - "Find" looks through your Draw deck and Discard pile, plus your Reserve deck where the
+    bonus allows it. Your hand is empty at that point, so it is left out; finding a card that is
+    already in hand would do nothing.
+- **Keyed on:** `pushCampaignStart` in `src/engine/solo/campaign.ts`, the `campaign` rewards in
+  `src/data/cards/solo/bots.json`.
+
+## 066 — Five-Year Mission upgrades: a free choice between Option A and B
+
+- **Question:** "Choose one: Option A … If none of your Market cards matches, you must take
+  Option B." May you take Option B when a Market card matches?
+- **Interpretation:**
+  - Yes. Option B is forced only when no card matches. The Market-only challenge closes Option
+    B after a win.
+  - Option A offers each matching Market card you owned at any point in the game, once. A card
+    already in your Reinforcement pile is not offered again.
+  - A REINFORCE bonus offers your crew cards whose starting position is the one it names
+    (Reserve deck or Available cards), never an INCIDENT, and never a card already in the pile.
+  - When nothing is on offer, the game passes without an upgrade.
+- **Keyed on:** `upgradeOptions` / `applyUpgrade` in `src/session/campaign.ts`.
+
+## 067 — Where the Reinforcement pile's cards come from
+
+- **Question:** a Market card added to the Reinforcement pile, and a crew card moved there by a
+  REINFORCE bonus: where are they in later games?
+- **Interpretation:**
+  - A Market card leaves the Market: at setup it comes out of its Market deck (or the face-up
+    offer, which is then refilled) and starts in your Reinforcement pile.
+  - A crew card leaves your deck: it starts in your Reinforcement pile, not where its position
+    indicator puts it.
+  - The pile is yours and visible to you. Its cards don't score until the campaign Directive
+    takes them into your hand.
+- **Keyed on:** `setupCampaignDeck` in `src/engine/solo/campaign.ts`.
+
+## 068 — The campaign challenges in the engine
+
+- **Interpretation:**
+  - **Lean start:** after a single win you choose which resource to start without, when you start
+    the next game.
+  - **Late Away Teams:** a set-aside token leaves both your pool and your total. It comes back
+    (to your Captain) at the first check after your Reserve deck is empty.
+  - **One ship:** your starting SHIP leaving your Fleet for any reason loses the game on the
+    spot. The game goes to final scoring, and the Bot wins whatever the score.
+  - **Random Reserve:** "from the rank of Lieutenant on" reads your rank when the game is set
+    up.
+- **Keyed on:** `campaignSetup` in `src/session/campaign.ts`, `campaignCheck` in
+  `src/engine/solo/campaign.ts`.

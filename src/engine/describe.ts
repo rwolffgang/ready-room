@@ -547,6 +547,8 @@ export function describePredicate(pred: Predicate): string {
 			return `you have ${pred.value}+ value`
 		case 'COLLECTIVE_AT_LEAST':
 			return `you have ${pred.value}+ collective value`
+		case 'IS_SOLO_BOT':
+			return 'this card is owned by the Bot'
 		case 'COMPARE':
 			return `${describeAmount(pred.a)} is ${pred.op === 'LT' ? 'lower than' : 'at least'} ${describeAmount(pred.b)}`
 		case 'AWAY_TEAMS_AT': {
@@ -649,6 +651,12 @@ export function describeZoneSpec(z: ZoneSpec): string {
 			return `${your} Captain`
 		case 'STATUS':
 			return `${your} Status card`
+		case 'BOT_ROW':
+			return "the Bot's Staging row"
+		case 'SUPPLEMENT':
+			return "the Bot's Supplement deck"
+		case 'REINFORCEMENT':
+			return `${your} Reinforcement deck`
 		case 'JUNK':
 			return 'the Junk'
 		case 'INCIDENT_DECK':
@@ -915,6 +923,8 @@ function render(node: Effect): string {
 					: ''
 			}.`
 		case 'TAKE':
+			if (node.deck === 'REINFORCEMENT')
+				return `Take ${node.count === 1 ? 'a card' : `${node.count} cards`} from your Reinforcement pile.`
 			return `Take ${node.count} ${node.deck === 'INCIDENT' ? 'Incident' : 'Encounter'} card${
 				node.count === 1 ? '' : 's'
 			}${node.look !== undefined ? `, look at the top ${node.look}` : ''}${
@@ -975,6 +985,12 @@ function render(node: Effect): string {
 		case 'GAIN_ACTION':
 			return `Gain ${describeAmount(node.amount)} {ACTION}.`
 		case 'ADVANCE_SPECIALTY':
+			if (typeof node.specialty === 'object')
+				return `Gain ${describeAmount(node.amount)} ${node.specialty.of
+					.map(specialtyWord)
+					.join(' / ')} (whichever is ${
+					node.specialty.pick === 'LOWER' ? 'lower' : 'higher'
+				}).`
 			if (node.specialty === 'LOWEST')
 				return `Gain ${describeAmount(node.amount)} to your lowest of RESEARCH/INFLUENCE/MILITARY (your pick if tied).`
 			return node.specialty === 'CHOICE'
@@ -1104,7 +1120,107 @@ function render(node: Effect): string {
 		// -------- escape hatch (1) --------
 		case 'SCRIPT':
 			return `(script: ${node.fn})`
+
+		// -------- solo Bot (rules/13) — Automated Command rows --------
+		case 'TRY': {
+			const lead = node.test !== undefined ? 'If able to do both' : 'If able'
+			const then = `${lead}, ${phrase(render(node.body))}.`
+			return node.otherwise === undefined
+				? then
+				: `${then} Otherwise, ${phrase(render(node.otherwise))}.`
+		}
+		case 'ATTACK':
+			return `[ATTACK] ${render(node.body)}`
+		case 'BOT_DECK':
+			return describeBotDeck(node)
+		case 'BOT_ACQUIRE':
+			return describeBotAcquire(node)
+		case 'BOT_JUNK':
+			return 'Junk the most valuable card in the Market (ignoring any with tokens).'
+		case 'BOT_SEND_AWAY_TEAM': {
+			const n = describeAmount(node.count)
+			const teams = n === '1' ? 'an Away Team' : `${n} Away Teams`
+			const where =
+				node.prefer !== undefined
+					? `${node.prefer.join(' > ')} > LOCATION`
+					: 'LOCATION'
+			return `Send ${teams} to a neutral ${where}${
+				node.ignoreShips === true ? ', ignoring any opponent SHIP' : ''
+			}.`
+		}
+		case 'BOT_DEPLOY': {
+			const ship =
+				node.target === 'THIS'
+					? 'this SHIP'
+					: node.target === 'DISCARD'
+						? 'a SHIP from the Bot Discard pile'
+						: 'the gained SHIP'
+			const then =
+				node.then === undefined
+					? ''
+					: `; it ${node.then === 'EXPLORE' ? 'explores' : 'engages'}`
+			return `Deploy ${ship}${then}.`
+		}
+		case 'BOT_PROMOTE':
+			return node.target === 'THIS'
+				? 'If this card is a PERSON, promote it to Duty Officer.'
+				: node.target === 'DISCARD'
+					? 'Promote a PERSON from the Bot Discard pile to Duty Officer.'
+					: 'Promote it to Duty Officer.'
+		case 'BOT_RESOLVE':
+			switch (node.from) {
+				case 'ROW':
+					return 'Resolve the next card of the Staging row.'
+				case 'DECK_TOP':
+					return 'Resolve the top card of the Bot deck.'
+				case 'SUPPLEMENT_TOP':
+					return 'Resolve the top card of the Supplement deck.'
+				case 'DISCARD':
+					return `Resolve ${withArticle(describeFilter(node.filter))} from the Bot Discard pile.`
+				case 'BOUND':
+					return 'Resolve it.'
+			}
+			break
+		case 'BOT_TAKE_CONTROL':
+			return 'Take control of the neutral LOCATION with most Bot tokens (minimum 1).'
+		case 'TRANSFER':
+			return 'Put this card on the bottom of your Draw deck (it is now yours).'
+		case 'BOT_REMOVE_AWAY_TEAM':
+			return node.count === 1
+				? 'Remove an Away Team.'
+				: `Remove ${node.count} Away Teams.`
 	}
+}
+
+/** "Log the top 2 cards of the Bot deck." and the Supplement variants. */
+function describeBotDeck(node: Extract<Effect, { k: 'BOT_DECK' }>): string {
+	const deck = node.from === 'DECK' ? 'the Bot deck' : 'the Supplement deck'
+	if (node.op === 'TAKE') return `Take the top card of ${deck}.`
+	const verb = node.op === 'LOG' ? 'Log' : 'Discard'
+	return node.count === 1
+		? `${verb} the top card of ${deck}.`
+		: `${verb} the top ${node.count} cards of ${deck}.`
+}
+
+/** "Gain a KLINGON > PERSON / SHIP." — the Bot's preference expression. */
+function describeBotAcquire(node: Extract<Effect, { k: 'BOT_ACQUIRE' }>): string {
+	const verb = node.mode === 'GAIN' ? 'Gain' : 'Take'
+	if (node.from === 'ENCOUNTER') return `${verb} the top ENCOUNTER.`
+	if (node.from === 'INCIDENT') return `${verb} an INCIDENT.`
+	if (node.pref === undefined)
+		return `${verb} the most valuable card in the Market.`
+	const steps = node.pref.map((step) =>
+		step
+			.map((term) =>
+				'most' in term
+					? `most ${resourceToken(term.most)}`
+					: describeFilter(term),
+			)
+			.join(' / '),
+	)
+	if (node.pref.every((step) => step.every((term) => 'most' in term)))
+		return `${verb} the card in the Market with the ${steps.join(' > ')}.`
+	return `${verb} ${withArticle(steps.join(' > '))}.`
 }
 
 // ---------------------------------------------------------------------------

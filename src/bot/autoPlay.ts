@@ -339,6 +339,22 @@ export function playBots(
 		const seat: Seat = s.pendingChoice?.seat ?? s.activeSeat
 		const legal = legalIntents(s)
 		if (legal.length === 0) return result(steps, 'STALL')
+		// the official solo Bot's turn is rules, not a decision: its beats run
+		// without asking the seat's bot (rules/13 §13.4)
+		if (legal.length === 1 && legal[0]!.t === 'BOT_STEP') {
+			s = reduce(s, legal[0]!).state
+			const cycleStart = noteIntent(s, intents, legal[0]!, windowPushes, seenWindows)
+			if (cycleStart !== undefined) {
+				const length = intents.length - cycleStart
+				return result(steps + 1, 'CYCLE', {
+					startStep: cycleStart,
+					length,
+					sample: intents.slice(Math.max(0, intents.length - length)),
+				})
+			}
+			opts.onStep?.(s, legal[0]!, steps, { seat, fallback: false })
+			continue
+		}
 		const t0 = clock()
 		let intent: Intent | undefined
 		try {

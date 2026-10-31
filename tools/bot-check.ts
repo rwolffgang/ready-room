@@ -6,6 +6,7 @@
 //   2. a few low-iteration ISMCTS games (hand-tuned leaf, and the learned leaf
 //      when the bundled weights are compatible)
 //   3. the bundled learned value's compatibility (featureHash, cardDataHash)
+//   4. normal (as you) against the official solo Bot, every Bot crew × level
 //
 // It fails (exit 1) on any first-legal fallback by a house bot, any game that
 // stops other than GAME_OVER (CYCLE / CAP / STALL / CRASH), or a crash of the
@@ -26,6 +27,8 @@ import {
 } from '../src/bot/learned'
 import { BUNDLED_VALUE, gatePassed } from '../src/bot/bundledValue'
 import { runArena, summaryLine, type ArenaRunSummary } from './lib/arenaRun'
+import { botFromSpec } from '../src/bot/registry'
+import { playSolo, soloSchedule, summarizeSolo } from '../src/bot/soloArena'
 
 function parseArgs(argv: string[]): Record<string, string> {
 	const out: Record<string, string> = {}
@@ -112,6 +115,25 @@ async function main(): Promise<void> {
 					`${r.a} vs ${r.b}: bot ${who} needed ${fb} first-legal fallback(s) (${s.fallbackGames.map((g) => g.game).join(', ')})`,
 				)
 		}
+	}
+	// the official solo Bot: normal (as you) against every Bot crew × level
+	const house = botFromSpec('normal', { catalog })
+	const solo = soloSchedule(catalog, 1, seed).map((g) =>
+		playSolo(catalog, house, g),
+	)
+	const levels = summarizeSolo(solo)
+		.map((l) => `${l.level} ${l.wins}/${l.games}`)
+		.join(', ')
+	console.log(`solo vs the official Bot (normal as you): ${solo.length} games — ${levels}`)
+	for (const r of solo) {
+		if (r.stopped !== 'GAME_OVER')
+			failures.push(
+				`solo ${r.bot} ${r.level} vs ${r.human}: stopped ${r.stopped}${r.crash !== undefined ? ` (${r.crash})` : ''}`,
+			)
+		if (r.fallbacks > 0)
+			failures.push(
+				`solo ${r.bot} ${r.level} vs ${r.human}: ${r.fallbacks} first-legal fallback(s)`,
+			)
 	}
 	const secs = (performance.now() - t0) / 1000
 	if (failures.length > 0) {

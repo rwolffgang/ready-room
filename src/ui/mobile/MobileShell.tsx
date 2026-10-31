@@ -379,10 +379,10 @@ export function MobileShell({ shell }: { shell: MobileShellKind }) {
 	if (projected === null) return null
 	const state = projected as unknown as GameState
 	const live = state.result === null
-	// online this device is its own seat, and against the house AI it stays
-	// with the human: never ask to pass it
+	// online this device is its own seat, and against the house AI or the
+	// official solo Bot it stays with the human: never ask to pass it
 	const passTo: 0 | 1 | null =
-		!live || online || hasBots(session?.opponents)
+		!live || online || hasBots(session?.opponents) || state.mode === 'SOLO'
 			? null
 			: pending !== null
 				? pending.seat !== viewer

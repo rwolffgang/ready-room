@@ -12,8 +12,8 @@
 // in the browser.
 
 import type { CardCatalog } from '../engine/setup'
-import type { CardDef } from '../data/schema'
-import { CardArraySchema } from '../data/schema'
+import type { BotCard, CardDef } from '../data/schema'
+import { BotArraySchema, CardArraySchema } from '../data/schema'
 import { BoardArraySchema, addBoardSides } from '../data/boards'
 import type { DeckId } from '../data/ids'
 import { stardateSpecs } from '../data/stardate'
@@ -42,10 +42,18 @@ export function loadBrowserCatalog(): CardCatalog {
 	const defs: CardDef[] = []
 	const stardates: CardCatalog['stardates'] = []
 	const boards: CardCatalog['boards'] = {}
+	const bots: BotCard[] = []
 	const errors: string[] = []
 
 	for (const [key, raw] of Object.entries(modules)) {
 		if (isBoardPath(key)) continue // boards are not cards (todo/13)
+		if (key.endsWith('/solo/bots.json')) {
+			// the solo Bots' Automated Command cards (not card JSON)
+			const parsed = BotArraySchema.safeParse(raw)
+			if (parsed.success) bots.push(...parsed.data)
+			else errors.push(`bot schema violation in ${key}`)
+			continue
+		}
 		if (isStardatePath(key)) {
 			const parsed = CardArraySchema.safeParse(raw)
 			if (!parsed.success) {
@@ -97,7 +105,7 @@ export function loadBrowserCatalog(): CardCatalog {
 			`browser catalog load failed (${errors.length} file(s)):\n  ${errors.join('\n  ')}`,
 		)
 	}
-	return { defs, stardates, boards }
+	return { defs, stardates, boards, bots }
 }
 
 /** The crew decks that actually have cards on disk right now (PIC/SHR/
@@ -106,7 +114,9 @@ export function loadBrowserCatalog(): CardCatalog {
 export function availableDecks(catalog: CardCatalog): DeckId[] {
 	const decks = new Set<DeckId>()
 	for (const def of catalog.defs) {
-		if (def.deck !== 'COMMON' && def.deck !== undefined) decks.add(def.deck)
+		// the solo Directives are no crew (rules/13 §13.14)
+		if (def.deck !== 'COMMON' && def.deck !== 'SOLO' && def.deck !== undefined)
+			decks.add(def.deck)
 	}
 	return [...decks].sort((a, b) => a.localeCompare(b))
 }

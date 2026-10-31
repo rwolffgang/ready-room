@@ -479,6 +479,9 @@ const SEAT_ZONE: Record<Extract<ZoneRef, { seat: Seat }>['k'], string> = {
 	DUTY_OFFICER: 'Duty Officer',
 	CAPTAIN: 'Captain',
 	STATUS: 'Status',
+	BOT_ROW: 'Staging row',
+	SUPPLEMENT: 'Supplement deck',
+	REINFORCEMENT: 'Reinforcement deck',
 }
 
 /** The Market group's candidates by suit, in the order they were offered:

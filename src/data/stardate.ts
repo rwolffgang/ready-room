@@ -22,9 +22,9 @@
 //   SD23–SD27  SOLO VS CAPTAIN BOT     5,6,7,6,5 (29)  Bot 3,3,3,4,4
 //   SD28–SD32  SOLO VS ADMIRAL BOT     5,5,6,6,5 (27)  Bot 3,3,4,4,5
 //
-// The solo cards carry no playable mode (there is no Solo/Bot mode, todo/15):
-// `modes: []` boxes them in every game; their level and Bot action count are
-// kept as data only (`StardateSpec.solo`).
+// The solo cards are the SOLO mode's (rules/13 §13.2): setup takes the five of
+// the chosen difficulty level, and each one's Bot action count rides along in
+// `StardateSpec.solo`.
 
 import type { CardDef } from './schema'
 import type {
@@ -63,20 +63,20 @@ function addSet(
 addSet(1, [5, 7, 7, 6, 5], ['TWO_PLAYER'])
 // rules/10 §10.1: Cadet Training uses the two "SOLO CADET PRACTICE" cards.
 addSet(6, [5, 5], ['CADET'])
-addSet(8, [6, 7, 7, 6, 5], [], { level: 'ENSIGN', botActions: [2, 2, 2, 2, 3] })
-addSet(13, [5, 7, 7, 6, 5], [], {
+addSet(8, [6, 7, 7, 6, 5], ['SOLO'], { level: 'ENSIGN', botActions: [2, 2, 2, 2, 3] })
+addSet(13, [5, 7, 7, 6, 5], ['SOLO'], {
 	level: 'LIEUTENANT',
 	botActions: [2, 2, 3, 3, 3],
 })
-addSet(18, [5, 7, 7, 6, 5], [], {
+addSet(18, [5, 7, 7, 6, 5], ['SOLO'], {
 	level: 'COMMANDER',
 	botActions: [2, 3, 3, 3, 4],
 })
-addSet(23, [5, 6, 7, 6, 5], [], {
+addSet(23, [5, 6, 7, 6, 5], ['SOLO'], {
 	level: 'CAPTAIN',
 	botActions: [3, 3, 3, 4, 4],
 })
-addSet(28, [5, 5, 6, 6, 5], [], {
+addSet(28, [5, 5, 6, 6, 5], ['SOLO'], {
 	level: 'ADMIRAL',
 	botActions: [3, 3, 4, 4, 5],
 })

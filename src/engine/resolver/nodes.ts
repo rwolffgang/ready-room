@@ -226,7 +226,7 @@ export type EffectNode =
 	  } // 2 Glory consolation if exhausted
 	| {
 			k: 'TAKE'
-			deck: 'INCIDENT' | 'ENCOUNTER'
+			deck: 'INCIDENT' | 'ENCOUNTER' | 'REINFORCEMENT'
 			count: number
 			look?: number | undefined // look at the top N; the taker chooses `count` of them
 			returnUnpicked?: boolean | undefined // the unchosen looked-at cards go to the bottom of the deck (SPACEFOLD, 1PIC18)
@@ -274,8 +274,14 @@ export type EffectNode =
 	| { k: 'GAIN_ACTION'; amount: Amount }
 	| {
 			k: 'ADVANCE_SPECIALTY'
-			// 'LOWEST' = the lowest specialty, player breaks ties (1SIS22)
-			specialty: SpecialtyId | 'CHOICE' | 'LOWEST'
+			// 'LOWEST' = the lowest specialty, player breaks ties (1SIS22);
+			// pick/of = the solo Bot's "gain 1 R / I (whichever is lower)": ties
+			// go to the first of `of` (rules/13 §13.6.2)
+			specialty:
+				| SpecialtyId
+				| 'CHOICE'
+				| 'LOWEST'
+				| { pick: 'LOWER' | 'HIGHER'; of: SpecialtyId[] }
 			amount: Amount
 	  }
 	| { k: 'RECRYSTALLIZE'; amount: Amount | 'ALL' } // BUR only; 'ALL' = every parked {DIL} (1BUR10)
@@ -410,6 +416,89 @@ export type EffectNode =
 	| { k: 'SCORE_VP'; amount: Amount }
 	// --- Escape hatch (docs/effect-dsl.md §8) ------------------------------------
 	| { k: 'SCRIPT'; fn: string } // named handler in a small registry; budget ≤ 5
+	// --- Solo Bot (rules/13): Automated Command rows and SURPRISE operations ----
+	// "If able, X. Otherwise, Y." (rules/13 §13.6.2): decided BEFORE anything
+	// runs — X (or `test`, "if able to do both …") must be able to fully
+	// resolve now — so a cancelled attack inside X still counts as done.
+	| {
+			k: 'TRY'
+			body: Effect
+			otherwise?: Effect | undefined
+			test?: Effect | undefined
+	  }
+	// The red part of a Bot row: an attack on the opponent (rules/13 §13.12.1),
+	// opened and closed around `body` like an ATTACK operation, so "would be
+	// attacked" windows, cancelling and "after you are attacked" all apply.
+	| { k: 'ATTACK'; body: Effect }
+	// The top `count` cards of the Bot deck (reshuffling it as needed — rules/13
+	// §13.5) or of its Supplement deck: logged (an INCIDENT is returned
+	// instead), discarded, or — Supplement only — taken onto the Bot deck.
+	| {
+			k: 'BOT_DECK'
+			from: 'DECK' | 'SUPPLEMENT'
+			op: 'LOG' | 'DISCARD' | 'TAKE'
+			count: number
+	  }
+	// "Gain/take a KLINGON > PERSON / SHIP" (rules/13 §13.10.1): the most
+	// valuable face-up Market card the preference allows; GAIN → the Bot
+	// Discard pile, TAKE → the top of the Bot deck. `from` ENCOUNTER/INCIDENT
+	// takes that deck's top card instead (no preference).
+	| {
+			k: 'BOT_ACQUIRE'
+			mode: 'GAIN' | 'TAKE'
+			from?: 'MARKET' | 'ENCOUNTER' | 'INCIDENT' | undefined
+			pref?: BotPref | undefined
+			bind?: string | undefined
+	  }
+	// "Junk the most valuable card in the Market (ignoring any with tokens)" —
+	// most valuable to the opponent (rules/13 §13.10.2)
+	| { k: 'BOT_JUNK' }
+	// "Send an AWAY TEAM to a neutral STARBASE > STARFLEET > LOCATION"
+	// (rules/13 §13.11.3); `ignoreShips` = "ignoring any opponent SHIP"
+	| {
+			k: 'BOT_SEND_AWAY_TEAM'
+			count: Amount
+			prefer?: TraitId[] | undefined
+			ignoreShips?: boolean | undefined
+	  }
+	// "Deploy this SHIP; it explores/engages" (rules/13 §13.11.2). DISCARD =
+	// the topmost SHIP of the Bot Discard pile; bound = a card bound earlier
+	// ("deploy the gained SHIP").
+	| {
+			k: 'BOT_DEPLOY'
+			target: 'THIS' | 'DISCARD' | { bound: string }
+			then?: 'EXPLORE' | 'ENGAGE' | undefined
+	  }
+	// Promote a PERSON to the Bot's single Duty Officer slot, dismissing the
+	// previous one (rules/13 §13.7). DISCARD = the topmost PERSON there.
+	| { k: 'BOT_PROMOTE'; target: 'THIS' | 'DISCARD' | { bound: string } }
+	// Resolve another card through the Automated Command cards, then carry on
+	// (rules/13 §13.8): the next face-down Staging row card, the top of the Bot
+	// deck or Supplement deck, the topmost match in the Bot Discard pile, or a
+	// bound card. Not a Bot action.
+	| {
+			k: 'BOT_RESOLVE'
+			from: 'ROW' | 'DECK_TOP' | 'SUPPLEMENT_TOP' | 'DISCARD' | 'BOUND'
+			filter?: CardFilter | undefined
+			bound?: string | undefined
+	  }
+	// "Take control of the neutral LOCATION with most Bot tokens (minimum 1)"
+	| { k: 'BOT_TAKE_CONTROL' }
+	// "… and remove 2 AWAY TEAMs to …": the Bot's own, one at a time, each from
+	// the LOCATION where it has the fewest tokens (ruling 055)
+	| { k: 'BOT_REMOVE_AWAY_TEAM'; count: number }
+	// "put … this card to the bottom of your draw deck" (1DIR01/2's SURPRISE):
+	// the resolving card changes hands — the actor now owns it
+	| { k: 'TRANSFER'; target: 'THIS'; to: 'DECK_BOTTOM' }
+
+/** A Bot preference expression (rules/13 §13.10.1): the outer list is the
+ *  ">" fallback order, each inner list a "/" set whose best card (by value)
+ *  wins. "A > B / C" = [[A], [B, C]]. */
+export type BotPref = BotPrefTerm[][]
+
+/** One term: a card matching the filter, or the card holding the most of a
+ *  resource token ("the card in the Market with the most {DIL}"). */
+export type BotPrefTerm = CardFilter | { most: ResourceId }
 
 export type Effect = EffectNode
 

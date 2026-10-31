@@ -315,13 +315,15 @@ export function valueOfFeatures(
 /**
  * The value function of `weights`: (state, seat) → [−1, 1] from `seat`'s side.
  * Throws if the weights' shape does not match their layout. It does NOT check
- * the hashes (see `compatibleValue`). A Cadet Training state (a virtual
- * opponent) falls back to the hand-tuned `evaluateNormalized`.
+ * the hashes (see `compatibleValue`). A Cadet Training or solo-Bot state (no
+ * second player) falls back to the hand-tuned `evaluateNormalized`.
  */
 export function loadValue(weights: ValueWeights): ValueFn {
 	const fromFeatures = valueOfFeatures(weights)
 	return (state, seat) => {
-		if (state.mode === 'CADET') return evaluateNormalized(state, seat)
+		// trained on two-player games only: Cadet's virtual opponent and the
+		// official solo Bot fall back to the hand-tuned evaluation
+		if (state.mode !== 'TWO_PLAYER') return evaluateNormalized(state, seat)
 		return fromFeatures(features(state, seat), features(state, otherSeat(seat)))
 	}
 }

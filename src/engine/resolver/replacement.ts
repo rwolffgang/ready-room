@@ -213,7 +213,14 @@ function subtreeRemovesAwayTeams(node: Effect): boolean {
 		case 'REPEAT':
 		case 'FOR_EACH':
 		case 'LET':
+		case 'ATTACK':
 			return subtreeRemovesAwayTeams(node.body)
+		case 'TRY':
+			return (
+				subtreeRemovesAwayTeams(node.body) ||
+				(node.otherwise !== undefined &&
+					subtreeRemovesAwayTeams(node.otherwise))
+			)
 		default:
 			return false
 	}

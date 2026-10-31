@@ -12,7 +12,8 @@ import type { CardDef } from '../src/data/schema'
 import type { CardCatalog } from '../src/engine/setup'
 import type { MissionState } from '../src/engine/state'
 import { normalizeCardNumber, toTraitId, type StccCard } from '../src/data/stcc'
-import { loadStccNode } from './stcc-node'
+import { loadStccBotsNode, loadStccNode } from './stcc-node'
+import { crosscheckBots } from './lib/crosscheckBots'
 import { cardName } from '../src/data/cardNames'
 
 const POSITION: Record<string, string | null> = {
@@ -146,7 +147,7 @@ async function main(): Promise<void> {
 		console.error('No STCC data found — run `npm run fetch-cards` first.')
 		process.exit(1)
 	}
-	const { defs, boards } = await loadCatalog()
+	const { defs, boards, bots } = await loadCatalog()
 
 	const unmatched: CardDef[] = []
 	const mismatches: [CardDef, string[]][] = []
@@ -196,6 +197,17 @@ async function main(): Promise<void> {
 		`\nMISSIONS (${missionCount} board missions with cardId; ${missionIssues.length} issue(s)):`,
 	)
 	for (const line of missionIssues) console.log(`  ${line}`)
+
+	const botIssues = crosscheckBots(
+		bots ?? [],
+		await loadStccBotsNode(),
+		defs,
+		stcc,
+	)
+	console.log(
+		`\nSOLO BOTS (${(bots ?? []).length} crews; ${botIssues.length} issue(s)):`,
+	)
+	for (const line of botIssues) console.log(`  ${line}`)
 
 	const unseen = [...stcc.entries()].filter(([k]) => !seen.has(k))
 	const soloOnly = unseen.filter(([, s]) =>

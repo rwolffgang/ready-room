@@ -119,6 +119,9 @@ export const DECKS = [
 	// fan-made custom crew decks (not part of the published game; names, text
 	// and art come from a custom pack, src/data/custom/)
 	'MAL',
+	// the solo Directives (rules/13 §13.14, rules/14 §14.4): no crew of their
+	// own, set up only in a solo game
+	'SOLO',
 ] as const
 export type DeckId = (typeof DECKS)[number]
 
@@ -143,6 +146,9 @@ export const OPERATION_TYPES = [
 	'CONTROL',
 	'ENDGAME',
 	'SPECIAL',
+	// "SURPRISE (Bot only)": resolved instead of an Automated Command row when
+	// the solo Bot resolves the card (rules/13 §13.6.3)
+	'SURPRISE',
 ] as const
 export type OperationType = (typeof OPERATION_TYPES)[number]
 
@@ -173,11 +179,12 @@ export const NOT_IN_THIS_BOX = new Set([
 	'MIND_CONTROL',
 ])
 
-// Suit MISSION and the SURPRISE trait are also box-unused (rules/12 §12.30) but live
-// outside NOT_IN_THIS_BOX because MISSION is a valid suit enum value and SURPRISE is a
-// valid gameplay trait — the validator checks them explicitly.
+// Suit MISSION is also box-unused (rules/12 §12.30) but lives outside
+// NOT_IN_THIS_BOX because it is a valid suit enum value — the validator checks
+// it explicitly. (The SURPRISE trait was the other one, until the official solo
+// Bot made it live — rules/13 §13.6.3.)
 export const NOT_IN_THIS_BOX_SUITS = new Set(['MISSION'])
-export const NOT_IN_THIS_BOX_TRAITS = new Set(['SURPRISE'])
+export const NOT_IN_THIS_BOX_TRAITS = new Set<string>()
 
 // Helpers — DIFFERENT_SPECIES (docs/effect-dsl.md §5) needs these to decide which
 // traits are species-bearing before performing the bipartite matching.

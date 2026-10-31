@@ -49,6 +49,7 @@ const RESPONSES: Record<string, string> = {
 	'data/errata.json': '{}',
 	'data/faq.json': '{}',
 	'data/tokens.json': '{}',
+	'data/bots.json': '[{"id":"x"},{"id":"y"}]',
 	'cardface-assets.js': `const CARDFACE={"token": {"vp": "data:image/png;base64,${PNG}"}, "suit": {"ship": "data:image/svg+xml;base64,${PNG}", "bad": "nope"}};`,
 }
 
@@ -61,6 +62,7 @@ describe('fetchStcc', () => {
 
 		expect(files.get('vendor/box1.json')).toBe(RESPONSES['box1.json'])
 		expect(files.has('vendor/faq.json')).toBe(true)
+		expect(files.get('vendor/bots.json')).toBe(RESPONSES['data/bots.json'])
 		expect(
 			new TextDecoder().decode(
 				files.get('public/icons/token/vp.png') as Uint8Array,
@@ -80,6 +82,7 @@ describe('fetchStcc', () => {
 			images: 2,
 			imagesTotal: 3,
 			icons: 2,
+			bots: 2,
 		})
 		expect(JSON.parse(files.get('vendor/manifest.json') as string)).toEqual(
 			res.manifest,
@@ -116,10 +119,15 @@ describe('stccUpToDate', () => {
 		images: 3,
 		imagesTotal: 3,
 		icons: 1,
+		bots: 16,
 	}
 	it('needs the pinned sha and every scan', () => {
 		expect(stccUpToDate(m, SOURCE)).toBe(true)
 		expect(stccUpToDate({ ...m, sha: 'old' }, SOURCE)).toBe(false)
 		expect(stccUpToDate(null, SOURCE)).toBe(false)
+	})
+	it('treats a fetch from before the solo Bots as out of date', () => {
+		const { bots: _bots, ...before } = m
+		expect(stccUpToDate(before, SOURCE)).toBe(false)
 	})
 })

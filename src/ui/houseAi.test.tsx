@@ -421,7 +421,11 @@ describe('setup screen', () => {
 		document.body.appendChild(host)
 		const root = createRoot(host)
 		act(() => root.render(<App />))
-		expect(host.textContent).toContain('House AI (not the official solo Bot)')
+		// the House AI is ours; the official solo Bot has its own panel
+		expect(host.textContent).toContain(
+			'House AI: a computer opponent of our own',
+		)
+		expect(host.textContent).toContain('Solo vs the Bot')
 		const p2 = host.querySelector<HTMLSelectElement>(
 			'select[aria-label="Player 2 played by"]',
 		)!

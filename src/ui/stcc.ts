@@ -19,6 +19,9 @@ import {
 	addCustomPacks,
 	buildStccIndex,
 	normalizeCardNumber,
+	parseStccBots,
+	stccBotForSource,
+	type StccBot,
 	type StccBox,
 	type StccCard,
 } from '../data/stcc'
@@ -84,6 +87,11 @@ let icons: Record<string, string> =
 	(modules['../../vendor/stcc/icons.json'] as
 		Record<string, string> | undefined) ?? {}
 
+/** The solo Bots' Automated Command card text, by STCC bot id. */
+let bots: Map<string, StccBot> = parseStccBots(
+	modules['../../vendor/stcc/bots.json'],
+)
+
 /** Install STCC data read at runtime: `readJson` reads a fetched JSON file by
  *  its name (`box1.json`, `icons.json`) or returns null; scans and icons are
  *  then served from `base`. Missing files leave those lookups empty. */
@@ -102,6 +110,21 @@ export async function loadStccFrom(
 		withCustomPacks(buildStccIndex(boxes, base)),
 		(nextIcons as Record<string, string> | null) ?? {},
 	)
+	setStccBots(parseStccBots(await readJson('bots.json')))
+}
+
+/** Test seam: replace the Automated Command text (an empty Map clears it). */
+export function setStccBots(next: Map<string, StccBot>): void {
+	bots = next
+}
+
+/** The Automated Command card text of the crew that `crewCard` (any card of
+ *  that crew deck, e.g. its Captain) belongs to, or null when the fetched data
+ *  has none (hosted build, an older fetch): the UI then renders our own
+ *  mechanics with describe(). */
+export function stccBotFor(crewCard: Pick<CardDef, 'cardId'>): StccBot | null {
+	const source = stccCard(crewCard)?.source
+	return source === undefined ? null : stccBotForSource(bots, source)
 }
 
 /** Test seam: replace the index (pass an empty Map to clear it). */

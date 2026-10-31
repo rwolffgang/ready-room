@@ -27,6 +27,8 @@ export function phaseWord(phase: GameState['phase']['k']): string {
 			return 'Setup'
 		case 'GAME_OVER':
 			return 'Game over'
+		case 'BOT':
+			return "Bot's turn"
 		default:
 			return RAIL_WORD[phase]
 	}
@@ -174,11 +176,13 @@ export function Header({ onMenu }: { onMenu: () => void }) {
 						</b>
 						{burn !== null && (
 							<span className="pb-sub">
-								{burn.leader === 'you'
-									? `You'd win it now: ${burn.mine} vs ${burn.theirs}`
-									: burn.leader === 'them'
-										? `${oppName} would win it: ${burn.mine} vs ${burn.theirs}`
-										: `Tied ${burn.mine} vs ${burn.theirs}: scoring decides`}
+								{state.mode === 'SOLO'
+									? 'If it comes, the Bot wins'
+									: burn.leader === 'you'
+										? `You'd win it now: ${burn.mine} vs ${burn.theirs}`
+										: burn.leader === 'them'
+											? `${oppName} would win it: ${burn.mine} vs ${burn.theirs}`
+											: `Tied ${burn.mine} vs ${burn.theirs}: scoring decides`}
 							</span>
 						)}
 					</span>

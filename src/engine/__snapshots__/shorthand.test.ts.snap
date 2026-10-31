@@ -228,6 +228,16 @@ exports[`shorthand golden > pins the whole catalogue (review this snapshot like 
     "PLAY | 2 ARRANGE +1 CARD",
     "PLAY ACT REQ[INFLUENCE ≥6] | {−3 DIL} › CONTROL ·'deck' JUNK DESTROY",
   ],
+  "1DIR01-2": [
+    "PLAY | {−1 CARD ·<PERSON>} › +1 CARD",
+    "SPEC | ",
+    "SPEC | ENDGAME : IF 'Bot' / ≥1 LOG ⇒ DESTROY",
+    "SURP | OPP[( +1<INCIDENT> DECK 'bottom, yours' | OPP[+2 GLO DISCARD_PILE 1 DECK ·'supplement'] )]",
+  ],
+  "1DIR02-2": [
+    "PLAY | +1 RESERVE 'reinforcement'",
+    "PLAY | IF non-≥1 CARD ⇒ +1 CARD LOG",
+  ],
   "1ENC01-8": [
     "PLAY ACT | +1 CARD / <LOCATION> IF ≥1 #SCIENTIST ⇒ +1 ACT",
     "PLAY ACT | SCAN2 <PERSON> / <CARGO> / <SHIP> / <ALLY> IF ≥1 #SCIENTIST ⇒ +1 CARD",

@@ -108,7 +108,7 @@ describe('DesktopRoot', () => {
 	it('goes straight to the app when the data is complete', async () => {
 		disk.set(
 			'vendor/manifest.json',
-			JSON.stringify({ sha: SHA, images: 1, imagesTotal: 1 }),
+			JSON.stringify({ sha: SHA, images: 1, imagesTotal: 1, bots: 16 }),
 		)
 		await mount()
 		await settle()

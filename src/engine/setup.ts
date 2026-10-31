@@ -18,18 +18,26 @@
 // decks today and the real card JSON later — this file never imports
 // src/data/cards or cards/records.
 
-import type { CardDef } from '../data/schema'
+import type { BotCard, CardDef } from '../data/schema'
 import type { DeckId } from '../data/ids'
 import type { Effect } from './resolver/nodes'
 import type { GameState, MissionState, PlayerState, TrackTable } from './state'
 import type { Seat, ZoneRef } from './resolver/queries'
 import { newGameState, addCard, moveCard, zoneKey, inPlayCards } from './state'
+import type { CampaignSetup, GameMode, SoloLevel } from './state'
 import { registerCards, cardDef } from './cards'
+import { registerBots } from './solo/acRegistry'
+import { setupSoloBot } from './solo/setup'
 import { shuffle, next } from './rng'
 import { effectiveHandSize } from './modifiers'
 import { toIid, type CardInstanceId } from './ids'
 
-export type GameMode = 'TWO_PLAYER' | 'CADET'
+import {
+	finishCampaignSetup,
+	holdsOpeningHand,
+	setupCampaignDeck,
+} from './solo/campaign'
+export type { GameMode, SoloLevel } from './state'
 
 export interface SetupPlayer {
 	deck: DeckId
@@ -44,6 +52,18 @@ export interface SetupConfig {
 	 *  opens). Absent = the random draw of §2.1 #17. The draw is still made
 	 *  either way, so the seed stream is the same as a random game's. */
 	startingSeat?: Seat | undefined
+	/** mode 'SOLO' only: the official Bot's game (rules/13). The Bot plays
+	 *  `players[1]`'s crew deck; the human, `players[0]`, always starts. */
+	solo?: SoloSetup | undefined
+}
+
+/** How a solo game against the official Bot is set up (rules/13 §13.2). */
+export interface SoloSetup {
+	level: SoloLevel
+	/** the Conspiring Admirals challenge (rules/13 §13.14) */
+	conspiringAdmirals?: boolean | undefined
+	/** a Five-Year Mission game (rules/14) */
+	campaign?: CampaignSetup | undefined
 }
 
 /** A Stardate card: the registered CardDef carries the Clean-up (wipe) effect;
@@ -54,15 +74,12 @@ export interface StardateSpec {
 	name: string
 	sequence: number // 1 sits on top (rules/02 §2.1 #11)
 	glory: number // printed Glory tokens
-	modes: GameMode[] // empty for the solo-vs-Bot cards: boxed in every mode
+	modes: GameMode[] // the modes that use this card; boxed in every other
 	def: CardDef // registered like any other def; CLEANUP op = the wipe effect
 	/** Solo-vs-Bot cards only (SD08–SD32): difficulty level and the printed Bot
-	 *  action count. Data only — there is no Solo/Bot mode yet (todo/15). */
+	 *  action count (rules/13 §13.2). */
 	solo?: SoloStardate | undefined
 }
-
-export type SoloLevel =
-	'ENSIGN' | 'LIEUTENANT' | 'COMMANDER' | 'CAPTAIN' | 'ADMIRAL'
 
 export interface SoloStardate {
 	level: SoloLevel
@@ -84,6 +101,8 @@ export interface CardCatalog {
 	defs: CardDef[]
 	stardates: StardateSpec[]
 	boards: Partial<Record<DeckId, BoardMissions>>
+	/** the solo Bots' Automated Command cards (src/data/cards/solo/bots.json) */
+	bots?: BotCard[] | undefined
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +115,7 @@ export interface CardCatalog {
  *  instance setup mints (registerCards is idempotent per id). */
 export function setup(config: SetupConfig, catalog: CardCatalog): GameState {
 	registerCards([...catalog.defs, ...catalog.stardates.map((s) => s.def)])
+	registerBots(catalog.bots ?? [])
 	const base = newGameState(config.seed, { mode: config.mode })
 	return setupGame(base, config, catalog)
 }
@@ -117,7 +137,12 @@ export function setupGame(
 	s = setupSupply(s, config, catalog) // #15 (token supplies are unbounded)
 	s = setupStartingPlayer(s, config.startingSeat) // #17
 	s = setupPlayerBoard(s, 0, config, catalog) // §2.2
-	s = setupPlayerBoard(s, 1, config, catalog)
+	// the official solo Bot sets up its own way (rules/13 §13.2)
+	s =
+		config.mode === 'SOLO'
+			? setupSoloBot(s, 1, config, catalog)
+			: setupPlayerBoard(s, 1, config, catalog)
+	s = finishCampaignSetup(s, config)
 	s = assertSetupCompleteness(s, config, catalog)
 	return { ...s, phase: { k: 'SETUP' } }
 }
@@ -276,12 +301,14 @@ export function setupStardateTrack(
 	config: SetupConfig,
 	catalog: CardCatalog,
 ): GameState {
+	// solo vs the Bot: only the five cards of the chosen level (rules/13 §13.2)
+	const used = (st: StardateSpec) =>
+		st.modes.includes(config.mode) &&
+		(config.mode !== 'SOLO' || st.solo?.level === config.solo?.level)
 	const inMode = catalog.stardates
-		.filter((st) => st.modes.includes(config.mode))
+		.filter(used)
 		.sort((a, b) => a.sequence - b.sequence)
-	const outOfMode = catalog.stardates.filter(
-		(st) => !st.modes.includes(config.mode),
-	)
+	const outOfMode = catalog.stardates.filter((st) => !used(st))
 	let s = state
 	for (const st of inMode) {
 		const r = mintInto(s, st.id, null, { k: 'STARDATE_PILE' }, 'sd')
@@ -307,6 +334,9 @@ export function setupStardateTrack(
 			pile: [...(s.zones[zoneKey({ k: 'STARDATE_PILE' })] ?? [])],
 			gloryOnTop: top.glory,
 			glories: inMode.map((st) => st.glory),
+			...(config.mode === 'SOLO'
+				? { botActions: inMode.map((st) => st.solo?.botActions ?? 0) }
+				: {}),
 		},
 	}
 }
@@ -331,7 +361,9 @@ export function setupStartingPlayer(
 	state: GameState,
 	agreed?: Seat,
 ): GameState {
-	if (state.mode === 'CADET') {
+	// solo modes: the human always starts, without the draw (rules/10 §10.1,
+	// rules/13 §13.2)
+	if (state.mode === 'CADET' || state.mode === 'SOLO') {
 		return { ...state, startingSeat: 0, activeSeat: 0 }
 	}
 	const [u, rng] = next(state.rng)
@@ -354,7 +386,10 @@ export function setupPlayerBoard(
 	s = setupMissions(s, seat, config, catalog)
 	s = setupPlayerRecord(s, seat, config, catalog)
 	s = attachSetupModifiers(s, seat)
-	s = drawOpeningHand(s, seat)
+	// a Five-Year Mission game changes your deck before you draw (rules/14);
+	// a "before drawing the starting hand" boost holds the hand for START
+	s = setupCampaignDeck(s, seat, config, catalog)
+	if (!holdsOpeningHand(config, seat)) s = drawOpeningHand(s, seat)
 	return s
 }
 
@@ -572,7 +607,9 @@ export function assertSetupCompleteness(
 	config: SetupConfig,
 	catalog: CardCatalog,
 ): GameState {
-	const chosen = new Set(config.players.map((p) => p.deck))
+	const chosen = new Set<string>(config.players.map((p) => p.deck))
+	// the solo Directives are set up in solo games only (solo/setup.ts)
+	if (config.mode === 'SOLO') chosen.add('SOLO')
 	const expected = new Set<string>()
 	for (const d of catalog.defs) {
 		if (d.deck === 'COMMON' || chosen.has(d.deck)) expected.add(d.id)
@@ -624,7 +661,7 @@ function pl(config: SetupConfig, seat: Seat): SetupPlayer {
 }
 
 /** Mint one CardInstance (deterministic iid from the instance serial). */
-function mintInto(
+export function mintInto(
 	state: GameState,
 	defId: string,
 	owner: Seat | null,
@@ -686,6 +723,14 @@ function* effectChildren(node: Effect): Iterable<Effect> {
 		case 'FOR_EACH':
 		case 'LET':
 			yield node.body
+			break
+		case 'ATTACK':
+			yield node.body
+			break
+		case 'TRY':
+			yield node.body
+			if (node.otherwise !== undefined) yield node.otherwise
+			if (node.test !== undefined) yield node.test
 			break
 		default:
 			break

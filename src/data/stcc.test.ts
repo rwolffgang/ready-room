@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest'
 import {
 	buildStccIndex,
 	normalizeCardNumber,
+	parseStccBots,
 	printedOpFor,
+	stccBotForSource,
 	printedOps,
 	splitTokens,
 	toTraitId,
@@ -134,5 +136,28 @@ describe('stcc join', () => {
 		expect(toTraitId('Mind-Control')).toBe('MIND_CONTROL')
 		expect(toTraitId('Lower Decker')).toBe('LOWER_DECKER')
 		expect(toTraitId("Vau N'Akat")).toBe('VAU_NAKAT')
+	})
+
+	it('parses Automated Command cards by bot id and skips malformed entries', () => {
+		const bot = {
+			id: 'testbot',
+			captain: 'Test',
+			variant: null,
+			traits: [{ key: '[[alien]]', text: 'Gain 1 [[glory]].' }],
+			suits: [{ suit: 'ship', text: 'A.', do_text: 'B.' }],
+			special: null,
+			campaign: {
+				win: { cards: '[[ally]]', bonus: ['BOOST: Gain 1 [[research]].'] },
+				loss: { cards: '[[cargo]]', bonus: [] },
+			},
+		}
+		const bots = parseStccBots([bot, { id: 'broken' }, 7])
+		expect([...bots.keys()]).toEqual(['testbot'])
+		expect(bots.get('testbot')?.suits[0]?.do_text).toBe('B.')
+		expect(parseStccBots(null).size).toBe(0)
+		// a crew's Bot is found through its cards' STCC source; variants never
+		const both = parseStccBots([bot, { ...bot, id: 'testbot-v', variant: 'V' }])
+		expect(stccBotForSource(both, 'Test')?.id).toBe('testbot')
+		expect(stccBotForSource(both, 'Other')).toBeNull()
 	})
 })

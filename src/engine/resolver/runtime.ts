@@ -46,12 +46,19 @@ import {
 	stealProtected,
 } from '../modifiers'
 import type { GainCtx } from '../modifiers'
-import type { ResourceId, SpecialtyId, TraitId } from '../../data/ids'
+import type {
+	MarketSuit,
+	ResourceId,
+	SpecialtyId,
+	TraitId,
+} from '../../data/ids'
 import {
 	isCadetOpponent,
 	opponentAwayTeamsAt,
 	opponentResource,
 } from '../../bot/cadet'
+import { isSoloBot } from '../solo/seat'
+import { MARKET_SUITS_FOUR } from '../market'
 
 /** A neutral EffectCtx for queries/amounts that do not depend on the actor
  *  (seat-independent references such as MARKET_OFFER). */
@@ -436,6 +443,23 @@ export function handCandidates(
 	return resolveQuery(state, { zones: [{ k: 'HAND', seat: 0 }], filter }, ctx)
 }
 
+/** Is this card exempt from discards and beams (`discardProtected`)? */
+export function discardProtected(state: GameState, iid: CardInstanceId): boolean {
+	const card = state.cards[iid]
+	return card !== undefined && cardDef(card.def).discardProtected === true
+}
+
+/** Hand cards an effect may discard: every one but a `discardProtected`. */
+export function discardCandidates(
+	state: GameState,
+	ctx: EffectCtx,
+	filter?: CardFilter,
+): CardInstanceId[] {
+	return handCandidates(state, ctx, filter).filter(
+		(iid) => !discardProtected(state, iid),
+	)
+}
+
 /** A Captain (or Status) card is in play but can never be dismissed: like a
  *  LOCATION it can never enter your deck (rules/08 → dismiss gives that as the
  *  reason Locations are exempt), and it holds your Log and Away Team pool
@@ -719,10 +743,24 @@ export function setOwner(
 	const card = state.cards[iid]
 	if (!card) return state
 	if (card.owner === seat) return state
-	return {
+	const next = {
 		...state,
 		cards: { ...state.cards, [iid]: { ...card, owner: seat } },
 	}
+	// a solo game remembers the Market cards you owned: a campaign upgrade
+	// may add one to your Reinforcement pile (rules/14 §14.3 Option A)
+	const solo = state.solo
+	if (
+		state.mode !== 'SOLO' ||
+		solo === undefined ||
+		seat === solo.bot ||
+		solo.marketOwned.includes(card.def)
+	)
+		return next
+	const def = cardDef(card.def)
+	if (def.deck !== 'COMMON' || !MARKET_SUITS_FOUR.includes(def.suit as MarketSuit))
+		return next
+	return { ...next, solo: { ...solo, marketOwned: [...solo.marketOwned, card.def] } }
 }
 
 /** Gain a faceup Market card: ownership, resource tokens on it (Glory from the
@@ -864,6 +902,7 @@ function gainGlory(state: GameState, seat: Seat, amount: number): GameState {
  *  successor to the flat STARDATE_REFILL_GLORY. */
 export function handoffStardate(state: GameState, seat: Seat): GameState {
 	const glories = state.stardates.glories
+	const botActions = state.stardates.botActions
 	if (state.stardates.pile.length <= 1) {
 		// The final Stardate card is NOT handed over and NOT refilled — it stays
 		// in place, emptied, as the marker that a Resolution was triggered
@@ -875,6 +914,10 @@ export function handoffStardate(state: GameState, seat: Seat): GameState {
 				pile: state.stardates.pile.slice(0, 1),
 				gloryOnTop: 0,
 				glories: glories === undefined ? undefined : [glories[0] ?? 0],
+				// the solo Bot keeps the final card's action count to the end
+				...(botActions === undefined
+					? {}
+					: { botActions: [botActions[0] ?? 0] }),
 			},
 		}
 	}
@@ -895,6 +938,7 @@ export function handoffStardate(state: GameState, seat: Seat): GameState {
 			pile: state.stardates.pile.slice(1),
 			gloryOnTop: refill,
 			glories: nextGlories,
+			...(botActions === undefined ? {} : { botActions: botActions.slice(1) }),
 		},
 	}
 }
@@ -921,6 +965,14 @@ export function stealResource(
 			seat: to,
 			message: `${res} cannot be stolen`,
 		})
+	if (isSoloBot(state, from)) {
+		// rules/13 §13.12.2: stealing from the official Bot always succeeds in
+		// full and comes from the supply — the Bot keeps its own (no gain event)
+		return addLog(
+			{ ...state, players: bumpPool(state, to, res, amount) },
+			{ kind: 'EVENT', seat: to, message: `steals ${amount} ${res}` },
+		)
+	}
 	if (isCadetOpponent(state.mode, from)) {
 		// rules/10 §10.2 #3: the virtual opponent permanently holds 1 of every
 		// resource — a steal takes exactly that 1 and never removes anything.
@@ -1136,7 +1188,7 @@ export function costCanResolve(
 					? ctx.bindings[node.exceptBound]
 					: undefined
 			return (
-				thisOnly(handCandidates(state, ctx, node.filter), node, ctx).filter(
+				thisOnly(discardCandidates(state, ctx, node.filter), node, ctx).filter(
 					(iid) => iid !== except && onlyBoundAllows(ctx, node.onlyBound, iid),
 				).length >= node.count
 			)

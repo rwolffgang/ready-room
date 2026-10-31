@@ -3796,3 +3796,238 @@ h3,
 		animation: none;
 	}
 }
+
+/* The official solo Bot's Automated Command cards (src/ui/solo/), drawn like
+ * the STCC card scanner: suit-coloured rows, red attacks, blue "you may". */
+.ac-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 12px;
+}
+.ac-card {
+	background: #f1efe9;
+	color: #1c1c1c;
+	border-radius: 10px;
+	padding: 6px 6px 8px;
+	font-family: 'Barlow Condensed', 'Barlow', sans-serif;
+	font-size: 0.95rem;
+	line-height: 1.35;
+}
+.ac-card h4 {
+	margin: 0 0 6px;
+	padding: 4px 8px;
+	border-radius: 6px;
+	background: #1f2a3c;
+	color: #fff;
+	font-family: 'Antonio', sans-serif;
+	letter-spacing: 0.04em;
+}
+.ac-card h4 small {
+	font-weight: 400;
+	opacity: 0.8;
+	margin-left: 4px;
+}
+.ac-surprise {
+	margin: 0 0 6px;
+	padding: 3px 8px;
+	border-radius: 999px;
+	background: #8c1f1a;
+	color: #fff;
+	font-size: 0.9em;
+}
+.ac-row {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 6px;
+	align-items: start;
+	padding: 4px 6px;
+	border-left: 6px solid var(--sc, #2b2b2b);
+	border-radius: 4px;
+	margin-bottom: 3px;
+	background: rgba(0, 0, 0, 0.03);
+}
+.ac-row .suit-pill {
+	background: var(--sc, #444);
+	color: var(--sc-ink, #fff);
+	font-size: 0.8em;
+}
+.ac-row-active {
+	outline: 3px solid var(--orange, #ff9c00);
+	background: #fff4d6;
+}
+.ac-attack {
+	color: #c4161c;
+	font-weight: 600;
+}
+.ac-you {
+	color: #1f4fa8;
+	font-weight: 600;
+}
+.ac-modal {
+	max-width: min(980px, 96vw);
+	max-height: 92vh;
+	overflow: auto;
+}
+.ac-compact .ac-card {
+	font-size: 0.85rem;
+}
+.bot-beat {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	margin-top: 4px;
+	padding: 4px 8px 4px 12px;
+	background: color-mix(in srgb, var(--periwinkle) 14%, var(--panel));
+	border-left: 6px solid var(--periwinkle);
+	border-radius: 4px;
+	font-size: 13px;
+}
+.pb .bot-beat {
+	flex: none;
+	margin: 6px 8px 0;
+	padding: 3px 6px 3px 8px;
+	border-left-width: 4px;
+	font-size: 12px;
+}
+.bot-beat-head {
+	font-family: 'Antonio', sans-serif;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.bot-beat-card {
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-weight: 700;
+	text-decoration: underline dotted;
+	cursor: pointer;
+}
+/* the console's opponent band: beside the Bot's cards, the row wrapping
+   over up to three lines */
+.band-tableau > .bot-beat {
+	flex: 1 1 360px;
+	flex-wrap: nowrap;
+	align-items: flex-start;
+	min-width: 0;
+	max-height: 100%;
+	margin: 0;
+	padding: 4px 8px;
+	overflow: hidden;
+	cursor: default;
+}
+.band-tableau > .bot-beat > * {
+	flex: none;
+}
+.band-tableau > .bot-beat .bot-beat-row {
+	flex: 1 1 auto;
+	max-height: 100%;
+	overflow: hidden;
+	font-size: 12px;
+	line-height: 1.25;
+}
+/* the row being resolved, on the Automated Command card's paper */
+.bot-beat-row {
+	flex: 1 1 260px;
+	min-width: 0;
+	padding: 2px 8px;
+	border-radius: 6px;
+	background: #f1efe9;
+	color: #1c1c1c;
+	font-family: 'Barlow Condensed', 'Barlow', sans-serif;
+}
+.bot-beat > .btn {
+	margin-left: auto;
+}
+.solo-setup {
+	margin-top: 10px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	border: 1px solid var(--line, #3a3f4d);
+	display: grid;
+	gap: 8px;
+}
+.solo-setup h2 {
+	margin: 0;
+	font-size: 1.05rem;
+}
+
+/* src/ui/solo/Campaign.tsx: the Five-Year Mission */
+.campaign-setup fieldset,
+.campaign-offers {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding: 6px 8px;
+	border: 1px solid var(--line, #3a3f4d);
+	border-radius: 8px;
+}
+.campaign-setup label,
+.campaign-offers label {
+	display: block;
+	line-height: 1.35;
+}
+.campaign-list {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.campaign-list li {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+.campaign-list li > span {
+	flex: 1 1 200px;
+	min-width: 0;
+}
+.campaign-screen {
+	display: grid;
+	gap: 14px;
+	max-width: 800px;
+	margin: 4vh auto;
+	padding: 24px 16px;
+}
+.campaign-screen h1 {
+	margin: 0;
+	font-size: 30px;
+	color: var(--orange);
+	letter-spacing: 0.04em;
+}
+.campaign-screen h2 {
+	margin: 0 0 6px;
+	font-size: 1.1rem;
+}
+.campaign-screen h3 {
+	margin: 12px 0 4px;
+	font-size: 0.95rem;
+}
+.campaign-screen .panel {
+	display: grid;
+	gap: 8px;
+	padding: 12px 14px;
+}
+.campaign-rank {
+	margin: 4px 0 0;
+}
+.campaign-cards {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding-left: 18px;
+}
+.campaign-log table {
+	width: 100%;
+}
+.campaign-end {
+	display: grid;
+	gap: 8px;
+	justify-items: start;
+	padding: 12px 14px;
+}

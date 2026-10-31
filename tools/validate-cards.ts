@@ -50,9 +50,11 @@ const GROUPS: ReadonlyArray<{ file: string; label: string; expected: number }> =
 		{ file: 'crew/kol.json', label: 'KOL', expected: 24 },
 		// fan-made custom deck (src/data/custom/firefly.json)
 		{ file: 'crew/mal.json', label: 'MAL', expected: 25 },
+		// the solo Directives (rules/13 §13.14; rules/14 §14.4 adds the campaign one)
+		{ file: 'solo/directives.json', label: 'SOLO', expected: 2 },
 	]
 
-const OVERALL_EXPECTED = 325
+const OVERALL_EXPECTED = 327
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -114,6 +116,9 @@ async function main(): Promise<void> {
 		// Crew board JSON is not card JSON (todo/13): the boards live under
 		// cards/boards and are loaded separately by src/data/catalog.ts.
 		if (relCards.startsWith('boards/')) continue
+		// the solo Bots' Automated Command cards are not card JSON (BotArraySchema,
+		// parsed by the catalog loader)
+		if (relCards === 'solo/bots.json') continue
 		let text: string
 		try {
 			text = await readFile(file, 'utf8')

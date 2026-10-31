@@ -16,6 +16,8 @@ import { estimateScore } from '../../session/log'
 import { deckLabel } from '../../data/cardNames'
 import { DeckPiles, SpecialtyBar } from '../board'
 import { BotTicker } from '../BotTicker'
+import { BotBeatStrip } from '../solo/AutomatedCommand'
+import { isSoloBot } from '../../engine/solo/seat'
 import { CardSprite } from '../cards'
 import { DeltaCounter } from '../delta'
 import { Icon } from '../icons'
@@ -62,13 +64,20 @@ export function OpponentBand({ seat }: { seat: Seat }) {
 	const state = projected as unknown as GameState
 	const p = state.players[seat]
 	if (p === undefined) return null
-	const hand = projected.zones[zoneKey({ k: 'HAND', seat })] ?? []
+	// the official solo Bot holds no hand: its face-down row is in its place
+	const bot = isSoloBot(state, seat)
+	const hand =
+		projected.zones[zoneKey({ k: bot ? 'BOT_ROW' : 'HAND', seat })] ?? []
+	const name = bot ? 'The Bot' : seatLabel(seat)
 	const done = p.missions.filter((m) => m.completed).length
 	// the band's empty background opens the viewscreen; its cards and buttons
 	// keep their own clicks
 	const onBand = (e: MouseEvent) => {
 		const t = e.target as Element
-		if (t.closest('button, a, .card, .cardstack, .bot-ticker') !== null) return
+		if (
+			t.closest('button, a, .card, .cardstack, .bot-ticker, .bot-beat') !== null
+		)
+			return
 		setViewscreen(true)
 	}
 	return (
@@ -82,7 +91,7 @@ export function OpponentBand({ seat }: { seat: Seat }) {
 				<div
 					className="opp-hand"
 					role="group"
-					aria-label={`${seatLabel(seat)} hand: ${hand.length} card${hand.length === 1 ? '' : 's'}`}
+					aria-label={`${name} ${bot ? 'row' : 'hand'}: ${hand.length} card${hand.length === 1 ? '' : 's'}`}
 					style={{ '--n': Math.max(1, hand.length) } as CSSProperties}
 				>
 					{hand.map((iid) => (
@@ -99,7 +108,7 @@ export function OpponentBand({ seat }: { seat: Seat }) {
 			<div className="band-main">
 				<div className="band-head">
 					<strong className="band-name">
-						{seatLabel(seat)} · {deckLabel(p.deckId)}
+						{name} · {deckLabel(p.deckId)}
 					</strong>
 					<span
 						className="band-pool"
@@ -146,15 +155,17 @@ export function OpponentBand({ seat }: { seat: Seat }) {
 							/>
 						))}
 					</span>
-					<span className="band-fact" title="Missions completed">
-						<Icon id="VP" label="Missions" /> {done}/{p.missions.length}
-					</span>
+					{!bot && (
+						<span className="band-fact" title="Missions completed">
+							<Icon id="VP" label="Missions" /> {done}/{p.missions.length}
+						</span>
+					)}
 					{incidents !== null && (
 						<span className="band-fact" title="Incidents they hold">
 							{incidents} Incident{incidents === 1 ? '' : 's'}
 						</span>
 					)}
-					<BotTicker variant="console" />
+					{!bot && <BotTicker variant="console" />}
 					<button
 						type="button"
 						className={`btn micro band-screen${viewscreen ? ' btn-active' : ''}`}
@@ -169,6 +180,9 @@ export function OpponentBand({ seat }: { seat: Seat }) {
 					{ZONES.map(({ k, label }) => (
 						<BandZoneCards key={k} seat={seat} k={k} label={label} />
 					))}
+					{/* the official solo Bot's beat, in the room its few cards
+					    leave: its row text is long */}
+					{bot && <BotBeatStrip />}
 				</div>
 			</div>
 		</section>

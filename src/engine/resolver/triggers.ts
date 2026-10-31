@@ -47,6 +47,7 @@ import { addLog } from './runtime'
 import { matchesWouldBeAttacked } from './replacement'
 import { canResolveEffect } from './primitives'
 import { probe } from './probe'
+import { isSoloBot } from '../solo/seat'
 
 /** Cap on nested REACTION_WINDOW frames (todo/09 §6): a genuine chain is 2–4
  *  deep; anything beyond this is a data bug. Throws a clear diagnostic. */
@@ -365,6 +366,8 @@ export function collectPassiveOps(
 	const out: OperationRef[] = []
 	const order = [state.activeSeat, otherSeat(state.activeSeat)]
 	for (const seat of order) {
+		// the official solo Bot ignores the text of its cards (rules/13 §13.1)
+		if (isSoloBot(state, seat)) continue
 		const side: OperationRef[] = []
 		for (const iid of inPlayCards(state, seat)) {
 			const card = state.cards[iid]!
@@ -387,7 +390,7 @@ export function collectPassiveOps(
 	// logged card's own SPECIAL with a CARD_LOGGED trigger fires for the player
 	// who logged it — the card has already left play, so it is not in the scan
 	// above.
-	if (event.k === 'CARD_LOGGED') {
+	if (event.k === 'CARD_LOGGED' && !isSoloBot(state, event.seat)) {
 		const card = state.cards[event.iid]
 		if (card !== undefined) {
 			cardDef(card.def).operations.forEach((op, opIndex) => {
@@ -475,6 +478,7 @@ export function collectReactionGroups(
 	]
 	for (const set of [0, 1] as const) {
 		const seat = seats[set]!
+		if (isSoloBot(state, seat)) continue // its cards are inert (rules/13 §13.1)
 		const side: OperationRef[] = []
 		for (const iid of inPlayCards(state, seat)) {
 			cardDef(state.cards[iid]!.def).operations.forEach((op, opIndex) => {

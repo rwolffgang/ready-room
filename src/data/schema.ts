@@ -6,7 +6,13 @@
 
 import { z } from 'zod'
 
-import type { Effect, Operation, TriggerSpec } from '../engine/resolver/nodes'
+import type {
+	BotPref,
+	BotPrefTerm,
+	Effect,
+	Operation,
+	TriggerSpec,
+} from '../engine/resolver/nodes'
 import type {
 	Amount,
 	CardFilter,
@@ -109,6 +115,8 @@ const ZoneSpecSchema: z.ZodType<ZoneSpec> = z.lazy(() =>
 					'DUTY_OFFICER',
 					'CAPTAIN',
 					'STATUS',
+					// your Five-Year Mission Reinforcement pile (rules/14 §14.4)
+					'REINFORCEMENT',
 				]),
 				seat: SeatSchema,
 			})
@@ -296,6 +304,7 @@ export const PredicateSchema: z.ZodType<Predicate> = z.lazy(() =>
 				value: z.number().int().min(0),
 			})
 			.strict(),
+		z.object({ k: z.literal('IS_SOLO_BOT') }).strict(),
 		z
 			.object({
 				k: z.literal('TOTAL_VP_AT_LEAST'),
@@ -334,6 +343,23 @@ const VariableSkillSpecSchema: z.ZodType<VariableSkillSpec> = z.lazy(() =>
 			.strict(),
 	]),
 )
+
+// ---------------------------------------------------------------------------
+// Solo Bot leaves (rules/13 §13.10.1): preference expressions and targets
+// ---------------------------------------------------------------------------
+
+const BotPrefTermSchema: z.ZodType<BotPrefTerm> = z.union([
+	z.object({ most: ResourceSchema }).strict(),
+	CardFilterSchema,
+])
+const BotPrefSchema: z.ZodType<BotPref> = z
+	.array(z.array(BotPrefTermSchema).min(1))
+	.min(1)
+const BotTargetSchema = z.union([
+	z.literal('THIS'),
+	z.literal('DISCARD'),
+	z.object({ bound: z.string().min(1) }).strict(),
+])
 
 // ---------------------------------------------------------------------------
 // Effects (docs/effect-dsl.md §§2–4) — the recursive union keyed on `k`
@@ -619,7 +645,9 @@ export const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
 		z
 			.object({
 				k: z.literal('TAKE'),
-				deck: z.enum(['INCIDENT', 'ENCOUNTER']),
+				// REINFORCEMENT: a card of your choice from your Reinforcement
+				// pile (rules/14 §14.4, ruling 8)
+				deck: z.enum(['INCIDENT', 'ENCOUNTER', 'REINFORCEMENT']),
 				count: z.number().int().min(1),
 				look: z.number().int().min(1).optional(),
 				returnUnpicked: z.boolean().optional(),
@@ -698,6 +726,12 @@ export const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
 					SpecialtySchema,
 					z.literal('CHOICE'),
 					z.literal('LOWEST'),
+					z
+						.object({
+							pick: z.enum(['LOWER', 'HIGHER']),
+							of: z.array(SpecialtySchema).min(2),
+						})
+						.strict(),
 				]),
 				amount: AmountSchema,
 			})
@@ -871,6 +905,75 @@ export const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
 		z.object({ k: z.literal('SCORE_VP'), amount: AmountSchema }).strict(),
 		// ---------------- escape hatch (docs/effect-dsl.md §8) ------------------------
 		z.object({ k: z.literal('SCRIPT'), fn: z.string().min(1) }).strict(),
+		// ---------------- solo Bot (rules/13) — AC rows and SURPRISE ops only ---------
+		// (the placement rule is enforced in BotCardSchema / the CardDef superRefine)
+		z
+			.object({
+				k: z.literal('TRY'),
+				body: EffectSchema,
+				otherwise: EffectSchema.optional(),
+				test: EffectSchema.optional(),
+			})
+			.strict(),
+		z.object({ k: z.literal('ATTACK'), body: EffectSchema }).strict(),
+		z
+			.object({
+				k: z.literal('BOT_DECK'),
+				from: z.enum(['DECK', 'SUPPLEMENT']),
+				op: z.enum(['LOG', 'DISCARD', 'TAKE']),
+				count: z.number().int().min(1),
+			})
+			.strict(),
+		z
+			.object({
+				k: z.literal('BOT_ACQUIRE'),
+				mode: z.enum(['GAIN', 'TAKE']),
+				from: z.enum(['MARKET', 'ENCOUNTER', 'INCIDENT']).optional(),
+				pref: BotPrefSchema.optional(),
+				bind: z.string().min(1).optional(),
+			})
+			.strict(),
+		z.object({ k: z.literal('BOT_JUNK') }).strict(),
+		z
+			.object({
+				k: z.literal('BOT_SEND_AWAY_TEAM'),
+				count: AmountSchema,
+				prefer: z.array(TraitSchema).min(1).optional(),
+				ignoreShips: z.boolean().optional(),
+			})
+			.strict(),
+		z
+			.object({
+				k: z.literal('BOT_DEPLOY'),
+				target: BotTargetSchema,
+				then: z.enum(['EXPLORE', 'ENGAGE']).optional(),
+			})
+			.strict(),
+		z
+			.object({ k: z.literal('BOT_PROMOTE'), target: BotTargetSchema })
+			.strict(),
+		z
+			.object({
+				k: z.literal('BOT_RESOLVE'),
+				from: z.enum(['ROW', 'DECK_TOP', 'SUPPLEMENT_TOP', 'DISCARD', 'BOUND']),
+				filter: CardFilterSchema.optional(),
+				bound: z.string().min(1).optional(),
+			})
+			.strict(),
+		z.object({ k: z.literal('BOT_TAKE_CONTROL') }).strict(),
+		z
+			.object({
+				k: z.literal('BOT_REMOVE_AWAY_TEAM'),
+				count: z.number().int().min(1),
+			})
+			.strict(),
+		z
+			.object({
+				k: z.literal('TRANSFER'),
+				target: z.literal('THIS'),
+				to: z.literal('DECK_BOTTOM'),
+			})
+			.strict(),
 	]),
 )
 
@@ -1018,6 +1121,10 @@ export interface CardDef {
 	/** "This card cannot be promoted." (1SIS13) — PROMOTE never
 	 *  offers it. */
 	cannotBePromoted?: boolean | undefined
+	/** "This card cannot be beamed or discarded by any effect except its own
+	 *  play operation (not even in the Clean-up Step)" (1DIR01/2): never a
+	 *  discard or beam candidate. */
+	discardProtected?: boolean | undefined
 	/** The card counts as a LOCATION throughout, and deploying it takes
 	 *  control of one (1ENC07): it
 	 *  also matches the LOCATION suit, DEPLOY puts it into the Location area
@@ -1052,6 +1159,14 @@ function* effectChildren(effect: Effect): Iterable<Effect> {
 		case 'FOR_EACH':
 		case 'LET':
 			yield effect.body
+			break
+		case 'ATTACK':
+			yield effect.body
+			break
+		case 'TRY':
+			yield effect.body
+			if (effect.otherwise !== undefined) yield effect.otherwise
+			if (effect.test !== undefined) yield effect.test
 			break
 		case 'ALT_PLAY':
 			yield effect.operation.effect
@@ -1114,6 +1229,7 @@ export const CardDefSchema = z
 		passives: z.array(z.string().min(1)).optional(),
 		cannotBePlayed: z.boolean().optional(),
 		cannotBePromoted: z.boolean().optional(),
+		discardProtected: z.boolean().optional(),
 		treatedAsLocation: z.boolean().optional(),
 	})
 	.strict()
@@ -1352,3 +1468,105 @@ export const CardDefSchema = z
 	})
 
 export const CardArraySchema = z.array(CardDefSchema)
+
+// ---------------------------------------------------------------------------
+// Automated Command cards (rules/13 §13.6) — the solo Bot's lookup tables, one
+// entry per crew in src/data/cards/solo/bots.json. Mechanics only: the printed
+// rows are joined in at runtime from the fetched STCC data/bots.json.
+// ---------------------------------------------------------------------------
+
+/** The SUITS card's rows, in their printed order. */
+export const BOT_SUITS = [
+	'INCIDENT',
+	'SHIP',
+	'ALLY',
+	'CARGO',
+	'PERSON',
+	'DIRECTIVE',
+	'ENCOUNTER',
+	'LOCATION',
+] as const
+export type BotSuit = (typeof BOT_SUITS)[number]
+
+const BotSuitRowSchema = z
+	.object({
+		/** the "no Duty Officer" side */
+		noDo: EffectSchema,
+		/** the "with Duty Officer" side */
+		do: EffectSchema,
+	})
+	.strict()
+
+/** A campaign upgrade bonus (rules/14 §14.3 Option B). */
+const BotBonusSchema = z.discriminatedUnion('k', [
+	// an effect resolved at the start of every later campaign game: before
+	// your starting hand is drawn, after it, or at the start of play
+	z
+		.object({
+			k: z.literal('BOOST'),
+			when: z.enum(['BEFORE_HAND', 'AFTER_HAND']),
+			effect: EffectSchema,
+		})
+		.strict(),
+	// move one of your own crew cards into your Reinforcement deck for good
+	z
+		.object({
+			k: z.literal('TO_REINFORCEMENT'),
+			from: z.enum(['RESERVE', 'AVAILABLE']),
+			filter: CardFilterSchema.optional(),
+		})
+		.strict(),
+])
+export type BotBonus = z.infer<typeof BotBonusSchema>
+
+const BotRewardSchema = z
+	.object({
+		/** the Market cards Option A may add to the Reinforcement deck: any
+		 *  card of one of these suits or with one of these traits */
+		match: z.array(z.union([SuitSchema, TraitSchema])).min(1),
+		/** Option B, in the printed order */
+		bonus: z.array(BotBonusSchema),
+	})
+	.strict()
+export type BotReward = z.infer<typeof BotRewardSchema>
+
+export const BotCardSchema = z
+	.object({
+		/** the crew whose Bot this is */
+		deck: DeckSchema,
+		/** TRAITS card rows, top to bottom: the first row naming a trait of the
+		 *  card being resolved wins; a WILDCARD card takes row 0 */
+		traits: z
+			.array(
+				z
+					.object({
+						match: z.array(TraitSchema).min(1),
+						effect: EffectSchema,
+					})
+					.strict(),
+			)
+			.min(1),
+		suits: z
+			.object({
+				INCIDENT: BotSuitRowSchema,
+				SHIP: BotSuitRowSchema,
+				ALLY: BotSuitRowSchema,
+				CARGO: BotSuitRowSchema,
+				PERSON: BotSuitRowSchema,
+				DIRECTIVE: BotSuitRowSchema,
+				ENCOUNTER: BotSuitRowSchema,
+				LOCATION: BotSuitRowSchema,
+			})
+			.strict(),
+		/** the BUR Bot's Dilithium Clean-up and scoring (rules/13 §13.4,
+		 *  §13.13.3) */
+		special: z.enum(['DILITHIUM']).optional(),
+		/** the Five-Year Mission upgrades for beating / losing to this Bot */
+		campaign: z
+			.object({ win: BotRewardSchema, loss: BotRewardSchema })
+			.strict()
+			.optional(),
+	})
+	.strict()
+export type BotCard = z.infer<typeof BotCardSchema>
+export const BotArraySchema = z.array(BotCardSchema)

@@ -27,7 +27,12 @@ import {
 import { runCollecting, pushOperation } from './resolver/stack'
 import { finalizeGame } from './scoring'
 import { advancePhaseStep, beginTurnStep } from './phases'
+import { pushCampaignStart } from './solo/campaign'
 import { cadetChoice, CADET_SEAT } from '../bot/cadet'
+import type { PendingChoice } from './resolver/choices'
+import { isSoloBot } from './solo/seat'
+import { soloChoice } from './solo/policy'
+import { pushBotStep } from './solo/turn'
 
 export type Intent =
 	| { t: 'START' } // SETUP -> the starting player's RESUPPLY
@@ -44,6 +49,7 @@ export type Intent =
 	| { t: 'RESOLVE_CHOICE'; choiceId: string; selection: unknown } // any phase
 	| { t: 'END_TURN' } // ACTION -> CLEANUP (rules/03 §3.5 / END_ACTION_STEP)
 	| { t: 'COMPLETE_MISSION'; index: number } // ACTION — no action cost (rules/03 §3.5.7)
+	| { t: 'BOT_STEP' } // BOT — the official solo Bot's next beat (rules/13 §13.4)
 
 export interface ReduceResult {
 	state: GameState
@@ -69,7 +75,13 @@ function requireNoChoice(state: GameState): void {
 }
 
 export function reduce(state: GameState, intent: Intent): ReduceResult {
-	return pilotCadet(reduceCore(state, intent))
+	return pilotVirtualSeat(reduceCore(state, intent))
+}
+
+/** START: the starting player's first RESUPPLY step — beneath a campaign
+ *  game's boosts, which resolve first (rules/14 §14.3). */
+function startStep(state: GameState): GameState {
+	return pushCampaignStart(beginTurnStep(state))
 }
 
 /** The Intent switch, unpiloted (the cadet pilot wraps it — see below). */
@@ -77,7 +89,7 @@ export function reduceCore(state: GameState, intent: Intent): ReduceResult {
 	switch (intent.t) {
 		case 'START':
 			requirePhase(state, 'SETUP')
-			return runToHalt(beginTurnStep(state))
+			return runToHalt(startStep(state))
 		case 'PASS':
 			requirePhase(state, 'RESUPPLY', 'CONTROL', 'ACTION')
 			requireNoChoice(state)
@@ -94,6 +106,12 @@ export function reduceCore(state: GameState, intent: Intent): ReduceResult {
 			return reduceResolveChoice(state, intent)
 		case 'COMPLETE_MISSION':
 			return reduceCompleteMission(state, intent)
+		case 'BOT_STEP':
+			requirePhase(state, 'BOT')
+			requireNoChoice(state)
+			if (state.stack.length > 0)
+				throw new Error('BOT_STEP: the previous beat has not finished')
+			return runToHalt(pushBotStep(state))
 	}
 }
 
@@ -108,35 +126,29 @@ function runToHalt(state: GameState): ReduceResult {
 }
 
 /**
- * Cadet Training auto-pilot (rules/10, todo/15 §1): the virtual opponent
- * (seat 1) never takes a turn — `handOffTurn` keeps the human (seat 0) active
- * and `setupStartingPlayer` makes the human start — so the only Cadet activity
- * is answering a PendingChoice an effect FORCEs onto seat 1 mid-step
- * (rules/12 §12.14 choice ownership: `choice.seat` = the deciding seat).
- *
- * After ANY intent settles, we auto-resolve a pending choice owned by the
- * Cadet with the Cadet's own deterministic policy (cadetChoice), validating it
- * and falling back to the probed first legal selection if the naive pick is
+ * The auto-pilot for a seat no one plays at this device: Cadet Training's
+ * virtual opponent (rules/10, todo/15 §1) and the official solo Bot (rules/13).
+ * After ANY intent settles, a pending choice owned by that seat is answered by
+ * its own deterministic policy (`cadetChoice` / `soloChoice`), validated, with
+ * the probed first legal selection as the fallback if the policy's pick is
  * ever illegal. A headless driver therefore only ever answers the HUMAN's
- * choices — seat 1 never needs a driver at all.
+ * choices (rules/12 §12.14 choice ownership: `choice.seat` = the deciding
+ * seat); the Bot's own turn advances through BOT_STEP intents.
  */
-export function pilotCadet(result: ReduceResult): ReduceResult {
+export function pilotVirtualSeat(result: ReduceResult): ReduceResult {
 	const out = { state: result.state, events: [...result.events] }
-	if (out.state.mode !== 'CADET') return out
 	let guard = 0
-	while (
-		out.state.result === null &&
-		out.state.pendingChoice !== null &&
-		out.state.pendingChoice.seat === CADET_SEAT &&
-		++guard < 1000
-	) {
+	for (;;) {
 		const choice = out.state.pendingChoice
-		let selection: unknown = cadetChoice(choice)
+		if (out.state.result !== null || choice === null) break
+		const policy = virtualPolicy(out.state, choice)
+		if (policy === null || ++guard >= 1000) break
+		let selection: unknown = policy(choice)
 		if (!validateChoice(out.state, choice.id, selection).ok) {
 			selection = firstLegalSelection(out.state)
 			if (selection === null) {
 				throw new Error(
-					`cadet pilot: no legal selection for a seat-1 choice (${choice.k}: ${choice.prompt})`,
+					`virtual seat pilot: no legal selection for a seat-${choice.seat} choice (${choice.k}: ${choice.prompt})`,
 				)
 			}
 		}
@@ -151,14 +163,26 @@ export function pilotCadet(result: ReduceResult): ReduceResult {
 	return out
 }
 
-/** A Cadet game is solo — legalIntents must never hand the driver a choice to
- *  resolve for the virtual opponent (the pilot already cleared it, and this is
- *  the guard for the pathological "pilot could not resolve" case). */
+/** @deprecated the Cadet-only name of `pilotVirtualSeat`. */
+export const pilotCadet = pilotVirtualSeat
+
+/** The policy answering `choice`, when no player at the device owns it. */
+function virtualPolicy(
+	state: GameState,
+	choice: PendingChoice,
+): ((choice: PendingChoice) => unknown) | null {
+	if (state.mode === 'CADET' && choice.seat === CADET_SEAT) return cadetChoice
+	if (isSoloBot(state, choice.seat)) return (c) => soloChoice(state, c)
+	return null
+}
+
+/** A virtual seat answers its own choices — legalIntents must never hand the
+ *  driver one (the pilot already cleared it; this guards the pathological
+ *  "pilot could not resolve" case). */
 function cadetChoiceGuard(state: GameState): boolean {
-	return !(
-		state.mode === 'CADET' &&
-		state.pendingChoice !== null &&
-		state.pendingChoice.seat === CADET_SEAT
+	return (
+		state.pendingChoice === null ||
+		virtualPolicy(state, state.pendingChoice) === null
 	)
 }
 
@@ -351,6 +375,10 @@ export function legalIntents(state: GameState): Intent[] {
 			}
 			break
 		}
+		case 'BOT':
+			// the official solo Bot's turn: its next beat (rules/13 §13.4)
+			if (state.stack.length === 0) out.push({ t: 'BOT_STEP' })
+			break
 		case 'CLEANUP':
 		case 'GAME_OVER':
 			break

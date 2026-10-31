@@ -37,6 +37,7 @@ import {
 	BotHistoryButton,
 	BotTicker,
 } from './BotTicker'
+import { BotBeatStrip } from './solo/AutomatedCommand'
 
 export const SPEED_LABEL: Record<BotSpeed, string> = {
 	slow: 'Slow',
@@ -111,6 +112,10 @@ export function BotBar({ variant }: { variant: 'console' | 'mobile' }) {
 	const paused = useGameStore((s) => s.botPaused)
 	const viewer = useGameStore((s) => s.viewerSeat)
 	const revealAll = useGameStore((s) => s.revealAll)
+	const solo = useGameStore((s) => s.state?.mode === 'SOLO')
+	// against the official solo Bot the phone shows its beat strip instead
+	// (the console carries it in the opponent band)
+	if (solo) return variant === 'mobile' ? <BotBeatStrip /> : null
 	if (!local || !hasBots(opponents)) return null
 	const spectator = isSpectator(opponents)
 	const store = useGameStore.getState

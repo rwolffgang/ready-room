@@ -18,7 +18,7 @@ import type { GuideSection } from './guide/ShorthandGuide'
 import type { ReferenceTab } from './ReferenceTabs'
 import { createOnlineController, type OnlineState } from './online/controller'
 
-import type { GameState } from '../engine/state'
+import type { BotBeat, GameState } from '../engine/state'
 import type { Intent } from '../engine/intents'
 import type { CardCatalog, SetupConfig } from '../engine/setup'
 import type { PendingChoice } from '../engine/resolver/choices'
@@ -122,6 +122,10 @@ export function undoPolicy(
 			count: 1,
 		}
 	}
+	// the official solo Bot replies like the house AI: take back your last
+	// decision and its steps after it, never past your turn's end
+	if (session.setup.mode === 'SOLO' && deciders !== undefined)
+		return botUndoPolicy(session, deciders, 0)
 	if (hasBots(session.opponents) && deciders !== undefined)
 		return botUndoPolicy(session, deciders)
 	if (isBoundary(last)) {
@@ -142,8 +146,10 @@ export function undoPolicy(
 function botUndoPolicy(
 	session: Session,
 	deciders: readonly Seat[],
+	onlyHuman?: Seat,
 ): UndoPolicy {
-	const humans = humanSeats(session.opponents)
+	const humans =
+		onlyHuman !== undefined ? [onlyHuman] : humanSeats(session.opponents)
 	if (humans.length === 0)
 		return {
 			allowed: false,
@@ -163,7 +169,10 @@ function botUndoPolicy(
 		}
 	return {
 		allowed: true,
-		reason: 'Takes back your last decision and the House AI replies after it.',
+		reason:
+			onlyHuman !== undefined
+				? 'Takes back your last decision and the Bot’s steps after it.'
+				: 'Takes back your last decision and the House AI replies after it.',
 		count: session.log.length - i,
 	}
 }
@@ -174,6 +183,8 @@ export function undoPolicyLabel(
 	opponents?: Opponents,
 ): string {
 	if (mode === 'CADET') return 'Take-backs enabled — free undo (solo).'
+	if (mode === 'SOLO')
+		return 'Take-backs: undo your last decision and the Bot’s steps — stops at your turn’s end.'
 	if (isSpectator(opponents)) return 'Spectator game — undo is off.'
 	if (hasBots(opponents))
 		return "Take-backs: undo your last decision and the House AI's replies — stops at your turn's end."
@@ -352,6 +363,7 @@ function commit(intent: Intent, decider: Seat): void {
  *  visible delay; then pump again. A no-op while a decision is in flight. */
 function pumpBot(): void {
 	if (botBusy) return
+	if (pumpSoloBot()) return
 	const botId = botToMove()
 	const st = useGameStore.getState()
 	if (adapter === null || botId === null || (st.botPaused && !botStep)) {
@@ -430,6 +442,62 @@ function pumpBot(): void {
 				pumpBot()
 			}, wait)
 		})
+}
+
+/** How long each beat of the official solo Bot's turn stays on screen, as a
+ *  multiple of the bot speed: a resolved card and its row stay longest, long
+ *  enough to read the row. */
+const BEAT_PACE: Record<BotBeat, number> = {
+	CONTROL: 1.5,
+	DRAW: 1.5,
+	RESOLVE: 4,
+	STARDATE: 1.5,
+	CLEANUP: 1.5,
+}
+
+/** The official solo Bot's turn (rules/13 §13.4): when its next beat is the
+ *  only legal move, commit a BOT_STEP after the beat's delay, then pump again.
+ *  It never decides anything — the engine plays its rows — so no runner is
+ *  asked. True when it has (or will have) moved, so the house-AI pump stays
+ *  out of it. */
+function pumpSoloBot(): boolean {
+	if (adapter === null || onlineController.active()) return false
+	const state = adapter.state
+	if (state.mode !== 'SOLO' || state.result !== null) return false
+	const legal = adapter.legalIntents
+	if (legal.length !== 1 || legal[0]!.t !== 'BOT_STEP') return false
+	const st = useGameStore.getState()
+	if (st.botPaused && !botStep) return true
+	const stepping = botStep
+	botStep = false
+	// the beat on screen (the one just narrated) sets how long it stays
+	const beat =
+		state.solo?.beat?.beat ??
+		(state.phase.k === 'BOT' ? state.phase.beat : 'CONTROL')
+	const delay = stepping
+		? 0
+		: Math.round(botDelay(st.botSpeed, false) * BEAT_PACE[beat])
+	const gen = botGen
+	botBusy = true
+	botTimer = setTimeout(() => {
+		botTimer = null
+		botBusy = false
+		if (gen !== botGen || adapter?.state !== state) {
+			pumpBot()
+			return
+		}
+		try {
+			commit(legal[0]!, state.solo?.bot ?? 1)
+		} catch (e) {
+			useGameStore.setState({
+				botPaused: true,
+				error: `The Bot could not take its step: ${e instanceof Error ? e.message : String(e)}`,
+			})
+			return
+		}
+		pumpBot()
+	}, delay)
+	return true
 }
 
 /** Commit a bot's (validated) intent; on an engine rejection fall back to the
@@ -675,6 +743,8 @@ export interface GameStore {
 	online: OnlineState | null
 	/** The Shorthand guide's open section, or null (src/ui/guide). */
 	guide: GuideSection | null
+	/** the Five-Year Mission whose logbook is open, between its games */
+	campaignOpen: string | null
 	/** Phase B: when off (default), cards show their printed card art; when
 	 *  on, they render the full text card (name/traits/ops). In-memory only —
 	 *  a deliberate preference, not part of a save. */
@@ -682,8 +752,13 @@ export interface GameStore {
 	// actions
 	loadCatalog: () => void
 	newGame: () => void
-	/** `opponents`: the house-AI seats (absent = hot-seat). */
-	startGame: (config: SetupConfig, opponents?: Opponents) => void
+	/** `opponents`: the house-AI seats (absent = hot-seat); `campaignId`: the
+	 *  Five-Year Mission the game belongs to. */
+	startGame: (
+		config: SetupConfig,
+		opponents?: Opponents,
+		opts?: { campaignId?: string | undefined },
+	) => void
 	resumeGame: (session: Session) => void
 	dispatch: (intent: Intent) => void
 	settle: (selection: unknown) => void
@@ -719,6 +794,7 @@ export interface GameStore {
 	clearWarning: () => void
 	openGuide: (section?: GuideSection) => void
 	closeGuide: () => void
+	openCampaign: (id: string | null) => void
 	// online play (src/ui/online/controller.ts)
 	openOnline: (creds: SeatCredentials) => void
 	closeOnline: () => void
@@ -830,7 +906,13 @@ function makeAdapter(session: Session, catalog: CardCatalog): SessionAdapter {
 /** Where the device's view sits at the start of a game: pinned to the one
  *  human against the house AI, seat 0 for a spectator game, else `hotSeat`
  *  (whoever moves, in hot-seat). */
-function initialViewer(opponents: Opponents | undefined, hotSeat: Seat): Seat {
+function initialViewer(
+	opponents: Opponents | undefined,
+	hotSeat: Seat,
+	mode?: GameState['mode'],
+): Seat {
+	// against the official solo Bot the device is the human's (seat 0)
+	if (mode === 'SOLO') return 0
 	const humans = humanSeats(opponents)
 	if (humans.length === 1) return humans[0]!
 	if (humans.length === 0) return 0
@@ -873,6 +955,7 @@ export const useGameStore = create<GameStore>((set) => ({
 	showCardDetails: false,
 	online: null,
 	guide: null,
+	campaignOpen: null,
 
 	loadCatalog: () => {
 		if (useGameStore.getState().catalog !== null) return
@@ -917,7 +1000,7 @@ export const useGameStore = create<GameStore>((set) => ({
 		})
 	},
 
-	startGame: (config, opponents) => {
+	startGame: (config, opponents, opts) => {
 		cancelPendingDetail()
 		cancelBot()
 		onlineController.close()
@@ -927,7 +1010,10 @@ export const useGameStore = create<GameStore>((set) => ({
 			if (catalog === null) {
 				catalog = loadBrowserCatalog()
 			}
-			const session = createSession(config, catalog, { opponents })
+			const session = createSession(config, catalog, {
+				opponents,
+				campaignId: opts?.campaignId,
+			})
 			adapter?.dispose()
 			adapter = makeAdapter(session, catalog)
 			deciders = []
@@ -944,6 +1030,7 @@ export const useGameStore = create<GameStore>((set) => ({
 			const viewerSeat: Seat = initialViewer(
 				session.opponents,
 				adapter.state.startingSeat,
+				session.setup.mode,
 			)
 			set({
 				botPaused: false,
@@ -987,6 +1074,7 @@ export const useGameStore = create<GameStore>((set) => ({
 			const viewerSeat: Seat = initialViewer(
 				session.opponents,
 				adapter.state.activeSeat,
+				session.setup.mode,
 			)
 			let warning: string | null = null
 			const drift = checkCardData(session, catalog)
@@ -1104,8 +1192,13 @@ export const useGameStore = create<GameStore>((set) => ({
 		cancelPendingDetail()
 		// online, this device is its seat
 		if (adapter === null || onlineController.active()) return
-		// against the house AI the device belongs to the one human
-		if (humanSeats(adapter.session.opponents).length === 1) return
+		// against the house AI or the official solo Bot the device belongs to
+		// the one human
+		if (
+			humanSeats(adapter.session.opponents).length === 1 ||
+			adapter.session.setup.mode === 'SOLO'
+		)
+			return
 		set({ viewerSeat: seat, selected: [], detailIid: null, ...snapshot(seat) })
 	},
 
@@ -1255,6 +1348,7 @@ export const useGameStore = create<GameStore>((set) => ({
 		set({ guide: section })
 	},
 	closeGuide: () => set({ guide: null }),
+	openCampaign: (id) => set({ campaignOpen: id }),
 
 	openOnline: (creds) => {
 		cancelPendingDetail()

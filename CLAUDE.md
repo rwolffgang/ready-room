@@ -26,6 +26,7 @@ npm run audit:publish             # copyright gate (see below)
 npx tsx tools/crosscheck-stcc.ts  # diff our card defs against the STCC database
 npx tsx tools/arena.ts --a normal --b easy --games 100   # House AI self-play arena (docs/bot.md)
 npm run bot:check                 # quick arena regression after card/rule changes
+npx tsx tools/solo-arena.ts --bot normal --games 2   # house AI (as you) vs the official solo Bot
 npm run bot:retrain               # self-play → train value → arena gate → src/bot/weights/
 npm run desktop:dev               # Tauri desktop app around Vite on :1420 (needs Rust)
 npm run desktop:build             # desktop installers (runs build:desktop = vite build --mode desktop)
@@ -123,9 +124,20 @@ the hosted game.
 play screens. Path aliases: `@engine`, `@data`, `@ui`, `@session`.
 
 **Bot** (`src/bot/`): the Cadet Training virtual opponent (`rules/10`) and the **House AI**. The
-House AI is our own opponent (Easy / Normal / Hard), _not_ the official solo Bot, which is still
-blocked on the solo rulebook. `docs/bot.md` is its manual. Read it before you change anything in
-`src/bot/`.
+House AI is our own opponent (Easy / Normal / Hard), _not_ the official solo Bot. `docs/bot.md` is
+its manual. Read it before you change anything in `src/bot/`.
+
+**Official solo Bot** (`src/engine/solo/`, `mode: 'SOLO'`, `rules/13`): rules, not an AI. It
+resolves cards through its crew's Automated Command rows. The mechanics are effect trees in
+`src/data/cards/solo/bots.json`; the text comes from the fetched STCC `data/bots.json`, and
+`crosscheck-stcc` keeps the two in step. Its turn advances one beat per logged `BOT_STEP` intent,
+and choices that land on it are answered by `solo/policy.ts` through the virtual-seat pilot in
+`intents.ts`. Your cards' effects on it go through hooks guarded by `isSoloBot` (steal, draw, take,
+recall, log, outcome gate). The Five-Year Mission campaign (`rules/14`) builds on it: the record
+(ranks, upgrades, logbook) is `src/session/campaign.ts`, and what a campaign brings into one game
+(`SetupConfig.solo.campaign`: Reinforcement pile, boosts, challenges) is applied by
+`src/engine/solo/campaign.ts`, so each campaign game still replays from its config. The UI for both
+is `src/ui/solo/`.
 
 ## House AI: how to keep it working
 

@@ -183,7 +183,7 @@ function pullAndPlace(
 
 /** Move `take` of `seat`'s tokens from `from` back to their pool. The total
  *  (pool + Locations) is unchanged — the stack-boundary invariant holds. */
-function pullFrom(
+export function pullFrom(
 	state: GameState,
 	from: CardInstanceId,
 	seat: Seat,
@@ -207,7 +207,7 @@ function pullFrom(
 
 /** Place `count` tokens at `loc` from the pool (never more than the pool
  *  holds), then emit AWAY_TEAM_SENT. */
-function place(
+export function place(
 	state: GameState,
 	loc: CardInstanceId,
 	seat: Seat,

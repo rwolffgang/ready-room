@@ -16,6 +16,8 @@ import { useBridgeUi } from './bridgeUi'
 import { useVpNow } from './Header'
 import { SecH, Tableau } from './stations'
 import { deckLabel } from '../../data/cardNames'
+import { isSoloBot } from '../../engine/solo/seat'
+import { AcCards } from '../solo/AutomatedCommand'
 
 const SPEC: SpecialtyId[] = ['RESEARCH', 'INFLUENCE', 'MILITARY']
 
@@ -36,7 +38,10 @@ export function OpponentView() {
 	const state = projected as unknown as GameState
 	const p = state.players[opp]
 	const z = (k: string) => projected.zones[k] ?? []
-	const hand = z(zoneKey({ k: 'HAND', seat: opp })).length
+	// the official solo Bot (rules/13): a face-down row instead of a hand, a
+	// Bot deck and a Supplement instead of the Reserve and Development
+	const bot = isSoloBot(state, opp)
+	const hand = z(zoneKey({ k: bot ? 'BOT_ROW' : 'HAND', seat: opp })).length
 	const log = z(zoneKey({ k: 'LOG', seat: opp })).length
 	const discard = z(zoneKey({ k: 'DISCARD', seat: opp }))
 	const draw = z(zoneKey({ k: 'DRAW', seat: opp })).length
@@ -67,7 +72,9 @@ export function OpponentView() {
 					</span>
 				</div>
 				<div className="pb-hrow">
-					<span className="pb-lbl">Hand {hand}</span>
+					<span className="pb-lbl">
+						{bot ? 'Row' : 'Hand'} {hand}
+					</span>
 					<span
 						className="pb-handbacks"
 						aria-label={`${hand} cards, face down`}
@@ -101,7 +108,8 @@ export function OpponentView() {
 					<div className="pb-piles">
 						<div className="pb-pile">
 							<Gl g="DECK" />
-							<b>{draw}</b>Draw
+							<b>{draw}</b>
+							{bot ? 'Bot deck' : 'Draw'}
 							<Gl g="LOCK" className="pb-lock" />
 						</div>
 						<button
@@ -119,22 +127,39 @@ export function OpponentView() {
 							<Gl g="DISCARD_PILE" />
 							<b>{discard.length}</b>Discard
 						</button>
-						<div className="pb-pile">
-							<Gl g="RESERVE" />
-							<b>{z(zoneKey({ k: 'RESERVE', seat: opp })).length}</b>Reserve
-							<Gl g="LOCK" className="pb-lock" />
-						</div>
-						<div className="pb-pile">
-							<Gl g="DEVELOP" />
-							<b>{z(zoneKey({ k: 'DEVELOPMENT', seat: opp })).length}</b>
-							Develop
-						</div>
+						{bot ? (
+							<div className="pb-pile">
+								<Gl g="RESERVE" />
+								<b>{z(zoneKey({ k: 'SUPPLEMENT', seat: opp })).length}</b>
+								Supplement
+								<Gl g="LOCK" className="pb-lock" />
+							</div>
+						) : (
+							<>
+								<div className="pb-pile">
+									<Gl g="RESERVE" />
+									<b>{z(zoneKey({ k: 'RESERVE', seat: opp })).length}</b>Reserve
+									<Gl g="LOCK" className="pb-lock" />
+								</div>
+								<div className="pb-pile">
+									<Gl g="DEVELOP" />
+									<b>{z(zoneKey({ k: 'DEVELOPMENT', seat: opp })).length}</b>
+									Develop
+								</div>
+							</>
+						)}
 						<div className="pb-pile">
 							<Gl g="LOG" />
 							<b>{log}</b>Log
 							<Gl g="LOCK" className="pb-lock" />
 						</div>
 					</div>
+					{bot && (
+						<>
+							<SecH icon={<Gl g="DECK" />}>Automated Command</SecH>
+							<AcCards compact />
+						</>
+					)}
 				</section>
 			</div>
 		</div>

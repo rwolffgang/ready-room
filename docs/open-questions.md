@@ -16,7 +16,13 @@ Two residual issues from that source:
   well at 3× upscale — but it is why icon recovery (`todo/02b`) needs a classifier rather than
   simple template matching at full resolution.
 
-## B2 — The solo Bot rules are not in this PDF _(blocks `todo/15` Bot mode only)_
+## B2 — The solo Bot rules are not in this PDF _(resolved)_
+
+**Resolved (2026-10-31):** the solo rulebook is now restated in `rules/13-solo-mode.md` and
+`rules/14-five-year-mission.md`, and STCC publishes the Automated Command card text
+(`data/bots.json`, fetched with the card data). Implementation: `todo/15` §3. The original note
+follows.
+
 
 The box contains **12 Automated Command cards** and **2 Solo cards**, but this rulebook does not
 specify how they work — the solo rules are a separate document

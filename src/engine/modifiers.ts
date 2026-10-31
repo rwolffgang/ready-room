@@ -25,6 +25,7 @@ import type { CardInstanceId } from './ids'
 import type { Effect, Operation } from './resolver/nodes'
 import type { ResourceId, TraitId } from '../data/ids'
 import type { Seat } from './resolver/queries'
+import { isSoloBot } from './solo/seat'
 
 /** How a resource entered the pool (todo/05). 1BUR02 redirects only
  *  operation gains; Market token gains and steals are exempt (rules/11 §11.6.1). */
@@ -300,6 +301,8 @@ export function activeModifiers(
 ): { id: string; source: CardInstanceId }[] {
 	const p = player(state, seat)
 	const out: { id: string; source: CardInstanceId }[] = [...p.modifiers]
+	// the official solo Bot ignores its cards' text: only attached layers count
+	if (isSoloBot(state, seat)) return out
 	for (const iid of inPlayCards(state, seat)) {
 		const card = state.cards[iid]!
 		const def = cardDef(card.def)

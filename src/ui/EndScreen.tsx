@@ -2,6 +2,8 @@
 // breakdown side by side in rules/07 §7.4.1 order. The banner takes the
 // winner's seat colour (ice = seat 0, salmon = seat 1 — docs/ui-lcars.md §2);
 // a tie is lilac (score) and a Cadet Training loss to the Burn is the alert.
+// Against the official solo Bot (rules/13) the Burn is the Bot's win and a
+// tie on points is too.
 
 import type { ReactNode } from 'react'
 import type { GameState } from '../engine/state'
@@ -22,6 +24,8 @@ import {
 import type { SpecialtyId } from '../data/ids'
 import { deckLabel } from '../data/cardNames'
 import { seatLabel } from './format'
+import { soloBotLabel } from './solo/labels'
+import { CampaignEnd } from './solo/Campaign'
 import { Icon, SpecialtyLabel } from './icons'
 import { useGameStore, useProjected, useSession, useViewerSeat } from './store'
 
@@ -85,6 +89,8 @@ export function endHeadline(
 	board: FinalScoreboard,
 	cadet: boolean,
 	names: [string, string],
+	/** the official solo Bot's seat, in a solo game */
+	soloBot: Seat | null = null,
 ): EndHeadline {
 	const totals = [board.breakdown[0].total, board.breakdown[1].total]
 	const incidents = board.incidentCounts
@@ -93,6 +99,18 @@ export function endHeadline(
 			tone: 'alert',
 			title: 'Training failed',
 			reason: 'The Burn was triggered: in Cadet Training that is a loss.',
+		}
+	if (soloBot !== null && incidents !== undefined)
+		return {
+			tone: 'alert',
+			title: `${names[soloBot]} wins`,
+			reason: 'The Burn was triggered: against the Bot that is a loss.',
+		}
+	if (soloBot !== null && totals[0] === totals[1])
+		return {
+			tone: soloBot === 0 ? 'seat-0' : 'seat-1',
+			title: `${names[soloBot]} wins`,
+			reason: `${totals[0]} – ${totals[1]} VP · a tie goes to the Bot`,
 		}
 	if (cadet) {
 		const band = CADET_BAND[cadetBenchmark(totals[0]!) ?? 'NONE']
@@ -160,7 +178,10 @@ export function EndScreen({ onNewGame }: { onNewGame: () => void }) {
 				: [onlineView.players[0].name, onlineView.players[1].name],
 		viewer,
 	})
-	const head = endHeadline(board, cadet, names)
+	const soloBot = state.mode === 'SOLO' ? (state.solo?.bot ?? 1) : null
+	if (soloBot !== null && state.solo !== undefined)
+		names[soloBot] = soloBotLabel(state.solo.level)
+	const head = endHeadline(board, cadet, names, soloBot)
 	return (
 		<main className="end-screen">
 			<header className={`end-banner tone-${head.tone}`} role="status">
@@ -212,6 +233,8 @@ export function EndScreen({ onNewGame }: { onNewGame: () => void }) {
 				names={names}
 				breakdown={board.breakdown}
 			/>
+
+			<CampaignEnd />
 
 			<button
 				type="button"
@@ -395,6 +418,13 @@ function ScoreBreakdownTable({
 							})}
 						</Row>
 					))}
+					{seats.some((s) => breakdown[s].resourcesVp !== undefined) && (
+						<Row label={<IconText icon="DIL" text="Dilithium and Latinum" />}>
+							{seats.map((s) => (
+								<Cell key={s} vp={breakdown[s].resourcesVp ?? 0} />
+							))}
+						</Row>
+					)}
 					<Row label="Completed missions">
 						{seats.map((s) => (
 							<Cell

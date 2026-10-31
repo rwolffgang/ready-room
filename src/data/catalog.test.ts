@@ -56,7 +56,7 @@ describe('loadCatalog', () => {
 		}
 	})
 
-	it('the 32 Stardate cards (SD01–SD32) split 5×TWO_PLAYER + 2×CADET + 25 solo-only, as printed', async () => {
+	it('the 32 Stardate cards (SD01–SD32) split 5×TWO_PLAYER + 2×CADET + 25×SOLO (5 per Bot level), as printed', async () => {
 		const catalog = await loadCatalog()
 		const two = catalog.stardates
 			.filter((st) => st.modes.includes('TWO_PLAYER'))
@@ -94,7 +94,7 @@ describe('loadCatalog', () => {
 		// Solo-vs-Bot cards: boxed in every mode, level + Bot actions as data only
 		const solo = catalog.stardates.filter((st) => st.solo !== undefined)
 		expect(solo).toHaveLength(25)
-		for (const st of solo) expect(st.modes).toEqual([])
+		for (const st of solo) expect(st.modes).toEqual(['SOLO'])
 		const total = (level: string) =>
 			solo
 				.filter((st) => st.solo!.level === level)

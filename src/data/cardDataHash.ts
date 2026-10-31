@@ -21,7 +21,12 @@ export function cardDataHash(catalog: CardCatalog): string {
 	const boards = Object.keys(catalog.boards)
 		.sort()
 		.map((deck) => `${deck}=${JSON.stringify(catalog.boards[deck as DeckId])}`)
-	const payload = `v1|${defs.join('\n')}|${stardates.join('\n')}|${boards.join('\n')}`
+	const bots = [...(catalog.bots ?? [])]
+		.sort((a, b) => a.deck.localeCompare(b.deck))
+		.map((bot) => JSON.stringify(bot))
+	const payload = `v1|${defs.join('\n')}|${stardates.join('\n')}|${boards.join('\n')}${
+		bots.length > 0 ? `|${bots.join('\n')}` : ''
+	}`
 	return hashString(payload)
 }
 

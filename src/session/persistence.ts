@@ -13,6 +13,13 @@ import { createStore, get, set, del, keys, type UseStore } from 'idb-keyval'
 import type { Session } from './log'
 import { SESSION_VERSION } from './log'
 import { parseOpponents } from './opponents'
+import {
+	deleteCampaign,
+	listCampaigns,
+	loadCampaign,
+	saveCampaign,
+	type Campaign,
+} from './campaign'
 
 /** Versioned key namespace: `ready-room:session:v1:<gameId>`. Bumping the
  *  version isolates saves across incompatible formats. */
@@ -188,6 +195,23 @@ export class SessionStore {
 
 	list(): Promise<Session[]> {
 		return listSessions(this.storage)
+	}
+
+	// Five-Year Mission campaigns live beside the saves (src/session/campaign.ts)
+	saveCampaign(c: Campaign): Promise<void> {
+		return saveCampaign(this.storage, c)
+	}
+
+	loadCampaign(id: string): Promise<Campaign | null> {
+		return loadCampaign(this.storage, id)
+	}
+
+	removeCampaign(id: string): Promise<void> {
+		return deleteCampaign(this.storage, id)
+	}
+
+	listCampaigns(): Promise<Campaign[]> {
+		return listCampaigns(this.storage)
 	}
 }
 

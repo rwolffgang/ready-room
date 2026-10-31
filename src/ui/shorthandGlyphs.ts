@@ -159,6 +159,9 @@ export const TIMING_SVG: Record<ShorthandLine['timing'], string> = {
 	CONTROL: FLAG,
 	ENDGAME: CHEQUERED,
 	SPECIAL: `<path d="M12 2.2c.8 5.2 2.6 9 9.8 9.8-7.2.8-9 4.6-9.8 9.8-.8-5.2-2.6-9-9.8-9.8 7.2-.8 9-4.6 9.8-9.8Z" ${FILL}/>`,
+	// a warning triangle: the solo Bot's SURPRISE operation
+	SURPRISE:
+		'<path d="M12 3 21.8 20.2H2.2Z"/><path d="M12 9.3v5.2M12 17.4v.1"/>',
 	DEVELOPMENT:
 		'<path d="M3.2 12.6V4.2a1 1 0 0 1 1-1h8.4l8.5 8.5a1.5 1.5 0 0 1 0 2.1l-7.1 7.1a1.5 1.5 0 0 1-2.1 0Z"/><circle cx="7.9" cy="7.9" r="1.5"/>',
 }
@@ -236,6 +239,7 @@ export const TIMING_WORD: Record<ShorthandLine['timing'], string> = {
 	CONTROL: 'Control (on taking control)',
 	ENDGAME: 'Endgame',
 	SPECIAL: 'Special',
+	SURPRISE: 'Surprise (Bot only)',
 	DEVELOPMENT: 'Development cost',
 }
 
