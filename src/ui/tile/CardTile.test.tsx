@@ -76,9 +76,9 @@ describe('CardTile', () => {
 		expect(tile.querySelector('.pb-sg')).not.toBeNull()
 		expect(tile.querySelector('.pb-th h4')?.textContent).toBe('1PIC02/24')
 		expect(tile.querySelector('.pb-traits')).not.toBeNull()
-		expect(tile.querySelector('.pb-meta')?.textContent).toContain(
-			'token on card',
-		)
+		// a docked ship (token on its card) says nothing about its position
+		expect(tile.querySelector('.pb-meta')).not.toBeNull()
+		expect(tile.querySelector('.pb-meta')?.textContent).not.toMatch(/token/)
 		expect(tile.querySelectorAll('.pb-ln').length).toBe(3)
 		// each line is still the accessible English sentence
 		for (const img of tile.querySelectorAll('.pb-ln [role="img"]'))

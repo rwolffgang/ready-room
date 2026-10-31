@@ -102,7 +102,7 @@ describe('Fleet ships in a choice', () => {
 			from: 'IN_PLAY',
 			sourceCard: null,
 		}))
-		expect(tabs).toEqual([`at ${locName}`, 'token on card'])
+		expect(tabs).toEqual([`at ${locName}`])
 	})
 
 	it('a "you may beam" confirm shows its ships the same way', () => {
@@ -114,6 +114,6 @@ describe('Fleet ships in a choice', () => {
 			preview: { cards: [], onto: [warped, docked] },
 			sourceCard: null,
 		}))
-		expect(tabs).toEqual([`at ${locName}`, 'token on card'])
+		expect(tabs).toEqual([`at ${locName}`])
 	})
 })
