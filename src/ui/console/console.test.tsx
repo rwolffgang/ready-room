@@ -11,6 +11,7 @@ import { zoneKey } from '../../engine/state'
 import App from '../App'
 import { useGameStore } from '../store'
 import { useConsoleUi } from './consoleUi'
+import { HAND_ROOM_QUERY } from './HandDock'
 import { HOLD_MS } from './longPress'
 
 function config(): SetupConfig {
@@ -57,7 +58,19 @@ beforeEach(() => {
 	document.body.innerHTML = ''
 	useGameStore.getState().newGame()
 	useConsoleUi.getState().reset(0)
+	useConsoleUi.getState().setHandPinned(false)
+	vi.unstubAllGlobals()
 })
+
+/** A viewport as tall as HAND_ROOM_QUERY asks (jsdom has no matchMedia). */
+function stubTallScreen() {
+	vi.stubGlobal('matchMedia', (media: string) => ({
+		media,
+		matches: media === HAND_ROOM_QUERY,
+		addEventListener: () => {},
+		removeEventListener: () => {},
+	}))
+}
 
 describe('console across the table', () => {
 	it('the opponent band holds their hand face down, their decks and their pool', () => {
@@ -374,6 +387,51 @@ describe('console across the table', () => {
 		expect(dock().querySelectorAll('.dock-fan .card-hand')).toHaveLength(
 			hand.length,
 		)
+	})
+
+	it('the end cap pins the hand, and the pin is kept on this device', () => {
+		const host = renderGame()
+		const dock = () => host.querySelector('.hand-dock')!
+		const cap = () => dock().querySelector<HTMLButtonElement>('.dock-cap')!
+		// the cap closes the dock on the right, after the hand
+		expect(dock().lastElementChild).toBe(cap())
+		expect(cap().getAttribute('aria-pressed')).toBe('false')
+		act(() => cap().click())
+		expect(cap().getAttribute('aria-pressed')).toBe('true')
+		expect(dock().classList.contains('dock-raised')).toBe(true)
+		expect(localStorage.getItem('ready-room:hand-pinned')).toBe('1')
+		// a new game keeps it
+		act(() => useConsoleUi.getState().reset(0))
+		expect(dock().classList.contains('dock-pinned')).toBe(true)
+		// and the drop shows at once, though focus stays on the cap
+		act(() => {
+			cap().focus()
+			cap().click()
+		})
+		expect(dock().classList.contains('dock-raised')).toBe(false)
+		expect(localStorage.getItem('ready-room:hand-pinned')).toBeNull()
+	})
+
+	it('on a short screen a pinned hand lifts over the board and Esc drops it', () => {
+		const host = renderGame()
+		key('h')
+		expect(host.querySelector('.frame.hand-docked')).toBeNull()
+		expect(host.querySelector('.hand-dock.dock-raised')).not.toBeNull()
+		key('Escape')
+		expect(host.querySelector('.hand-dock.dock-raised')).toBeNull()
+	})
+
+	it('on a tall screen a pinned hand docks in its own row, and Esc leaves it', () => {
+		stubTallScreen()
+		const host = renderGame()
+		expect(host.querySelector('.frame.hand-docked')).toBeNull()
+		key('h')
+		expect(host.querySelector('.frame.hand-docked')).not.toBeNull()
+		key('Escape')
+		expect(host.querySelector('.frame.hand-docked')).not.toBeNull()
+		expect(host.querySelector('.hand-dock.dock-pinned')).not.toBeNull()
+		key('h')
+		expect(host.querySelector('.frame.hand-docked')).toBeNull()
 	})
 
 	it('a touch tap on the lowered hand lifts it instead of opening a card', () => {

@@ -4,15 +4,25 @@
 // raised hand) — so the board above it is never covered by default.
 //
 // It lifts to full size over the board when you point at it, when focus moves
-// into it, or on a tap (the first tap on a lowered dock only lifts it). H pins
-// it up, H or Esc again lets it drop. Raising moves the cards straight up and
-// never sideways, so the two clicks of a double-click (the store's timer in
+// into it, or on a tap (the first tap on a lowered dock only lifts it). The
+// end cap that closes the dock on the right, or H, pins it up and lets it drop
+// again; the pin is kept per device. On a screen tall enough (HAND_ROOM_QUERY)
+// a pinned hand docks at full height in a row of its own and the board shrinks
+// to fit above it, so it covers nothing; on a shorter one it lifts over the
+// board and Esc lets it drop. Raising moves the cards straight up and never
+// sideways, so the two clicks of a double-click (the store's timer in
 // cardClicked) land on the same card.
 //
 // Your Draw and Discard sit at its left end, the decks on your side of the
 // table.
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+	useSyncExternalStore,
+} from 'react'
 import type {
 	CSSProperties,
 	MouseEvent as ReactMouseEvent,
@@ -30,11 +40,48 @@ import { useEscape, useShortcut } from './useShortcut'
 const RAISE_MS = 140
 const LOWER_MS = 260
 
+/** Tall enough for the hand at full size below a board whose cards stay
+ *  near their laptop size (console.css: --card-w with the docked --dock-h). */
+export const HAND_ROOM_QUERY = '(min-height: 960px)'
+
+function roomQuery(): MediaQueryList | null {
+	try {
+		return typeof window !== 'undefined' &&
+			typeof window.matchMedia === 'function'
+			? window.matchMedia(HAND_ROOM_QUERY)
+			: null
+	} catch {
+		return null
+	}
+}
+
+function subscribeRoom(fn: () => void): () => void {
+	const q = roomQuery()
+	q?.addEventListener?.('change', fn)
+	return () => q?.removeEventListener?.('change', fn)
+}
+
+/** True while a pinned hand has a row of its own (ConsoleShell sets the
+ *  frame's `hand-docked` from this). */
+export function useHandDocked(): boolean {
+	const pinned = useConsoleUi((s) => s.handPinned)
+	const room = useSyncExternalStore(
+		subscribeRoom,
+		() => roomQuery()?.matches ?? false,
+	)
+	return pinned && room
+}
+
+function inCap(t: EventTarget | null): boolean {
+	return t instanceof Element && t.closest('.dock-cap') !== null
+}
+
 export function HandDock({ seat }: { seat: Seat }) {
 	const projected = useProjected()
 	const count = projected?.zones[zoneKey({ k: 'HAND', seat })]?.length ?? 0
 	const pinned = useConsoleUi((s) => s.handPinned)
 	const setPinned = useConsoleUi((s) => s.setHandPinned)
+	const docked = useHandDocked()
 	const [hovered, setHovered] = useState(false)
 	const [focused, setFocused] = useState(false)
 	const [tapped, setTapped] = useState(false)
@@ -46,17 +93,31 @@ export function HandDock({ seat }: { seat: Seat }) {
 		if (timer.current !== null) window.clearTimeout(timer.current)
 		timer.current = null
 	}
+	const later = (fn: () => void, ms: number) => {
+		clear()
+		timer.current = window.setTimeout(() => {
+			timer.current = null
+			fn()
+		}, ms)
+	}
 	useEffect(() => clear, [])
 
-	useShortcut('h', () => {
+	const toggle = () => {
 		setTapped(false)
+		// a drop shows at once, though the pointer is still on the cap
+		if (pinned) {
+			clear()
+			setHovered(false)
+		}
 		setPinned(!pinned)
-	})
+	}
+	useShortcut('h', toggle)
 	const drop = useCallback(() => {
 		setPinned(false)
 		setTapped(false)
 	}, [setPinned])
-	useEscape(pinned || tapped, drop)
+	// a docked hand is part of the table, not a layer over it
+	useEscape((pinned && !docked) || tapped, drop)
 
 	// a tap outside lowers a dock a tap raised
 	useEffect(() => {
@@ -72,16 +133,21 @@ export function HandDock({ seat }: { seat: Seat }) {
 
 	const onEnter = (e: ReactPointerEvent) => {
 		if (e.pointerType === 'touch') return
-		clear()
-		timer.current = window.setTimeout(() => setHovered(true), RAISE_MS)
+		later(() => setHovered(true), RAISE_MS)
 	}
 	const onLeave = (e: ReactPointerEvent) => {
 		if (e.pointerType === 'touch') return
-		clear()
-		timer.current = window.setTimeout(() => setHovered(false), LOWER_MS)
+		later(() => setHovered(false), LOWER_MS)
+	}
+	// after a drop the pointer is still on the dock: moving it off the cap
+	// lifts the hand again
+	const onMove = (e: ReactPointerEvent) => {
+		if (e.pointerType === 'touch' || hovered || timer.current !== null) return
+		if (inCap(e.target)) return
+		later(() => setHovered(true), RAISE_MS)
 	}
 	// touch: the first tap on a lowered hand only lifts it (the decks and the
-	// handle work at once)
+	// end cap work at once)
 	const lastPointer = useRef<string>('mouse')
 	const onDownCapture = (e: ReactPointerEvent) => {
 		lastPointer.current = e.pointerType
@@ -105,32 +171,33 @@ export function HandDock({ seat }: { seat: Seat }) {
 			style={{ '--hand-n': Math.max(1, count) } as CSSProperties}
 			onPointerEnter={onEnter}
 			onPointerLeave={onLeave}
+			onPointerMove={onMove}
 			onPointerDownCapture={onDownCapture}
 			onClickCapture={onClickCapture}
-			onFocus={() => setFocused(true)}
+			// the cap only pins and drops: focus on it lifts nothing
+			onFocus={(e) => setFocused(!inCap(e.target))}
 			onBlur={(e) => {
 				if (!e.currentTarget.contains(e.relatedTarget as Node | null))
 					setFocused(false)
 			}}
 		>
 			<DeckPiles seat={seat} />
-			<button
-				type="button"
-				className="dock-handle"
-				onClick={() => {
-					setTapped(false)
-					setPinned(!pinned)
-				}}
-				aria-pressed={pinned}
-				title={pinned ? 'Let your hand drop (H)' : 'Keep your hand up (H)'}
-			>
-				<span className="dock-handle-label">
-					Hand <kbd>H</kbd>
-				</span>
-			</button>
+			<span className="dock-handle">Hand</span>
 			<div className="dock-fan">
 				<Hand seat={seat} />
 			</div>
+			<button
+				type="button"
+				className="dock-cap"
+				onClick={toggle}
+				aria-pressed={pinned}
+				aria-label="Keep your hand up"
+				title={pinned ? 'Let your hand drop (H)' : 'Keep your hand up (H)'}
+			>
+				<span>
+					Hold <kbd>H</kbd>
+				</span>
+			</button>
 		</div>
 	)
 }
