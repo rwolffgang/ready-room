@@ -329,6 +329,7 @@ const TIMING_TONE: Record<TileLine['line']['timing'], string> = {
 	CONTROL: 'turn',
 	ENDGAME: 'end',
 	SPECIAL: 'special',
+	SURPRISE: 'special',
 	DEVELOPMENT: 'dev',
 }
 

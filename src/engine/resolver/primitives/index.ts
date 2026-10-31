@@ -99,6 +99,16 @@ import { modifierDetach } from './modifierDetach'
 import { altPlay } from './altPlay'
 import { scoreVp } from './scoreVp'
 import { script } from './script'
+import { tryNode, able } from './tryNode'
+import { attack } from './attack'
+import { botDeck } from './botDeck'
+import { botAcquire } from './botAcquire'
+import { botJunk } from './botJunk'
+import { botSendAwayTeam } from './botSendAwayTeam'
+import { botDeploy } from './botDeploy'
+import { botPromote } from './botPromote'
+import { botResolve } from './botResolve'
+import { botTakeControl } from './botTakeControl'
 
 /** Behaviour contract for one node kind (todo/04 §2). */
 export interface Primitive<N extends Effect> {
@@ -213,6 +223,16 @@ export const PRIMITIVES: {
 	ALT_PLAY: altPlay,
 	SCORE_VP: scoreVp,
 	SCRIPT: script,
+	TRY: tryNode,
+	ATTACK: attack,
+	BOT_DECK: botDeck,
+	BOT_ACQUIRE: botAcquire,
+	BOT_JUNK: botJunk,
+	BOT_SEND_AWAY_TEAM: botSendAwayTeam,
+	BOT_DEPLOY: botDeploy,
+	BOT_PROMOTE: botPromote,
+	BOT_RESOLVE: botResolve,
+	BOT_TAKE_CONTROL: botTakeControl,
 }
 
 /** The primitive for a node, widened to the full Effect union. The mapped
@@ -243,6 +263,8 @@ const CONTROL_KINDS = new Set<Effect['k']>([
 	'LET',
 	'OPPONENT',
 	'NOOP',
+	'TRY',
+	'ATTACK',
 ])
 
 export function isControl(node: Effect): boolean {
@@ -298,6 +320,14 @@ export function canResolveEffect(
 			})
 		case 'NOOP':
 			return true
+		case 'TRY':
+			return able(state, node.test ?? node.body, ctx)
+				? canResolveEffect(state, node.body, ctx)
+				: node.otherwise !== undefined
+					? canResolveEffect(state, node.otherwise, ctx)
+					: true
+		case 'ATTACK':
+			return canResolveEffect(state, node.body, ctx)
 		default:
 			return primitiveOf(node).canResolve(state, node, ctx)
 	}
@@ -352,6 +382,14 @@ export function canPayAll(
 			})
 		case 'NOOP':
 			return true
+		case 'TRY':
+			return able(state, node.test ?? node.body, ctx)
+				? canPayAll(state, node.body, ctx)
+				: node.otherwise !== undefined
+					? canPayAll(state, node.otherwise, ctx)
+					: true
+		case 'ATTACK':
+			return canPayAll(state, node.body, ctx)
 		default:
 			return primitiveOf(node).isCost
 				? primitiveOf(node).canResolve(state, node, ctx)

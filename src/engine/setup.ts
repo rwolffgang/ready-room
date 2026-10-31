@@ -24,12 +24,13 @@ import type { Effect } from './resolver/nodes'
 import type { GameState, MissionState, PlayerState, TrackTable } from './state'
 import type { Seat, ZoneRef } from './resolver/queries'
 import { newGameState, addCard, moveCard, zoneKey, inPlayCards } from './state'
+import type { GameMode, SoloLevel } from './state'
 import { registerCards, cardDef } from './cards'
 import { shuffle, next } from './rng'
 import { effectiveHandSize } from './modifiers'
 import { toIid, type CardInstanceId } from './ids'
 
-export type GameMode = 'TWO_PLAYER' | 'CADET'
+export type { GameMode, SoloLevel } from './state'
 
 export interface SetupPlayer {
 	deck: DeckId
@@ -44,6 +45,16 @@ export interface SetupConfig {
 	 *  opens). Absent = the random draw of §2.1 #17. The draw is still made
 	 *  either way, so the seed stream is the same as a random game's. */
 	startingSeat?: Seat | undefined
+	/** mode 'SOLO' only: the official Bot's game (rules/13). The Bot plays
+	 *  `players[1]`'s crew deck; the human, `players[0]`, always starts. */
+	solo?: SoloSetup | undefined
+}
+
+/** How a solo game against the official Bot is set up (rules/13 §13.2). */
+export interface SoloSetup {
+	level: SoloLevel
+	/** the Conspiring Admirals challenge (rules/13 §13.14) */
+	conspiringAdmirals?: boolean | undefined
 }
 
 /** A Stardate card: the registered CardDef carries the Clean-up (wipe) effect;
@@ -54,15 +65,12 @@ export interface StardateSpec {
 	name: string
 	sequence: number // 1 sits on top (rules/02 §2.1 #11)
 	glory: number // printed Glory tokens
-	modes: GameMode[] // empty for the solo-vs-Bot cards: boxed in every mode
+	modes: GameMode[] // the modes that use this card; boxed in every other
 	def: CardDef // registered like any other def; CLEANUP op = the wipe effect
 	/** Solo-vs-Bot cards only (SD08–SD32): difficulty level and the printed Bot
-	 *  action count. Data only — there is no Solo/Bot mode yet (todo/15). */
+	 *  action count (rules/13 §13.2). */
 	solo?: SoloStardate | undefined
 }
-
-export type SoloLevel =
-	'ENSIGN' | 'LIEUTENANT' | 'COMMANDER' | 'CAPTAIN' | 'ADMIRAL'
 
 export interface SoloStardate {
 	level: SoloLevel
@@ -686,6 +694,14 @@ function* effectChildren(node: Effect): Iterable<Effect> {
 		case 'FOR_EACH':
 		case 'LET':
 			yield node.body
+			break
+		case 'ATTACK':
+			yield node.body
+			break
+		case 'TRY':
+			yield node.body
+			if (node.otherwise !== undefined) yield node.otherwise
+			if (node.test !== undefined) yield node.test
 			break
 		default:
 			break

@@ -19,7 +19,8 @@ export function lowestTracks(state: GameState, seat: Seat): SpecialtyId[] {
 /** ADVANCE_SPECIALTY: raise a track, clamped at 15 (rules/07 §7.1). The
  *  'CHOICE' variant surfaces a CHOOSE_SPECIALTY pick first; 'LOWEST' advances
  *  whichever track is the lowest, asking only in a tie ("you choose in a
- *  tie" — 1SIS22). */
+ *  tie" — 1SIS22); `{pick, of}` is the solo Bot's lower/higher of the listed
+ *  tracks, never asking. */
 export const advanceSpecialty: Primitive<
 	Extract<Effect, { k: 'ADVANCE_SPECIALTY' }>
 > = {
@@ -42,6 +43,14 @@ export const advanceSpecialty: Primitive<
 					specialties: [...offered],
 				})
 			} else specialty = answer<SpecialtyId>(ctx, key)
+		} else if (typeof node.specialty === 'object') {
+			// the solo Bot's "whichever is lower / higher" over the listed tracks;
+			// ties go to the first listed (R > I > M — rules/13 §13.6.2)
+			const sp = player(state, ctx.actor).specialties
+			const sign = node.specialty.pick === 'LOWER' ? 1 : -1
+			specialty = node.specialty.of.reduce((best, t) =>
+				sign * sp[t] < sign * sp[best] ? t : best,
+			)
 		} else {
 			specialty = node.specialty
 		}

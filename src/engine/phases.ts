@@ -166,6 +166,8 @@ export function executePhaseStep(
 			return stepCleanup(state, frame, ctx)
 		case 'SETUP':
 			return state
+		case 'BOT':
+			throw new Error('the solo Bot turn needs a solo game (todo/15 §3)')
 		case 'GAME_OVER':
 			// the "Before scoring" SPECIALs have resolved: score now
 			return state.result === null

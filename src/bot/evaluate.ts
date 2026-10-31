@@ -186,6 +186,7 @@ const PHASE_INDEX: Record<GameState['phase']['k'], number> = {
 	CONTROL: 2,
 	ACTION: 3,
 	CLEANUP: 4,
+	BOT: 4, // the solo Bot's turn: its clean-up hands over to you
 	GAME_OVER: 5,
 }
 

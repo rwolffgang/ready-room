@@ -26,6 +26,7 @@ import { recordFx } from '../fx'
 import { evalPredicate } from '../queries/resolveQuery'
 import { cardDef } from '../cards'
 import { altPlayOperation, type AltPlayRef } from '../altPlay'
+import { acRowOperation } from '../solo/acRegistry'
 import {
 	failOperation,
 	skipBenefit,
@@ -42,7 +43,7 @@ import {
 	eventCardOf,
 	reactionPayable,
 } from './triggers'
-import type { OperationRef } from '../state'
+import type { AcRowRef, OperationRef } from '../state'
 import type { CardInstanceId } from '../ids'
 import { chronicle, frameActor } from './chronicle'
 import {
@@ -98,9 +99,12 @@ function opOf(
 	card: CardInstanceId,
 	opIndex: number,
 	via?: AltPlayRef,
+	row?: AcRowRef,
 ): Operation {
 	const instance = state.cards[card]
 	if (!instance) throw new Error(`pushOperation: no card instance ${card}`)
+	// the solo Bot ignores the printed text: its Automated Command row instead
+	if (row !== undefined) return acRowOperation(row)
 	if (via !== undefined) {
 		// an ALT_PLAY grant (1PIC08): the granted text replaces the printed op
 		const granted = altPlayOperation(state, via)
@@ -159,7 +163,7 @@ export function executeOne(state: GameState): GameState {
 		}
 		case 'OPERATION': {
 			if (frame.phase === 0) {
-				const op = opOf(state, frame.card, frame.opIndex, frame.via)
+				const op = opOf(state, frame.card, frame.opIndex, frame.via, frame.row)
 				// Stamp the operation context ONCE per operation: CHOOSE_ONE reads
 				// $op.isAttack / $op.seat to hard-filter options when an ATTACK is
 				// resolved by the opponent (rules/03 §3.5.3), and FREE_PLAY/DUPLICATE
@@ -239,10 +243,16 @@ export function executeOne(state: GameState): GameState {
 			// rules/08 → REACTION, rules/03 §3.5.3: the opponent resolved it).
 			let done: GameState = clearWildcards({ ...state, stack })
 			if (frame.attack !== undefined) done = closePending(done, frame.attack)
-			const completed = opOf(state, frame.card, frame.opIndex, frame.via)
-			// A granted ALT_PLAY is not one of the card's printed operations, so
-			// it has no index a later DUPLICATE (RESOLVED_THIS_TURN) could name.
-			if (frame.via === undefined) {
+			const completed = opOf(
+				state,
+				frame.card,
+				frame.opIndex,
+				frame.via,
+				frame.row,
+			)
+			// A granted ALT_PLAY (or a Bot row) is not one of the card's printed
+			// operations, so it has no index a later DUPLICATE could name.
+			if (frame.via === undefined && frame.row === undefined) {
 				done = recordResolved(done, {
 					card: frame.card,
 					opIndex: frame.opIndex,

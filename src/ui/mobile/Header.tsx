@@ -27,6 +27,8 @@ export function phaseWord(phase: GameState['phase']['k']): string {
 			return 'Setup'
 		case 'GAME_OVER':
 			return 'Game over'
+		case 'BOT':
+			return "Bot's turn"
 		default:
 			return RAIL_WORD[phase]
 	}

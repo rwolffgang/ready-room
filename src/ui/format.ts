@@ -4,7 +4,7 @@
 //
 // Also owns the human labels for engine enums so the components stay dumb.
 
-import type { Phase } from '../engine/state'
+import type { BotBeat, Phase } from '../engine/state'
 import type { ResourceId, SpecialtyId, Suit } from '../data/ids'
 import type { Seat } from '../engine/resolver/queries'
 
@@ -81,9 +81,19 @@ export function phaseLabel(phase: Phase): string {
 			return 'Action'
 		case 'CLEANUP':
 			return `Clean-up ${cleanupSubLabel(phase.sub)}`
+		case 'BOT':
+			return `Bot ${BOT_BEAT_LABELS[phase.beat]}`
 		case 'GAME_OVER':
 			return 'Game over'
 	}
+}
+
+const BOT_BEAT_LABELS: Record<BotBeat, string> = {
+	CONTROL: 'control',
+	DRAW: 'draws',
+	RESOLVE: 'resolves',
+	STARDATE: 'stardate',
+	CLEANUP: 'clean-up',
 }
 
 const CLEANUP_LABELS: Record<string, string> = {

@@ -12,6 +12,7 @@ import type { Amount, Query } from './resolver/queries'
 import type { MarketSuit, ResourceId } from '../data/ids'
 import { SUITS, TRAITS, SPECIALTIES } from '../data/ids'
 import { describe, describeOperation } from './describe'
+import { PRIMITIVES } from './resolver/primitives'
 
 // ---------------------------------------------------------------------------
 // Significant-token vocab (mirrors tools/check_fidelity.ts — keep in sync)
@@ -424,12 +425,41 @@ const samples: { [K in Effect['k']]: Effect & { k: K } } = {
 		},
 	},
 	SCRIPT: { k: 'SCRIPT', fn: 'demo.handler' },
+	// (missing until the count became the registry's own key list)
+	ASSIMILATE: { k: 'ASSIMILATE', target: 'THIS' },
+	COST_REQUIRE: {
+		k: 'COST_REQUIRE',
+		cond: { k: 'SPECIALTY_AT_LEAST', specialty: 'MILITARY', value: 3 },
+	},
+	DRONE: { k: 'DRONE', verb: 'REGENERATE', count: 1 },
+	// solo Bot (rules/13)
+	TRY: { k: 'TRY', body: draw(1), otherwise: gain('GLO', 2) },
+	ATTACK: {
+		k: 'ATTACK',
+		body: { k: 'FORCE', body: { k: 'TAKE', deck: 'INCIDENT', count: 1 } },
+	},
+	BOT_DECK: { k: 'BOT_DECK', from: 'DECK', op: 'DISCARD', count: 2 },
+	BOT_ACQUIRE: {
+		k: 'BOT_ACQUIRE',
+		mode: 'GAIN',
+		pref: [[{ traits: ['KLINGON'] }], [{ suits: ['PERSON'] }, { suits: ['SHIP'] }]],
+	},
+	BOT_JUNK: { k: 'BOT_JUNK' },
+	BOT_SEND_AWAY_TEAM: {
+		k: 'BOT_SEND_AWAY_TEAM',
+		count: 1,
+		prefer: ['STARBASE', 'STARFLEET'],
+	},
+	BOT_DEPLOY: { k: 'BOT_DEPLOY', target: 'THIS', then: 'EXPLORE' },
+	BOT_PROMOTE: { k: 'BOT_PROMOTE', target: 'THIS' },
+	BOT_RESOLVE: { k: 'BOT_RESOLVE', from: 'DECK_TOP' },
+	BOT_TAKE_CONTROL: { k: 'BOT_TAKE_CONTROL' },
 } as { [K in Effect['k']]: Effect & { k: K } }
 
 vitestDescribe('describe() is total over every node kind', () => {
-	it('renders all 76 kinds to non-empty English without placeholders/leaks', () => {
+	it('renders every kind to non-empty English without placeholders/leaks', () => {
 		const kinds = Object.keys(samples)
-		expect(kinds.length).toBe(76)
+		expect(kinds.sort()).toEqual(Object.keys(PRIMITIVES).sort())
 		const rendered = Object.entries(samples).map(([k, node]) => ({
 			k,
 			out: describe(node as Effect),
@@ -443,6 +473,30 @@ vitestDescribe('describe() is total over every node kind', () => {
 		// exact-phrasing spot checks for the shared tooltip surface
 		expect(describe(samples.SEQ)).toBe('Gain 1 {DIL}. Draw a card.')
 		expect(describe(samples.MAY)).toBe('You may draw a card.')
+		// the solo Bot's rows read like its Automated Command cards
+		expect(describe(samples.TRY)).toBe(
+			'If able, draw a card. Otherwise, gain 2 {GLO}.',
+		)
+		expect(describe(samples.BOT_DECK)).toBe(
+			'Discard the top 2 cards of the Bot deck.',
+		)
+		expect(describe(samples.BOT_ACQUIRE)).toBe(
+			'Gain a KLINGON > PERSON / SHIP.',
+		)
+		expect(describe(samples.BOT_SEND_AWAY_TEAM)).toBe(
+			'Send an Away Team to a neutral STARBASE > STARFLEET > LOCATION.',
+		)
+		expect(describe(samples.BOT_DEPLOY)).toBe('Deploy this SHIP; it explores.')
+		expect(describe(samples.BOT_RESOLVE)).toBe(
+			'Resolve the top card of the Bot deck.',
+		)
+		expect(
+			describe({
+				k: 'ADVANCE_SPECIALTY',
+				specialty: { pick: 'LOWER', of: ['RESEARCH', 'INFLUENCE'] },
+				amount: 1,
+			}),
+		).toBe('Gain 1 RESEARCH / INFLUENCE (whichever is lower).')
 		expect(describe(samples.COST_ACTION)).toBe('Spend an {ACTION}.')
 		expect(describe(samples.CHOOSE_ONE)).toContain('Either ')
 	})

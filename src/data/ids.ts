@@ -143,6 +143,9 @@ export const OPERATION_TYPES = [
 	'CONTROL',
 	'ENDGAME',
 	'SPECIAL',
+	// "SURPRISE (Bot only)": resolved instead of an Automated Command row when
+	// the solo Bot resolves the card (rules/13 §13.6.3)
+	'SURPRISE',
 ] as const
 export type OperationType = (typeof OPERATION_TYPES)[number]
 

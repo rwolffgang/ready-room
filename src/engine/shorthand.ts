@@ -796,7 +796,7 @@ export function shorthand(e: Effect): Tok[] {
 			const g: GlyphId =
 				e.specialty === 'CHOICE'
 					? 'ANY_SPECIALTY'
-					: e.specialty === 'LOWEST'
+					: e.specialty === 'LOWEST' || typeof e.specialty === 'object'
 						? 'LOWEST_SPECIALTY'
 						: e.specialty
 			return counted((n) => glyph(g, n), e.amount, '+')
@@ -884,6 +884,69 @@ export function shorthand(e: Effect): Tok[] {
 			]
 		case 'SCRIPT':
 			return [word('special rule')]
+
+		// solo Bot (rules/13) — Automated Command rows
+		case 'TRY': {
+			const then = shorthand(e.body)
+			const other = e.otherwise !== undefined ? shorthand(e.otherwise) : []
+			return [
+				{
+					k: 'if',
+					cond: [word(e.test !== undefined ? 'able (both)' : 'able')],
+					then,
+					...(other.length > 0 ? { else: other } : {}),
+				},
+			]
+		}
+		case 'ATTACK':
+			return [glyph('ATTACK'), ...shorthand(e.body)]
+		case 'BOT_DECK': {
+			const verb =
+				e.op === 'LOG' ? glyph('LOG') : e.op === 'DISCARD' ? glyph('DISCARD_PILE') : glyph('TOP_DECK')
+			return [
+				verb,
+				glyph('DECK', `${e.count}`),
+				...(e.from === 'SUPPLEMENT' ? qual([word('supplement')]) : []),
+			]
+		}
+		case 'BOT_ACQUIRE': {
+			if (e.from === 'ENCOUNTER' || e.from === 'INCIDENT')
+				return [{ k: 'suit', suit: e.from, n: '+1' }]
+			const terms: Tok[] = (e.pref ?? [[{}]]).flatMap((step, i) => [
+				...(i > 0 ? [word('>')] : []),
+				...step.flatMap((term, j) => [
+					...(j > 0 ? [{ k: 'sep', s: '/' } as Tok] : []),
+					...('most' in term ? [word('most'), glyph(term.most)] : filt(term)),
+				]),
+			])
+			return [
+				e.mode === 'GAIN' ? glyph('DISCARD_PILE', '+1') : glyph('TOP_DECK', '+1'),
+				...qual(terms),
+			]
+		}
+		case 'BOT_JUNK':
+			return [glyph('JUNK'), ...qual([word('most valuable')])]
+		case 'BOT_SEND_AWAY_TEAM':
+			return [
+				...counted((n) => glyph('SEND', n), e.count, ''),
+				...(e.prefer !== undefined
+					? qual(e.prefer.map((t) => ({ k: 'trait', trait: t }) as Tok))
+					: []),
+			]
+		case 'BOT_DEPLOY':
+			return [
+				glyph('DEPLOY'),
+				...(e.then !== undefined ? [glyph('WARP'), word(e.then.toLowerCase())] : []),
+			]
+		case 'BOT_PROMOTE':
+			return [
+				glyph('PROMOTE'),
+				...(e.target === 'DISCARD' ? qual([glyph('DISCARD_PILE')]) : []),
+			]
+		case 'BOT_RESOLVE':
+			return [word('resolve'), ...qual([word(e.from.toLowerCase().replace('_', ' '))])]
+		case 'BOT_TAKE_CONTROL':
+			return [glyph('CONTROL'), ...qual([word('most Bot tokens')])]
 	}
 }
 
@@ -1138,6 +1201,7 @@ const TIMING_TEXT: Record<ShorthandLine['timing'], string> = {
 	CONTROL: 'CONT',
 	ENDGAME: 'ENDG',
 	SPECIAL: 'SPEC',
+	SURPRISE: 'SURP',
 	DEVELOPMENT: 'DEV',
 }
 

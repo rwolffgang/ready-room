@@ -49,6 +49,9 @@ export type ZoneRef =
 				| 'DUTY_OFFICER'
 				| 'CAPTAIN'
 				| 'STATUS'
+				| 'BOT_ROW'
+				| 'SUPPLEMENT'
+				| 'REINFORCEMENT'
 			seat: Seat
 	  }
 	| { k: 'BEAMED'; host: string }

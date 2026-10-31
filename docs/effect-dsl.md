@@ -343,6 +343,31 @@ discard to take the INCIDENT back to hand, and on success draw two). This is an 
 }
 ```
 
+### The solo Bot — Automated Command rows (`rules/13`)
+
+The official solo Bot never reads its cards' text. It resolves every card through a row of its
+crew's Automated Command cards (`src/data/cards/solo/bots.json`, schema `BotCardSchema`). Each row
+is an ordinary effect tree, run as an `OPERATION` frame whose `row` names it, with "this card" =
+the card being resolved. These nodes exist for those rows and for SURPRISE operations. The `BOT_*`
+nodes always act for the Bot and choose by its rules, never by a player's choice.
+
+| Node | Meaning |
+| --- | --- |
+| `TRY {body, otherwise?, test?}` | "If able, X. Otherwise, Y.". Decided once, before anything runs: can `test` (default `body`) fully resolve now? FORCE/OPPONENT/ATTACK are looked through. A cancelled attack inside X still counts as done. |
+| `ATTACK {body}` | The red part of a row: an attack on the opponent around `body`. It opens and closes the attack record like an ATTACK operation, so "would be attacked" windows, cancels and ATTACKED apply. |
+| `BOT_DECK {from: DECK\|SUPPLEMENT, op: LOG\|DISCARD\|TAKE, count}` | The top cards of the Bot deck (reshuffling it, `rules/13` §13.5) or of the Supplement deck. A logged INCIDENT is returned instead; TAKE puts a Supplement card onto the Bot deck. |
+| `BOT_ACQUIRE {mode: GAIN\|TAKE, from?, pref?, bind?}` | A Market card by preference: `pref` = `[[A], [B, C]]` for "A > B / C", where terms are card filters or `{most: res}`. The best card is chosen by value to the Bot. GAIN goes to the Bot Discard pile, TAKE to the top of the Bot deck. `from: ENCOUNTER\|INCIDENT` takes that deck's top card. |
+| `BOT_JUNK` | Junks the token-free Market card most valuable to the opponent. |
+| `BOT_SEND_AWAY_TEAM {count, prefer?, ignoreShips?}` | Sends to the neutral LOCATION with the most Bot tokens, after trait preferences. It never sends where it over-secures. With no Away Team left on its Captain, it pulls one back from where it has the fewest. |
+| `BOT_DEPLOY {target: THIS\|DISCARD\|{bound}, then?: EXPLORE\|ENGAGE}` | Deploys a SHIP, then warps it to the emptiest Location (explore) or to the one where the opponent has the most tokens (engage). |
+| `BOT_PROMOTE {target}` | Promotes a PERSON into the Bot's single Duty Officer slot, dismissing the previous Duty Officer. |
+| `BOT_RESOLVE {from: ROW\|DECK_TOP\|SUPPLEMENT_TOP\|DISCARD\|BOUND, filter?}` | Resolves another card through its row, then carries on. A LOCATION left in Staging joins the Control Area. |
+| `BOT_TAKE_CONTROL` | Takes control of the neutral LOCATION with the most Bot tokens (minimum 1). |
+
+`ADVANCE_SPECIALTY.specialty` may also be `{pick: LOWER|HIGHER, of: [...]}`: "gain 1 R / I
+(whichever is lower)". Ties go to the first listed track. Card value and every Location pick are
+in `src/engine/solo/value.ts` and `rank.ts`.
+
 ## 5. Predicates & queries
 
 ```ts

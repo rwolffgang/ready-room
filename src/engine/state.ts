@@ -64,12 +64,19 @@ export type CleanupSub =
 	| 'DRAW'
 	| 'REFRESH'
 
+/** The solo Bot's turn (rules/13 §13.4), one beat per BOT_STEP intent:
+ *  CONTROL (take control of a secured LOCATION and resolve it) → DRAW (lay the
+ *  face-down Staging row) → RESOLVE (flip and resolve the next row card, once
+ *  per card) → STARDATE (a Stardate card handed to the Bot) → CLEANUP. */
+export type BotBeat = 'CONTROL' | 'DRAW' | 'RESOLVE' | 'STARDATE' | 'CLEANUP'
+
 export type Phase =
 	| { k: 'SETUP' }
 	| { k: 'RESUPPLY'; pending: OperationRef[] }
 	| { k: 'CONTROL' }
 	| { k: 'ACTION' }
 	| { k: 'CLEANUP'; sub: CleanupSub }
+	| { k: 'BOT'; beat: BotBeat }
 	| { k: 'GAME_OVER' }
 
 export type LogKind =
@@ -341,6 +348,9 @@ export type Frame =
 			/** resolve the operation granted by this ALT_PLAY PASSIVE instead of
 			 *  the card's printed #opIndex (1PIC08; src/engine/altPlay.ts). */
 			via?: AltPlayRef | undefined
+			/** the solo Bot resolving `card` through this Automated Command row
+			 *  instead of its printed text (rules/13 §13.6; solo/acRegistry.ts) */
+			row?: AcRowRef | undefined
 			/** resources paid as a cost by this operation (set by COST_RESOURCE /
 			 *  SPEND_RESOURCE on the nearest OPERATION frame; 1SIS24). */
 			paid?: ResourceId[] | undefined
@@ -375,7 +385,7 @@ export type Frame =
 export interface GameState {
 	version: number
 	rng: Rng
-	mode: 'TWO_PLAYER' | 'CADET'
+	mode: GameMode
 	cards: Record<string, CardInstance>
 	zones: Record<string, CardInstanceId[]> // keyed by zoneKey(ref) (see below)
 	players: [PlayerState, PlayerState]
@@ -393,6 +403,9 @@ export interface GameState {
 		 *  flat STARDATE_REFILL_GLORY (docs/data-model.md §1, rules/03 §3.6.4).
 		 *  Optional so bare test states (endgame.test etc.) construct without it. */
 		glories?: number[] | undefined
+		/** Bot actions of each card still in `pile` (index 0 = top), kept in
+		 *  step with `glories`; only solo Stardates print them (rules/13 §13.4). */
+		botActions?: number[] | undefined
 	}
 	awayTeamsAt: Record<string, [number, number]> // LocationRef key -> [seat0, seat1]
 	resolutionTriggered: boolean
@@ -425,6 +438,55 @@ export interface GameState {
 	 *  choice to the first legal selection, suppress events/reactions. Never set
 	 *  on a persisted state. */
 	probe?: boolean | undefined
+	/** The official solo Bot's game (mode 'SOLO', rules/13); absent otherwise. */
+	solo?: SoloState | undefined
+}
+
+/** The game modes: two players (hot-seat, online, vs the House AI), Cadet
+ *  Training (rules/10) and solo vs the official Bot (rules/13). */
+export type GameMode = 'TWO_PLAYER' | 'CADET' | 'SOLO'
+
+/** The solo difficulty levels, easiest first (rules/13 §13.2). */
+export const SOLO_LEVELS = [
+	'ENSIGN',
+	'LIEUTENANT',
+	'COMMANDER',
+	'CAPTAIN',
+	'ADMIRAL',
+] as const
+export type SoloLevel = (typeof SOLO_LEVELS)[number]
+
+/** What the solo Bot is resolving right now — narration for the UI only; the
+ *  rules never read it. */
+export interface BotBeatInfo {
+	beat: BotBeat
+	/** the card being resolved (flipped, taken control of, resolved by a row) */
+	card?: CardInstanceId | undefined
+	/** the Automated Command row it matched */
+	row?: AcRowRef | undefined
+}
+
+/** One row of an Automated Command card (src/data/cards/solo/bots.json): a
+ *  TRAITS row by index, a SUITS row by suit and side, or a card's own
+ *  SURPRISE operation (rules/13 §13.6). */
+export type AcRowRef =
+	| { deck: DeckId; trait: number }
+	| { deck: DeckId; suit: string; do: boolean }
+	| { deck: DeckId; surprise: true }
+
+export interface SoloState {
+	/** the Bot's seat (always 1: the human starts and sits at 0) */
+	bot: Seat
+	/** the Bot's crew deck, whose Automated Command cards it uses */
+	crew: DeckId
+	level: SoloLevel
+	/** the Conspiring Admirals challenge (rules/13 §13.14) */
+	conspiringAdmirals: boolean
+	/** common Market cards the human owned at any point this game — campaign
+	 *  upgrade Option A (rules/14 §14.3); def ids, in first-owned order */
+	marketOwned: string[]
+	/** narration of the Bot's current beat */
+	beat?: BotBeatInfo | undefined
 }
 
 // ---------------------------------------------------------------------------
@@ -453,6 +515,9 @@ export const ZONES = [
 	'DUTY_OFFICER',
 	'CAPTAIN',
 	'STATUS',
+	'BOT_ROW',
+	'SUPPLEMENT',
+	'REINFORCEMENT',
 	'BEAMED',
 ] as const
 
@@ -489,6 +554,9 @@ export function zoneKey(ref: ZoneRef): string {
 		case 'DUTY_OFFICER':
 		case 'CAPTAIN':
 		case 'STATUS':
+		case 'BOT_ROW':
+		case 'SUPPLEMENT':
+		case 'REINFORCEMENT':
 			return `${ref.k}:${ref.seat}`
 		default:
 			return ref.k // ENCOUNTER_DECK, INCIDENT_DECK, LOCATION_DECK, JUNK, STARDATE_PILE, BOX
@@ -591,6 +659,29 @@ export function zoneProps(ref: ZoneRef): ZoneProps {
 				visibleTo: 'ALL',
 			}
 		case 'LOG':
+			return {
+				inPlay: false,
+				traitsCount: false,
+				skillsCount: false,
+				tableOps: false,
+				ordered: false,
+				visibleTo: 'OWNER',
+			}
+		// the solo Bot's face-down Staging row and Supplement deck (rules/13
+		// §13.2, §13.4): unknown cards from its deck, in order
+		case 'BOT_ROW':
+		case 'SUPPLEMENT':
+			return {
+				inPlay: false,
+				traitsCount: false,
+				skillsCount: false,
+				tableOps: false,
+				ordered: true,
+				visibleTo: 'NONE',
+			}
+		// your campaign Reinforcement deck (rules/14 §14.4): you built it, so
+		// you may look through it; it never scores
+		case 'REINFORCEMENT':
 			return {
 				inPlay: false,
 				traitsCount: false,
@@ -965,7 +1056,7 @@ export function clearWildcards(state: GameState): GameState {
 /** Minimal, deterministic state two players can be slotted into. */
 export function newGameState(
 	seed = 1,
-	opts?: { mode?: 'TWO_PLAYER' | 'CADET' },
+	opts?: { mode?: GameMode },
 ): GameState {
 	const base = (seat: Seat): PlayerState => ({
 		seat,

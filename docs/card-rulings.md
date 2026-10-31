@@ -968,3 +968,19 @@ BEAM, GAIN LAT 1])` (no COST_BEAM).
 - **Interpretation:** keep it exactly like a player's Log, which is face down to the opponent. Its
   size is public. Logged cards only matter at scoring, and the end-of-game breakdown shows them.
 - **Keyed on:** `zoneProps` LOG (`src/engine/state.ts`); `rules/13` §13.2.
+
+## 061 — Bot Market preferences: printed traits only; "most {DIL}" needs one
+
+- **Question:** two corners of the Bot's Market preferences.
+  - Does a WILDCARD card in the Market count as "a KLINGON" for "gain a KLINGON > …"?
+  - What does "the card in the Market with the most {DIL} > most {GLO}" gain when no Market card
+    holds either token?
+- **Interpretation:**
+  - **WILDCARD:** the solo rulebook gives WILDCARD meaning only for the card the Bot resolves (it
+    takes the first TRAITS row). A Market card belongs to nobody, and nobody declares what it
+    counts as. So preferences match printed traits, suits and Focus icons only.
+  - **"Most" terms:** a "most {X}" step needs a card holding at least one {X}, otherwise the
+    chain falls through to its next step. When nothing is left, the Bot gains nothing, so "if
+    able" rows take their "otherwise" branch.
+- **Keyed on:** `src/engine/resolver/primitives/botAcquire.ts`; `src/engine/solo/nodes.test.ts`
+  ("Market preferences").

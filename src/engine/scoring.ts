@@ -207,6 +207,14 @@ function* effectChildren(effect: Effect): Iterable<Effect> {
 		case 'LET':
 			yield effect.body
 			break
+		case 'ATTACK':
+			yield effect.body
+			break
+		case 'TRY':
+			yield effect.body
+			if (effect.otherwise !== undefined) yield effect.otherwise
+			if (effect.test !== undefined) yield effect.test
+			break
 		default:
 			break
 	}
