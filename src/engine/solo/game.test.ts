@@ -33,6 +33,7 @@ export function soloConfig(
 	level: SoloLevel,
 	seed: number,
 	human: DeckId = HUMAN[bot]!,
+	conspiringAdmirals = false,
 ): SetupConfig {
 	return {
 		mode: 'SOLO',
@@ -41,7 +42,7 @@ export function soloConfig(
 			{ deck: bot, boardSide: 'BASIC' },
 		],
 		seed,
-		solo: { level },
+		solo: { level, conspiringAdmirals },
 	}
 }
 
@@ -109,4 +110,22 @@ describe('whole solo games', () => {
 			}
 		},
 	)
+})
+
+describe('whole solo games with the Conspiring Admirals challenge', () => {
+	it.each(BOTS)('%s Bot at ADMIRAL: reaches the end', (bot) => {
+		for (const seed of seeds()) {
+			let before: GameState | undefined
+			const r = autoPlay(
+				setup(soloConfig(bot, 'ADMIRAL', seed, HUMAN[bot], true), catalog),
+				undefined,
+				undefined,
+				(s) => {
+					assertInvariants(s, { since: before })
+					before = s
+				},
+			)
+			expect(r.stopped, `${bot} seed ${seed}`).toBe('GAME_OVER')
+		}
+	})
 })

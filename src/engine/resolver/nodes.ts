@@ -487,6 +487,9 @@ export type EffectNode =
 	// "… and remove 2 AWAY TEAMs to …": the Bot's own, one at a time, each from
 	// the LOCATION where it has the fewest tokens (ruling 055)
 	| { k: 'BOT_REMOVE_AWAY_TEAM'; count: number }
+	// "put … this card to the bottom of your draw deck" (1DIR01/2's SURPRISE):
+	// the resolving card changes hands — the actor now owns it
+	| { k: 'TRANSFER'; target: 'THIS'; to: 'DECK_BOTTOM' }
 
 /** A Bot preference expression (rules/13 §13.10.1): the outer list is the
  *  ">" fallback order, each inner list a "/" set whose best card (by value)

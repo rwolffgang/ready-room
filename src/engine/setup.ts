@@ -596,7 +596,9 @@ export function assertSetupCompleteness(
 	config: SetupConfig,
 	catalog: CardCatalog,
 ): GameState {
-	const chosen = new Set(config.players.map((p) => p.deck))
+	const chosen = new Set<string>(config.players.map((p) => p.deck))
+	// the solo Directives are set up in solo games only (solo/setup.ts)
+	if (config.mode === 'SOLO') chosen.add('SOLO')
 	const expected = new Set<string>()
 	for (const d of catalog.defs) {
 		if (d.deck === 'COMMON' || chosen.has(d.deck)) expected.add(d.id)

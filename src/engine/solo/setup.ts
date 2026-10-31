@@ -66,9 +66,18 @@ export function setupSoloBot(
 	const dev = mintShuffled(s, by('DEVELOPMENT'), supplement, bot)
 	const res = mintShuffled(dev.state, by('RESERVE'), supplement, bot)
 	s = res.state
+	// The solo Directives: under the Conspiring Admirals challenge the SURPRISE
+	// one joins the Bot's Available cards (rules/13 §13.14); the rest go back
+	// to the box (the campaign's own Directive is dealt by rules/14 setup).
+	const directives = catalog.defs.filter((d) => d.deck === 'SOLO')
+	const challenge = directives.filter(
+		(d) => solo.conspiringAdmirals === true && d.traits.includes('SURPRISE'),
+	)
+	for (const d of directives)
+		if (!challenge.includes(d)) s = mintInto(s, d.id, null, { k: 'BOX' }, 'solo').state
 	// Bot deck: Available shuffled, Deployed + Controlled shuffled on top.
 	const deck: ZoneRef = { k: 'DRAW', seat: bot }
-	const avail = mintShuffled(s, by('AVAILABLE'), deck, bot)
+	const avail = mintShuffled(s, [...by('AVAILABLE'), ...challenge], deck, bot)
 	const onTop = mintShuffled(
 		avail.state,
 		[...by('DEPLOYED'), ...by('CONTROLLED_LOCATION')],

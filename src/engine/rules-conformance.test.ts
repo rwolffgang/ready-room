@@ -600,12 +600,12 @@ describe('rules/12 §12.29 — Reserve and Development are removed before scorin
 describe('rules/12 §12.30 — unimplemented content stays recognised-but-inert', () => {
 	// DRONE / ASSIMILATE, MISSIONS suits, the SURPRISE trait, unprinted cards and
 	// the box-unused icons must never crash the engine — reserved, not active.
-	it('the box-unused icon ids, the MISSION suit and the SURPRISE trait are reserved', () => {
+	it('the box-unused icon ids and the MISSION suit are reserved; SURPRISE is live (solo)', () => {
 		for (const id of ['JEM_HADAR', 'VORTA', 'XB', 'HELMET', 'MIND_CONTROL']) {
 			expect(NOT_IN_THIS_BOX.has(id)).toBe(true)
 		}
 		expect(NOT_IN_THIS_BOX_SUITS.has('MISSION')).toBe(true)
-		expect(NOT_IN_THIS_BOX_TRAITS.has('SURPRISE')).toBe(true)
+		expect(NOT_IN_THIS_BOX_TRAITS.has('SURPRISE')).toBe(false)
 		expect(NOT_IN_THIS_BOX.has('ANDORIAN')).toBe(false)
 	})
 

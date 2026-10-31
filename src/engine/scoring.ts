@@ -129,6 +129,7 @@ function excludedFromScoring(card: GameState['cards'][string]): boolean {
 	switch (card.zone.k) {
 		case 'RESERVE':
 		case 'DEVELOPMENT':
+		case 'BOX': // destroyed: out of the game, whoever last owned it
 		case 'SUPPLEMENT': // the solo Bot's Reserve + Development (ruling 053)
 		case 'REINFORCEMENT': // until a card takes it out (rules/14 §14.4)
 		case 'INCIDENT_DECK':

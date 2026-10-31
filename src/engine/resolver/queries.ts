@@ -221,6 +221,9 @@ export type Predicate =
 	// "you have N+ {COLLECTIVE} value" (1CAR02): Borg Collective icons are not
 	// used in this box (rules/12 §12.30) — reserved, the value is always 0.
 	| { k: 'COLLECTIVE_AT_LEAST'; value: number }
+	// the acting seat is the official solo Bot ("if this card is owned by the
+	// bot" — 1DIR01/2)
+	| { k: 'IS_SOLO_BOT' }
 	| { k: 'TOTAL_VP_AT_LEAST'; value: number } // "you have N+ value" = total printed VP in play (1CAR02)
 	| {
 			k: 'AWAY_TEAMS_AT' // away-team tokens at matched Locations: "2+ AWAY TEAMS here" (1SHR12, ruling 026)

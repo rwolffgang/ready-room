@@ -302,6 +302,7 @@ export const PredicateSchema: z.ZodType<Predicate> = z.lazy(() =>
 				value: z.number().int().min(0),
 			})
 			.strict(),
+		z.object({ k: z.literal('IS_SOLO_BOT') }).strict(),
 		z
 			.object({
 				k: z.literal('TOTAL_VP_AT_LEAST'),
@@ -962,6 +963,13 @@ export const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
 				count: z.number().int().min(1),
 			})
 			.strict(),
+		z
+			.object({
+				k: z.literal('TRANSFER'),
+				target: z.literal('THIS'),
+				to: z.literal('DECK_BOTTOM'),
+			})
+			.strict(),
 	]),
 )
 
@@ -1109,6 +1117,10 @@ export interface CardDef {
 	/** "This card cannot be promoted." (1SIS13) — PROMOTE never
 	 *  offers it. */
 	cannotBePromoted?: boolean | undefined
+	/** "This card cannot be beamed or discarded by any effect except its own
+	 *  play operation (not even in the Clean-up Step)" (1DIR01/2): never a
+	 *  discard or beam candidate. */
+	discardProtected?: boolean | undefined
 	/** The card counts as a LOCATION throughout, and deploying it takes
 	 *  control of one (1ENC07): it
 	 *  also matches the LOCATION suit, DEPLOY puts it into the Location area
@@ -1213,6 +1225,7 @@ export const CardDefSchema = z
 		passives: z.array(z.string().min(1)).optional(),
 		cannotBePlayed: z.boolean().optional(),
 		cannotBePromoted: z.boolean().optional(),
+		discardProtected: z.boolean().optional(),
 		treatedAsLocation: z.boolean().optional(),
 	})
 	.strict()

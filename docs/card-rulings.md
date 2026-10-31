@@ -984,3 +984,44 @@ BEAM, GAIN LAT 1])` (no COST_BEAM).
     able" rows take their "otherwise" branch.
 - **Keyed on:** `src/engine/resolver/primitives/botAcquire.ts`; `src/engine/solo/nodes.test.ts`
   ("Market preferences").
+
+## 062 — A destroyed card never scores
+
+- **Question:** DESTROY sends a card "to the box" (rules/08 → destroy), but the engine kept its
+  `owner`, so a destroyed card's printed VP still counted for its last owner at final scoring.
+- **Interpretation:** the box is out of the game, so a card in it scores for nobody, like a
+  card returned to a shared supply (051). This applies in every mode. It surfaced with the solo
+  Conspiring Admirals card, which destroys itself before scoring when the Bot owns it.
+- **Keyed on:** `excludedFromScoring` in `src/engine/scoring.ts`;
+  `src/engine/solo/conspiracy.test.ts`.
+
+## 063 — Your hand attacks on the Bot: what "you choose the outcome" means in the engine
+
+- **Question:** the solo rulebook (p.10) has hand attacks, and attacks that make the Bot choose
+  from its own Discard pile, do nothing, with **you** freely choosing whether they succeeded.
+  Which of our card shapes does that cover, and how is the choice asked?
+- **Interpretation:** the engine handles three shapes.
+  - A forced discard (or log) with nothing depending on it simply does nothing; no question is
+    asked.
+  - "You may make them discard … to gain …" is a cost on the Bot's hand inside a "may".
+    Accepting the "may" is the choice that it succeeded: the cost counts as paid, and nothing
+    moves (rulebook Example 1).
+  - An "if they can … / if they cannot …" of your card that tests the Bot's hand or Discard
+    pile asks you which branch happens. A step inside that branch which binds "the card they
+    logged/discarded" for a later "if they did" follows your answer (rulebook Example 2). When
+    no branch decided it, you are asked at that step.
+- **Keyed on:** `src/engine/solo/outcome.ts`, `COST_DISCARD` in
+  `src/engine/resolver/primitives/costDiscard.ts`; `src/engine/solo/outcome.test.ts`.
+
+## 064 — The Conspiring Admirals card's "discard this card"
+
+- **Question:** its play operation says "discard a PERSON from your hand to discard this card
+  and draw a card", and a SPECIAL forbids any other effect from beaming or discarding it ("not
+  even in the Clean-up Step", per the STCC errata).
+- **Interpretation:**
+  - A played card sits in your Staging Area and goes to your Discard pile at Clean-up. That
+    *is* "discard this card", so the play operation is the PERSON-discard cost and the draw.
+  - The protection is a card flag, `discardProtected`. The card is never a candidate for a
+    hand discard, a cost discard, a beam, or the Clean-up "discard any cards from hand".
+- **Keyed on:** `src/data/cards/solo/directives.json`, `discardCandidates` in
+  `src/engine/resolver/runtime.ts`.

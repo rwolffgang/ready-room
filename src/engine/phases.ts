@@ -52,6 +52,7 @@ import {
 import type { ChoiceSeed, PendingChoice } from './resolver/choices'
 import { SKIP_LOCATION } from './resolver/choices'
 import { executeBotBeat, startBotTurn } from './solo/turn'
+import { discardProtected } from './resolver/runtime'
 import { isSoloBot } from './solo/seat'
 
 const phaseCtx = (actor: Seat): EffectCtx => ({
@@ -187,9 +188,11 @@ export function executePhaseStep(
 function beginFinalScoring(state: GameState): GameState {
 	const ops: Frame[] = []
 	for (const seat of [state.activeSeat, otherSeat(state.activeSeat)]) {
-		// the official solo Bot's cards stay silent (rules/13 §13.1)
-		if (isSoloBot(state, seat)) continue
+		const bot = isSoloBot(state, seat)
 		for (const iid of owned(state, seat)) {
+			// the official solo Bot's cards stay silent (rules/13 §13.1) — except
+			// a solo Directive's own "before scoring" rule (1DIR01/2)
+			if (bot && cardDef(state.cards[iid]!.def).deck !== 'SOLO') continue
 			cardDef(state.cards[iid]!.def).operations.forEach((op, opIndex) => {
 				if (op.type !== 'SPECIAL' || op.trigger?.on !== 'BEFORE_SCORING') return
 				ops.push({
@@ -586,7 +589,10 @@ function cleanupDiscard(state: GameState, ctx: EffectCtx): GameState {
 	let s = state
 	for (const iid of zonesOf(state, { k: 'STAGING', seat }))
 		s = moveToDiscard(s, iid, seat)
-	const hand = zonesOf(state, { k: 'HAND', seat })
+	// "not even in the Clean-up Step" (1DIR01/2): protected cards stay
+	const hand = zonesOf(state, { k: 'HAND', seat }).filter(
+		(iid) => !discardProtected(state, iid),
+	)
 	if (hand.length === 0)
 		return pushStep(s, { k: 'CLEANUP', sub: 'DRAW' }, phaseCtx(seat))
 	return phaseSuspend(s, seat, { k: 'CLEANUP', sub: 'DISCARD' }, ctx, key, {

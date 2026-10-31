@@ -437,6 +437,23 @@ export function handCandidates(
 	return resolveQuery(state, { zones: [{ k: 'HAND', seat: 0 }], filter }, ctx)
 }
 
+/** Is this card exempt from discards and beams (`discardProtected`)? */
+export function discardProtected(state: GameState, iid: CardInstanceId): boolean {
+	const card = state.cards[iid]
+	return card !== undefined && cardDef(card.def).discardProtected === true
+}
+
+/** Hand cards an effect may discard: every one but a `discardProtected`. */
+export function discardCandidates(
+	state: GameState,
+	ctx: EffectCtx,
+	filter?: CardFilter,
+): CardInstanceId[] {
+	return handCandidates(state, ctx, filter).filter(
+		(iid) => !discardProtected(state, iid),
+	)
+}
+
 /** A Captain (or Status) card is in play but can never be dismissed: like a
  *  LOCATION it can never enter your deck (rules/08 → dismiss gives that as the
  *  reason Locations are exempt), and it holds your Log and Away Team pool
@@ -1151,7 +1168,7 @@ export function costCanResolve(
 					? ctx.bindings[node.exceptBound]
 					: undefined
 			return (
-				thisOnly(handCandidates(state, ctx, node.filter), node, ctx).filter(
+				thisOnly(discardCandidates(state, ctx, node.filter), node, ctx).filter(
 					(iid) => iid !== except && onlyBoundAllows(ctx, node.onlyBound, iid),
 				).length >= node.count
 			)

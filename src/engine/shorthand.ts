@@ -488,6 +488,8 @@ function cond(p: Predicate): Tok[] {
 			return [suit('CAPTAIN'), { k: 'trait', trait: p.trait }]
 		case 'COLLECTIVE_AT_LEAST':
 			return [word(`collective ≥${p.value}`)]
+		case 'IS_SOLO_BOT':
+			return [word('Bot')]
 		case 'TOTAL_VP_AT_LEAST':
 			return [glyph('VP', `≥${p.value}`)]
 		case 'AWAY_TEAMS_AT': {
@@ -949,6 +951,8 @@ export function shorthand(e: Effect): Tok[] {
 			return [glyph('CONTROL'), ...qual([word('most Bot tokens')])]
 		case 'BOT_REMOVE_AWAY_TEAM':
 			return [glyph('AWAY', `−${e.count}`)]
+		case 'TRANSFER':
+			return [glyph('DECK'), word('bottom, yours')]
 	}
 }
 

@@ -1,7 +1,7 @@
 import type { Effect } from '../nodes'
 import type { Primitive } from './index'
 import {
-	handCandidates,
+	discardCandidates,
 	pickCards,
 	moveCard,
 	emit,
@@ -36,7 +36,7 @@ export const discard: Primitive<Extract<Effect, { k: 'DISCARD' }>> = {
 			return botDeckCanAdvance(state, seat)
 		if (node.from === 'DECK_TOP')
 			return (state.zones[`DRAW:${seat}`]?.length ?? 0) > 0
-		return handCandidates(state, flipCtx(ctx, node.whose), node.filter).some(
+		return discardCandidates(state, flipCtx(ctx, node.whose), node.filter).some(
 			(iid) => onlyBoundAllows(ctx, node.onlyBound, iid),
 		)
 	},
@@ -69,7 +69,7 @@ export const discard: Primitive<Extract<Effect, { k: 'DISCARD' }>> = {
 		}
 		const seat = discardSeat(ctx, node.whose)
 		// onlyBound: "discard one of THEM" — only the bound (just-drawn) cards (1PIC16)
-		const candidates = handCandidates(
+		const candidates = discardCandidates(
 			state,
 			flipCtx(ctx, node.whose),
 			node.filter,

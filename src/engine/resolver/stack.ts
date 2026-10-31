@@ -54,6 +54,7 @@ import {
 	openAttack,
 	windowStillOpen,
 } from './replacement'
+import { soloOutcomeGate } from '../solo/outcome'
 
 /** Hard cap on run-loop iterations — a malformed card must throw, not hang. */
 export const MAX_STEPS = 10_000
@@ -148,9 +149,11 @@ export function executeOne(state: GameState): GameState {
 				// "When you would be attacked" (replacement.ts): a negative effect
 				// of the opponent's ATTACK may be ignored, or open a window first.
 				const gate = attackGate(bound, frame, 'ATTACK')
-				next = gate.run
-					? prim.execute(gate.state, frame.node, frame.ctx, frame)
-					: gate.state
+				// "you choose the outcome" of your effects on the solo Bot's hand
+				const solo = gate.run ? soloOutcomeGate(gate.state, frame) : gate
+				next = solo.run
+					? prim.execute(solo.state, frame.node, frame.ctx, frame)
+					: solo.state
 			}
 			next = recordFx(bound, next, frame.ctx.source)
 			if (next.stack.length - before > MAX_PUSH_PER_STEP) {

@@ -547,6 +547,8 @@ export function describePredicate(pred: Predicate): string {
 			return `you have ${pred.value}+ value`
 		case 'COLLECTIVE_AT_LEAST':
 			return `you have ${pred.value}+ collective value`
+		case 'IS_SOLO_BOT':
+			return 'this card is owned by the Bot'
 		case 'COMPARE':
 			return `${describeAmount(pred.a)} is ${pred.op === 'LT' ? 'lower than' : 'at least'} ${describeAmount(pred.b)}`
 		case 'AWAY_TEAMS_AT': {
@@ -1179,6 +1181,8 @@ function render(node: Effect): string {
 			break
 		case 'BOT_TAKE_CONTROL':
 			return 'Take control of the neutral LOCATION with most Bot tokens (minimum 1).'
+		case 'TRANSFER':
+			return 'Put this card on the bottom of your Draw deck (it is now yours).'
 		case 'BOT_REMOVE_AWAY_TEAM':
 			return node.count === 1
 				? 'Remove an Away Team.'

@@ -1,0 +1,135 @@
+[
+	{
+		"id": "1DIR01-2",
+		"cardId": "1DIR01/2",
+		"suit": "DIRECTIVE",
+		"deck": "SOLO",
+		"traits": ["SHADY", "STARFLEET", "SURPRISE"],
+		"skills": [],
+		"focus": null,
+		"vp": -4,
+		"vpAsterisk": false,
+		"startPosition": "AVAILABLE",
+		"developmentCost": null,
+		"discardProtected": true,
+		"operations": [
+			{
+				"type": "PLAY",
+				"costsAction": false,
+				"isAttack": false,
+				"effect": {
+					"k": "PAY_THEN",
+					"cost": {
+						"k": "COST_DISCARD",
+						"count": 1,
+						"filter": {
+							"suits": ["PERSON"]
+						}
+					},
+					"body": {
+						"k": "DRAW",
+						"count": 1
+					}
+				}
+			},
+			{
+				"type": "SPECIAL",
+				"costsAction": false,
+				"isAttack": false,
+				"effect": {
+					"k": "NOOP"
+				}
+			},
+			{
+				"type": "SPECIAL",
+				"costsAction": false,
+				"isAttack": false,
+				"trigger": {
+					"on": "BEFORE_SCORING"
+				},
+				"effect": {
+					"k": "IF",
+					"cond": {
+						"k": "OR",
+						"terms": [
+							{
+								"k": "IS_SOLO_BOT"
+							},
+							{
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "LOG",
+											"seat": 0
+										}
+									],
+									"thisCard": true
+								},
+								"value": 1
+							}
+						]
+					},
+					"then": {
+						"k": "DESTROY",
+						"target": "THIS"
+					}
+				}
+			},
+			{
+				"type": "SURPRISE",
+				"costsAction": false,
+				"isAttack": false,
+				"effect": {
+					"k": "FORCE",
+					"body": {
+						"k": "CHOOSE_ONE",
+						"options": [
+							{
+								"label": "take an INCIDENT; it and this card go under your Draw deck",
+								"body": {
+									"k": "SEQ",
+									"steps": [
+										{
+											"k": "TAKE",
+											"deck": "INCIDENT",
+											"count": 1,
+											"to": "DECK_BOTTOM"
+										},
+										{
+											"k": "TRANSFER",
+											"target": "THIS",
+											"to": "DECK_BOTTOM"
+										}
+									]
+								}
+							},
+							{
+								"label": "the Bot gains 2 {GLO} and discards its top Supplement card",
+								"body": {
+									"k": "OPPONENT",
+									"body": {
+										"k": "SEQ",
+										"steps": [
+											{
+												"k": "GAIN_RESOURCE",
+												"res": "GLO",
+												"amount": 2
+											},
+											{
+												"k": "BOT_DECK",
+												"from": "SUPPLEMENT",
+												"op": "DISCARD",
+												"count": 1
+											}
+										]
+									}
+								}
+							}
+						]
+					}
+				}
+			}
+		]
+	}
+]

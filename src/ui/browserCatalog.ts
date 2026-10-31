@@ -114,7 +114,9 @@ export function loadBrowserCatalog(): CardCatalog {
 export function availableDecks(catalog: CardCatalog): DeckId[] {
 	const decks = new Set<DeckId>()
 	for (const def of catalog.defs) {
-		if (def.deck !== 'COMMON' && def.deck !== undefined) decks.add(def.deck)
+		// the solo Directives are no crew (rules/13 §13.14)
+		if (def.deck !== 'COMMON' && def.deck !== 'SOLO' && def.deck !== undefined)
+			decks.add(def.deck)
 	}
 	return [...decks].sort((a, b) => a.localeCompare(b))
 }

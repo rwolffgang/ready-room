@@ -11,6 +11,7 @@ import {
 	suspend,
 	answered,
 	answerSingle,
+	discardProtected,
 } from '../runtime'
 import { cardDef, isLocationDef } from '../../cards'
 import type { GameState } from '../../state'
@@ -36,7 +37,9 @@ function candidatesOf(
 		node,
 		ctx,
 	).filter(
-		(iid) => !isLocationDef(cardDef(state.cards[iid]!.def)), // rules/06 §6.4.2
+		(iid) =>
+			!isLocationDef(cardDef(state.cards[iid]!.def)) && // rules/06 §6.4.2
+			!discardProtected(state, iid),
 	)
 }
 

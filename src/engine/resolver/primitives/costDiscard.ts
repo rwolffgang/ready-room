@@ -2,7 +2,7 @@ import type { Effect } from '../nodes'
 import type { Primitive } from './index'
 import {
 	costCanResolve,
-	handCandidates,
+	discardCandidates,
 	pickCards,
 	moveCard,
 	failOperation,
@@ -11,6 +11,8 @@ import {
 	emit,
 } from '../runtime'
 import { otherSeat, type EffectCtx } from '../../state'
+import { isSoloBot } from '../../solo/seat'
+import { ASSUMED } from '../../solo/outcome'
 
 /** The seat whose hand is discarded from (COST_DISCARD `whose`). */
 function discardSeat(
@@ -34,8 +36,11 @@ export function exceptBound(
 export const costDiscard: Primitive<Extract<Effect, { k: 'COST_DISCARD' }>> = {
 	isCost: true,
 	canResolve: (s, n, ctx) => {
+		// the official solo Bot has no hand: making it discard always "works"
+		// — by paying, you chose that it succeeded (rules/13 §13.12.2)
+		if (n.whose === 'OPPONENT' && isSoloBot(s, otherSeat(ctx.actor))) return true
 		if (n.whose === 'OPPONENT') {
-			const flip = handCandidates(
+			const flip = discardCandidates(
 				s,
 				{ ...ctx, actor: otherSeat(ctx.actor) },
 				n.filter,
@@ -47,14 +52,18 @@ export const costDiscard: Primitive<Extract<Effect, { k: 'COST_DISCARD' }>> = {
 	offersDecline: (_state, node) => node.whose !== 'OPPONENT',
 	execute(state, node, ctx, _frame) {
 		const seat = discardSeat(ctx, node.whose)
+		if (node.whose === 'OPPONENT' && isSoloBot(state, seat)) {
+			if (node.bind !== undefined) ctx.bindings[node.bind] = ASSUMED
+			return state
+		}
 		const candidates =
 			node.whose === 'OPPONENT'
-				? handCandidates(
+				? discardCandidates(
 						state,
 						{ ...ctx, actor: otherSeat(ctx.actor) },
 						node.filter,
 					)
-				: thisOnly(handCandidates(state, ctx, node.filter), node, ctx).filter(
+				: thisOnly(discardCandidates(state, ctx, node.filter), node, ctx).filter(
 						(iid) =>
 							iid !== exceptBound(ctx, node) &&
 							onlyBoundAllows(ctx, node.onlyBound, iid),

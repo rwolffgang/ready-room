@@ -37,6 +37,7 @@ import type {
 	ZoneSpec,
 } from '../resolver/queries'
 import type { EffectCtx } from '../state'
+import { isSoloBot } from '../solo/seat'
 
 export type QueryOpts = MatchOpts
 
@@ -544,6 +545,8 @@ export function evalPredicate(
 					ctx,
 				).length >= 1
 			)
+		case 'IS_SOLO_BOT':
+			return isSoloBot(state, ctx.actor)
 		case 'COLLECTIVE_AT_LEAST':
 			// "you have N+ {COLLECTIVE} value" (1CAR02): the Borg Collective icon is
 			// not used in this box (rules/12 §12.30), so every player's collective
