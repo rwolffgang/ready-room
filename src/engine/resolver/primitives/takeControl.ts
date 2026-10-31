@@ -21,6 +21,7 @@ import {
 	opponentAwayTeamsAt,
 	opponentShipTokensAt,
 } from '../../../bot/cadet'
+import { isSoloBot } from '../../solo/seat'
 
 /** TAKE_CONTROL (rules/03 §3.4.2, rules/06 §6.4, rules/08 → take control):
  *  move a LOCATION into the actor's Location Area and resolve its CONTROL
@@ -179,7 +180,9 @@ function finish(
 	next = emit(next, { k: 'PUT_INTO_PLAY', iid: loc, seat })
 	const ops = cardDef(state.cards[loc]!.def).operations
 	const ctrlIndex = ops.findIndex((o) => o.type === 'CONTROL')
-	if (ctrlIndex >= 0) {
+	// the official solo Bot resolves its Automated Command row instead of the
+	// LOCATION's text (rules/13 §13.4 #2 — solo/turn.ts)
+	if (ctrlIndex >= 0 && !isSoloBot(state, seat)) {
 		next = pushOperation(next, loc, ctrlIndex, {
 			actor: seat,
 			source: loc,

@@ -7,6 +7,7 @@ import { matchFilter } from '../../queries/resolveQuery'
 import { cardDef, isLocationDef } from '../../cards'
 import { botDeckCanAdvance, botDeckTop } from '../../solo/deck'
 import { classify } from '../../solo/classify'
+import { registerScript } from './script'
 
 type Node = Extract<Effect, { k: 'BOT_RESOLVE' }>
 
@@ -103,9 +104,8 @@ export const botResolve: Primitive<Node> = {
 				)
 		}
 	},
-	execute(state, node, ctx, frame) {
+	execute(state, node, ctx, _frame) {
 		const bot = ctx.actor
-		if (frame.ip === 1) return afterResolve(state, ctx)
 		const fetched = fetch(state, node, ctx)
 		const iid = fetched.iid
 		if (iid === null) return fetched.state
@@ -126,9 +126,11 @@ export const botResolve: Primitive<Node> = {
 				},
 			}
 		}
+		// the post-row step is a SCRIPT, not this node at ip 1: the stack's
+		// leaf guard would skip a BOT_RESOLVE whose source is used up by then
 		const after: Frame = {
 			k: 'EFFECT',
-			node,
+			node: { k: 'SCRIPT', fn: AFTER_RESOLVE },
 			ctx: {
 				...ctx,
 				bindings: {
@@ -137,7 +139,7 @@ export const botResolve: Primitive<Node> = {
 					[PLAYED]: node.from === 'ROW',
 				},
 			},
-			ip: 1,
+			ip: 0,
 		}
 		if (row === null) return { ...next, stack: [...next.stack, after] }
 		const opCtx: EffectCtx = { actor: bot, source: iid, bindings: {} }
@@ -164,8 +166,15 @@ export const botResolve: Primitive<Node> = {
 	},
 }
 
+const AFTER_RESOLVE = 'bot.afterResolve'
+
 /** After the row: a LOCATION left in the Staging Area joins the Control Area
  *  (rules/13 §13.6.4); a flipped row card raises CARD_PLAYED (ruling 052). */
+registerScript(AFTER_RESOLVE, {
+	canResolve: () => true,
+	execute: (state, _node, ctx) => afterResolve(state, ctx),
+})
+
 function afterResolve(state: GameState, ctx: EffectCtx): GameState {
 	const bot = ctx.actor
 	const iid = ctx.bindings[CARD] as CardInstanceId

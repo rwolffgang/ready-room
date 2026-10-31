@@ -6,6 +6,7 @@ import { otherSeat, zonesOf, type GameState } from '../../state'
 import type { CardInstanceId } from '../../ids'
 import type { EffectCtx } from '../../state'
 import type { ZoneRef } from '../queries'
+import { isSoloBot } from '../../solo/seat'
 
 /** TAKE (rules/08 → take, todo/13 follow-up gap #4):
  *  - plain: move the top `count` cards of the deck to the taker.
@@ -125,7 +126,11 @@ function takeIt(
 	// Taking puts the INCIDENT/ENCOUNTER under the taker's ownership (the Burn
 	// counts taken INCIDENTs by owner — rules/03 §3.1, rules/12 §12.11).
 	next = setOwner(next, iid, ctx.actor)
-	const dest = destination(node, ctx.actor)
+	// a card the official solo Bot takes goes on top of its deck (rules/13
+	// §13.10.1) — it has no hand
+	const dest = isSoloBot(state, ctx.actor)
+		? { zone: { k: 'DRAW', seat: ctx.actor } as ZoneRef, toTop: true }
+		: destination(node, ctx.actor)
 	next = moveCard(
 		next,
 		iid,

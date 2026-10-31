@@ -12,6 +12,8 @@ import {
 	answerSingle,
 	declinedPick,
 } from '../runtime'
+import { isSoloBot } from '../../solo/seat'
+import { botLogCard } from './botDeck'
 
 type LogNode = Extract<Effect, { k: 'LOG' }>
 type EffectFrame = Extract<Frame, { k: 'EFFECT' }>
@@ -78,6 +80,8 @@ function logCard(
 	}
 	delete ctx.bindings[PRE_LEAVE_TARGET]
 	if (node.bind !== undefined) ctx.bindings[node.bind] = iid
+	// the official solo Bot returns an INCIDENT instead of logging it (rules/13 §13.9)
+	if (isSoloBot(state, ctx.actor)) return botLogCard(state, iid, ctx.actor)
 	return emit(moveCard(state, iid, { k: 'LOG', seat: ctx.actor }), {
 		k: 'CARD_LOGGED',
 		iid,

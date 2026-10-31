@@ -5,6 +5,7 @@ import { stealResource } from '../runtime'
 import { player, otherSeat, type GameState } from '../../state'
 import { isCadetOpponent } from '../../../bot/cadet'
 import { stealProtected } from '../../modifiers'
+import { isSoloBot } from '../../solo/seat'
 
 /** STEAL (rules/08 §steal, rules/04 §4.3.3, rules/12 §12.8): transfer resources
  *  from the opponent, capped at what they actually hold (parked tokens first,
@@ -20,6 +21,8 @@ export const steal: Primitive<Extract<Effect, { k: 'STEAL' }>> = {
 		if (stealProtected(state, from, node.res)) return false
 		// The virtual cadet holds 1 of that resource (rules/10 §10.2 #3).
 		if (isCadetOpponent(state.mode, from)) return true
+		// Stealing from the official solo Bot always succeeds (rules/13 §13.12.2).
+		if (isSoloBot(state, from)) return true
 		const victim = player(state, from)
 		if (victim.resources[node.res] > 0) return true
 		// parked tokens on the victim's modifier cards are also stealable

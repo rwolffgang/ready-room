@@ -27,6 +27,7 @@ import { newGameState, addCard, moveCard, zoneKey, inPlayCards } from './state'
 import type { GameMode, SoloLevel } from './state'
 import { registerCards, cardDef } from './cards'
 import { registerBots } from './solo/acRegistry'
+import { setupSoloBot } from './solo/setup'
 import { shuffle, next } from './rng'
 import { effectiveHandSize } from './modifiers'
 import { toIid, type CardInstanceId } from './ids'
@@ -129,7 +130,11 @@ export function setupGame(
 	s = setupSupply(s, config, catalog) // #15 (token supplies are unbounded)
 	s = setupStartingPlayer(s, config.startingSeat) // #17
 	s = setupPlayerBoard(s, 0, config, catalog) // §2.2
-	s = setupPlayerBoard(s, 1, config, catalog)
+	// the official solo Bot sets up its own way (rules/13 §13.2)
+	s =
+		config.mode === 'SOLO'
+			? setupSoloBot(s, 1, config, catalog)
+			: setupPlayerBoard(s, 1, config, catalog)
 	s = assertSetupCompleteness(s, config, catalog)
 	return { ...s, phase: { k: 'SETUP' } }
 }
@@ -288,12 +293,14 @@ export function setupStardateTrack(
 	config: SetupConfig,
 	catalog: CardCatalog,
 ): GameState {
+	// solo vs the Bot: only the five cards of the chosen level (rules/13 §13.2)
+	const used = (st: StardateSpec) =>
+		st.modes.includes(config.mode) &&
+		(config.mode !== 'SOLO' || st.solo?.level === config.solo?.level)
 	const inMode = catalog.stardates
-		.filter((st) => st.modes.includes(config.mode))
+		.filter(used)
 		.sort((a, b) => a.sequence - b.sequence)
-	const outOfMode = catalog.stardates.filter(
-		(st) => !st.modes.includes(config.mode),
-	)
+	const outOfMode = catalog.stardates.filter((st) => !used(st))
 	let s = state
 	for (const st of inMode) {
 		const r = mintInto(s, st.id, null, { k: 'STARDATE_PILE' }, 'sd')
@@ -319,6 +326,9 @@ export function setupStardateTrack(
 			pile: [...(s.zones[zoneKey({ k: 'STARDATE_PILE' })] ?? [])],
 			gloryOnTop: top.glory,
 			glories: inMode.map((st) => st.glory),
+			...(config.mode === 'SOLO'
+				? { botActions: inMode.map((st) => st.solo?.botActions ?? 0) }
+				: {}),
 		},
 	}
 }
@@ -343,7 +353,9 @@ export function setupStartingPlayer(
 	state: GameState,
 	agreed?: Seat,
 ): GameState {
-	if (state.mode === 'CADET') {
+	// solo modes: the human always starts, without the draw (rules/10 §10.1,
+	// rules/13 §13.2)
+	if (state.mode === 'CADET' || state.mode === 'SOLO') {
 		return { ...state, startingSeat: 0, activeSeat: 0 }
 	}
 	const [u, rng] = next(state.rng)
@@ -636,7 +648,7 @@ function pl(config: SetupConfig, seat: Seat): SetupPlayer {
 }
 
 /** Mint one CardInstance (deterministic iid from the instance serial). */
-function mintInto(
+export function mintInto(
 	state: GameState,
 	defId: string,
 	owner: Seat | null,

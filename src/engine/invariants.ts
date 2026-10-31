@@ -52,7 +52,24 @@ export function assertInvariants(
 	assertResources(state)
 	assertBeamedCards(state)
 	assertStack(state)
+	assertSoloBot(state)
 	assertStateSerialisable(state)
+}
+
+// ---------------------------------------------------------------------------
+// The official solo Bot (rules/13): it never holds a hand, takes no action
+// tokens, and its face-down Staging row exists only during its own turn.
+// ---------------------------------------------------------------------------
+
+function assertSoloBot(state: GameState): void {
+	if (state.mode !== 'SOLO' || state.solo === undefined) return
+	const bot = state.solo.bot
+	if ((state.zones[`HAND:${bot}`]?.length ?? 0) > 0)
+		throw new Error('solo Bot: it holds cards in hand')
+	if (state.players[bot]!.actions.available !== 0)
+		throw new Error('solo Bot: it has action tokens')
+	if (state.phase.k !== 'BOT' && (state.zones[`BOT_ROW:${bot}`]?.length ?? 0) > 0)
+		throw new Error('solo Bot: its Staging row outlived its turn')
 }
 
 // ---------------------------------------------------------------------------

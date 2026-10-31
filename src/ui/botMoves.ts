@@ -309,6 +309,8 @@ function optionPhrase(
 		case 'RESOLVE_CHOICE':
 			if (choice === null) return 'Answer'
 			return capitalize(answerPhrase(choice, intent.selection, n))
+		case 'BOT_STEP':
+			return 'Next Bot step'
 	}
 }
 
@@ -338,6 +340,8 @@ function stepPhrase(
 				phrase: `completed mission ${intent.index + 1}`,
 				headline: true,
 			}
+		case 'BOT_STEP':
+			return { phrase: 'took its next step', headline: true }
 		case 'RESOLVE_CHOICE': {
 			const choice = before.pendingChoice
 			if (choice === null) return { phrase: 'answered', headline: false }

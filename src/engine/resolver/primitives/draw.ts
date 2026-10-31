@@ -9,6 +9,8 @@ import { canPayAll } from './index'
 import type { GameState, EffectCtx } from '../../state'
 import type { CardInstanceId } from '../../ids'
 import type { Seat } from '../queries'
+import { isSoloBot } from '../../solo/seat'
+import { botDeckCanAdvance, botDeckTop } from '../../solo/deck'
 
 // DRAW + deck cycling (rules/04 §4.1, rules/12 §12.22, todo/05 §4).
 //
@@ -31,10 +33,14 @@ interface CycleState {
 export const draw: Primitive<Extract<Effect, { k: 'DRAW' }>> = {
 	isCost: false,
 	canResolve(state, _node, ctx) {
+		if (isSoloBot(state, ctx.actor)) return botDeckCanAdvance(state, ctx.actor)
 		return deckCanAdvance(state, ctx.actor, ctx)
 	},
 	execute(state, node, ctx, _frame) {
 		const seat = ctx.actor
+		// the official solo Bot has no hand: a draw discards the top of its deck
+		// instead (rules/13 §13.12.3)
+		if (isSoloBot(state, seat)) return botMill(state, seat, evalAmount(state, node.count, ctx))
 		const handSizeCap = ctx.bindings['$draw.handSizeCap']
 		const started = ctx.bindings['$draw.remaining']
 		const total = evalAmount(state, node.count, ctx)
@@ -245,4 +251,21 @@ export function drawCards(
 			},
 		],
 	}
+}
+
+/** The official solo Bot "draws" `n`: the top of its deck (reshuffling as
+ *  needed) goes to its Discard pile instead (rules/13 §13.12.3). */
+function botMill(state: GameState, bot: Seat, n: number): GameState {
+	let next = state
+	for (let i = 0; i < n; i++) {
+		const r = botDeckTop(next, bot)
+		next = r.state
+		if (r.top === null) break
+		next = emit(moveCard(next, r.top, { k: 'DISCARD', seat: bot }), {
+			k: 'CARD_DISCARDED',
+			iid: r.top,
+			seat: bot,
+		})
+	}
+	return next
 }

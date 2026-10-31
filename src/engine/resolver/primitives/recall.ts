@@ -1,7 +1,8 @@
 import type { Effect } from '../nodes'
 import type { Primitive } from './index'
 import { resolveQuery } from '../../queries/resolveQuery'
-import { pickCards, moveCard } from '../runtime'
+import { pickCards, moveCard, emit } from '../runtime'
+import { isSoloBot } from '../../solo/seat'
 import { cardDef, isLocationDef } from '../../cards'
 import type { GameState, EffectCtx } from '../../state'
 import type { CardInstanceId } from '../../ids'
@@ -24,6 +25,14 @@ export const recall: Primitive<Extract<Effect, { k: 'RECALL' }>> = {
 		})
 		if (r.kind === 'suspended') return r.state
 		if (r.kind === 'none') return state
+		// the official solo Bot has no hand: a recalled card — a SHIP, its Duty
+		// Officer — is discarded instead (rules/13 §13.7, §13.11.2)
+		if (isSoloBot(state, ctx.actor))
+			return emit(moveCard(state, r.iids[0]!, { k: 'DISCARD', seat: ctx.actor }), {
+				k: 'CARD_DISMISSED',
+				iid: r.iids[0]!,
+				seat: ctx.actor,
+			})
 		return moveCard(state, r.iids[0]!, { k: 'HAND', seat: ctx.actor })
 	},
 }

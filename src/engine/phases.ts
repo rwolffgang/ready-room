@@ -51,6 +51,8 @@ import {
 } from './resolver/runtime'
 import type { ChoiceSeed, PendingChoice } from './resolver/choices'
 import { SKIP_LOCATION } from './resolver/choices'
+import { executeBotBeat, startBotTurn } from './solo/turn'
+import { isSoloBot } from './solo/seat'
 
 const phaseCtx = (actor: Seat): EffectCtx => ({
 	actor,
@@ -167,7 +169,7 @@ export function executePhaseStep(
 		case 'SETUP':
 			return state
 		case 'BOT':
-			throw new Error('the solo Bot turn needs a solo game (todo/15 §3)')
+			return executeBotBeat(state, frame)
 		case 'GAME_OVER':
 			// the "Before scoring" SPECIALs have resolved: score now
 			return state.result === null
@@ -185,6 +187,8 @@ export function executePhaseStep(
 function beginFinalScoring(state: GameState): GameState {
 	const ops: Frame[] = []
 	for (const seat of [state.activeSeat, otherSeat(state.activeSeat)]) {
+		// the official solo Bot's cards stay silent (rules/13 §13.1)
+		if (isSoloBot(state, seat)) continue
 		for (const iid of owned(state, seat)) {
 			cardDef(state.cards[iid]!.def).operations.forEach((op, opIndex) => {
 				if (op.type !== 'SPECIAL' || op.trigger?.on !== 'BEFORE_SCORING') return
@@ -718,6 +722,8 @@ export function handOffTurn(state: GameState, seat: Seat): GameState {
 		}
 	}
 	s = { ...s, activeSeat: s.mode === 'CADET' ? 0 : otherSeat(seat) }
+	// the official solo Bot has no Resupply: its turn waits for BOT_STEPs
+	if (isSoloBot(s, s.activeSeat)) return startBotTurn(s, s.activeSeat)
 	return pushStep(s, { k: 'RESUPPLY', pending: [] }, phaseCtx(s.activeSeat))
 }
 

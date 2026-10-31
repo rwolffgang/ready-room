@@ -28,6 +28,8 @@ import type { Seat } from './resolver/queries'
 import type { Effect } from './resolver/nodes'
 import type { SpecialtyId } from '../data/ids'
 import { describeOperation } from './describe'
+import { isSoloBot } from './solo/seat'
+import { botCard } from './solo/acRegistry'
 
 // ---------------------------------------------------------------------------
 // Result record shapes
@@ -65,6 +67,9 @@ export interface ScoreBreakdown {
 	missions: { index: number; vp: number }[]
 	missionsCompleted: number
 	focusSuppressed: boolean
+	/** The official solo Bot's Dilithium/Latinum VP (rules/13 §13.13.3, ruling
+	 *  054); players never score resources. */
+	resourcesVp?: number | undefined
 }
 
 export interface FinalScoreboard {
@@ -124,6 +129,8 @@ function excludedFromScoring(card: GameState['cards'][string]): boolean {
 	switch (card.zone.k) {
 		case 'RESERVE':
 		case 'DEVELOPMENT':
+		case 'SUPPLEMENT': // the solo Bot's Reserve + Development (ruling 053)
+		case 'REINFORCEMENT': // until a card takes it out (rules/14 §14.4)
 		case 'INCIDENT_DECK':
 		case 'ENCOUNTER_DECK':
 		case 'MARKET_DECK':
@@ -308,10 +315,21 @@ export function score(state: GameState, seat: Seat): ScoreBreakdown {
 	b.total += neutralCount
 
 	// Step 3 — ENDGAME operations on in-play cards. A logged (or deck/hand)
-	// card is NOT evaluated here — see step 4 (rules/12 §12.28).
+	// card is NOT evaluated here — see step 4 (rules/12 §12.28). The official
+	// solo Bot instead scores 5 VP per ENDGAME operation it owns, in play or
+	// not (rules/13 §13.13.3).
+	const bot = isSoloBot(state, seat)
 	for (const iid of owned(state, seat)) {
 		const card = state.cards[iid]
 		if (!card || excludedFromScoring(card)) continue
+		if (bot) {
+			for (const op of cardDef(card.def).operations) {
+				if (op.type !== 'ENDGAME') continue
+				b.endgame.push({ card: iid, label: describeOperation(op), vp: 5 })
+				b.total += 5
+			}
+			continue
+		}
 		if (!zoneProps(card.zone).inPlay) continue
 		const def = cardDef(card.def)
 		def.operations.forEach((op) => {
@@ -360,8 +378,9 @@ export function score(state: GameState, seat: Seat): ScoreBreakdown {
 	// Step 5 — Focus icons × highest-reached multiplier value. Skipped entirely
 	// when no mission is completed (rules/12 §12.27); surface `focusSuppressed`.
 	b.missionsCompleted = p.missions.filter((m) => m.completed).length
-	b.focusSuppressed = b.missionsCompleted === 0
-	if (b.missionsCompleted > 0) {
+	// the official solo Bot ignores missions and scores its Focus regardless
+	b.focusSuppressed = b.missionsCompleted === 0 && !bot
+	if (!b.focusSuppressed) {
 		for (const f of focusBySpecialty(state, seat)) {
 			if (f.cards === 0) continue
 			b.focus.push(f)
@@ -376,6 +395,18 @@ export function score(state: GameState, seat: Seat): ScoreBreakdown {
 			b.missions.push({ index: m.index, vp: m.vp })
 			b.total += m.vp
 		}
+	}
+
+	// Step 7 — the official solo Bot's resources: 1 VP per 2 Dilithium/Latinum
+	// combined; the Dilithium Bot 1 VP per Dilithium (ruling 054).
+	if (bot) {
+		const { DIL, LAT } = p.resources
+		const crew = state.solo?.crew
+		b.resourcesVp =
+			crew !== undefined && botCard(crew)?.special === 'DILITHIUM'
+				? DIL + Math.floor(LAT / 2)
+				: Math.floor((DIL + LAT) / 2)
+		b.total += b.resourcesVp
 	}
 
 	return b
@@ -426,6 +457,9 @@ export function finalizeGame(state: GameState): GameState {
 			// rules/10 §10.2 #5: if the Burn is ever triggered, you lose.
 			scoreboard.cadetLoss = true
 			scoreboard.winners = []
+		} else if (state.mode === 'SOLO') {
+			// rules/13 §13.1: the Burn is the official Bot's win, whatever the counts
+			scoreboard.winners = [state.solo?.bot ?? 1]
 		} else if (counts[0] !== counts[1]) {
 			scoreboard.winners = [counts[0]! < counts[1]! ? 0 : 1]
 		} else {
@@ -440,6 +474,12 @@ export function finalizeGame(state: GameState): GameState {
 		if (state.mode === 'CADET') {
 			scoreboard.winners = [0]
 			scoreboard.cadetLoss = false
+		} else if (state.mode === 'SOLO') {
+			// rules/13 §13.1: you win only with MORE VP — a tie is the Bot's
+			const bot = state.solo?.bot ?? 1
+			const you = bot === 1 ? 0 : 1
+			const [mine, its] = you === 0 ? [b0.total, b1.total] : [b1.total, b0.total]
+			scoreboard.winners = [mine > its ? you : bot]
 		} else {
 			scoreboard.winners = winningSeats(b0.total, b1.total)
 		}

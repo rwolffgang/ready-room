@@ -52,6 +52,7 @@ import {
 	opponentAwayTeamsAt,
 	opponentResource,
 } from '../../bot/cadet'
+import { isSoloBot } from '../solo/seat'
 
 /** A neutral EffectCtx for queries/amounts that do not depend on the actor
  *  (seat-independent references such as MARKET_OFFER). */
@@ -864,6 +865,7 @@ function gainGlory(state: GameState, seat: Seat, amount: number): GameState {
  *  successor to the flat STARDATE_REFILL_GLORY. */
 export function handoffStardate(state: GameState, seat: Seat): GameState {
 	const glories = state.stardates.glories
+	const botActions = state.stardates.botActions
 	if (state.stardates.pile.length <= 1) {
 		// The final Stardate card is NOT handed over and NOT refilled — it stays
 		// in place, emptied, as the marker that a Resolution was triggered
@@ -875,6 +877,10 @@ export function handoffStardate(state: GameState, seat: Seat): GameState {
 				pile: state.stardates.pile.slice(0, 1),
 				gloryOnTop: 0,
 				glories: glories === undefined ? undefined : [glories[0] ?? 0],
+				// the solo Bot keeps the final card's action count to the end
+				...(botActions === undefined
+					? {}
+					: { botActions: [botActions[0] ?? 0] }),
 			},
 		}
 	}
@@ -895,6 +901,7 @@ export function handoffStardate(state: GameState, seat: Seat): GameState {
 			pile: state.stardates.pile.slice(1),
 			gloryOnTop: refill,
 			glories: nextGlories,
+			...(botActions === undefined ? {} : { botActions: botActions.slice(1) }),
 		},
 	}
 }
@@ -921,6 +928,14 @@ export function stealResource(
 			seat: to,
 			message: `${res} cannot be stolen`,
 		})
+	if (isSoloBot(state, from)) {
+		// rules/13 §13.12.2: stealing from the official Bot always succeeds in
+		// full and comes from the supply — the Bot keeps its own (no gain event)
+		return addLog(
+			{ ...state, players: bumpPool(state, to, res, amount) },
+			{ kind: 'EVENT', seat: to, message: `steals ${amount} ${res}` },
+		)
+	}
 	if (isCadetOpponent(state.mode, from)) {
 		// rules/10 §10.2 #3: the virtual opponent permanently holds 1 of every
 		// resource — a steal takes exactly that 1 and never removes anything.

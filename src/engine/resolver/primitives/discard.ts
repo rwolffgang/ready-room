@@ -8,6 +8,8 @@ import {
 	onlyBoundAllows,
 } from '../runtime'
 import { otherSeat, type GameState, type EffectCtx } from '../../state'
+import { isSoloBot } from '../../solo/seat'
+import { botDeckCanAdvance, botDeckTop } from '../../solo/deck'
 
 /** The seat the discard acts on — DISCARD `whose` (default SELF). */
 function discardSeat(
@@ -30,6 +32,8 @@ export const discard: Primitive<Extract<Effect, { k: 'DISCARD' }>> = {
 	isCost: false,
 	canResolve(state, node, ctx) {
 		const seat = discardSeat(ctx, node.whose)
+		if (node.from === 'DECK_TOP' && isSoloBot(state, seat))
+			return botDeckCanAdvance(state, seat)
 		if (node.from === 'DECK_TOP')
 			return (state.zones[`DRAW:${seat}`]?.length ?? 0) > 0
 		return handCandidates(state, flipCtx(ctx, node.whose), node.filter).some(
@@ -44,8 +48,15 @@ export const discard: Primitive<Extract<Effect, { k: 'DISCARD' }>> = {
 			const deck = state.zones[`DRAW:${seat}`] ?? []
 			const n = Math.min(node.count, deck.length)
 			let next = state
-			for (let i = 0; i < n; i++) {
-				const top = next.zones[`DRAW:${seat}`]?.[0]
+			// the official solo Bot's deck reshuffles when it runs out (rules/13 §13.5)
+			const bot = isSoloBot(state, seat)
+			for (let i = 0; i < (bot ? node.count : n); i++) {
+				let top = next.zones[`DRAW:${seat}`]?.[0]
+				if (bot) {
+					const r = botDeckTop(next, seat)
+					next = r.state
+					top = r.top ?? undefined
+				}
 				if (top === undefined) break
 				if (node.bind !== undefined) ctx.bindings[node.bind] = top
 				next = emit(moveCard(next, top, { k: 'DISCARD', seat }), {
