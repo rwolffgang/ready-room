@@ -69,14 +69,15 @@ move. Its rows are effect trees in `src/data/cards/solo/bots.json`, keyed to the
       against `bots.json`.
 - [x] Bot setup, turn, choice policy, human→Bot hooks, inert Bot cards, end timing, scoring.
 - [x] Hand-attack outcome choice (`rules/13` §13.12.2).
-- [x] The `SURPRISE` trait becomes live; solo Directive `1DIR01/2` (Conspiracy), minted only in
-      SOLO games, from the latest STCC errata. (`1DIR02/2`, Reinforce, comes with the campaign.)
+- [x] The `SURPRISE` trait becomes live; solo Directives `1DIR01/2` (Conspiracy) and `1DIR02/2`
+      (Reinforce), minted only in SOLO games, from the latest STCC errata.
 - [x] House AI: determinize, SOLO evaluation, `tools/solo-arena.ts` (no learned weights ship, so
       no retrain).
 - [x] UI: Solo vs Bot setup, Bot area, Automated Command panel (rendered from STCC text), paced
       Bot turn, end screen (`src/ui/solo/`).
-- [ ] Five-Year Mission campaign (`rules/14`): Reinforcement deck, boosts, challenges, campaign
-      record and screens.
+- [x] Five-Year Mission campaign (`rules/14`): Reinforcement deck and the campaign Directive
+      `1DIR02/2`, boosts, challenges, campaign record (`src/session/campaign.ts`) and screens
+      (`src/ui/solo/Campaign.tsx`).
 - Out of scope until we have their decks: the other 10 STCC Bots (box 2/3 crews), `2DIR01`/`2DIR02`.
 
 ## 4. A heuristic opponent (optional, later) — done as the house AI

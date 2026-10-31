@@ -27,6 +27,7 @@ import {
 import { runCollecting, pushOperation } from './resolver/stack'
 import { finalizeGame } from './scoring'
 import { advancePhaseStep, beginTurnStep } from './phases'
+import { pushCampaignStart } from './solo/campaign'
 import { cadetChoice, CADET_SEAT } from '../bot/cadet'
 import type { PendingChoice } from './resolver/choices'
 import { isSoloBot } from './solo/seat'
@@ -77,12 +78,18 @@ export function reduce(state: GameState, intent: Intent): ReduceResult {
 	return pilotVirtualSeat(reduceCore(state, intent))
 }
 
+/** START: the starting player's first RESUPPLY step — beneath a campaign
+ *  game's boosts, which resolve first (rules/14 §14.3). */
+function startStep(state: GameState): GameState {
+	return pushCampaignStart(beginTurnStep(state))
+}
+
 /** The Intent switch, unpiloted (the cadet pilot wraps it — see below). */
 export function reduceCore(state: GameState, intent: Intent): ReduceResult {
 	switch (intent.t) {
 		case 'START':
 			requirePhase(state, 'SETUP')
-			return runToHalt(beginTurnStep(state))
+			return runToHalt(startStep(state))
 		case 'PASS':
 			requirePhase(state, 'RESUPPLY', 'CONTROL', 'ACTION')
 			requireNoChoice(state)

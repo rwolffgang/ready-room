@@ -800,6 +800,91 @@
 					]
 				}
 			}
+		},
+		"campaign": {
+			"win": {
+				"match": ["ALIEN", "TRANSCENDENT"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 3
+						}
+					},
+					{
+						"k": "BOOST",
+						"when": "BEFORE_HAND",
+						"effect": {
+							"k": "SEQ",
+							"steps": [
+								{
+									"k": "FIND",
+									"filter": {},
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										},
+										{
+											"k": "DRAW",
+											"seat": 0
+										}
+									]
+								},
+								{
+									"k": "FIND",
+									"filter": {},
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										},
+										{
+											"k": "DRAW",
+											"seat": 0
+										}
+									]
+								}
+							]
+						}
+					}
+				]
+			},
+			"loss": {
+				"match": ["ALLY", "ALIEN", "SYNTHETIC"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 1
+						}
+					},
+					{
+						"k": "BOOST",
+						"when": "BEFORE_HAND",
+						"effect": {
+							"k": "FIND",
+							"filter": {},
+							"zones": [
+								{
+									"k": "DISCARD",
+									"seat": 0
+								},
+								{
+									"k": "DRAW",
+									"seat": 0
+								}
+							]
+						}
+					}
+				]
+			}
 		}
 	},
 	{
@@ -1651,6 +1736,78 @@
 						}
 					]
 				}
+			}
+		},
+		"campaign": {
+			"win": {
+				"match": ["WEAPON", "BUSINESS"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "BEFORE_HAND",
+						"effect": {
+							"k": "SEQ",
+							"steps": [
+								{
+									"k": "FIND",
+									"filter": {
+										"suits": ["LOCATION"]
+									},
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										},
+										{
+											"k": "DRAW",
+											"seat": 0
+										}
+									],
+									"bind": "$boost.found"
+								},
+								{
+									"k": "FREE_PLAY",
+									"filter": {
+										"suits": ["LOCATION"]
+									},
+									"bound": "$boost.found"
+								}
+							]
+						}
+					},
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "GAIN_RESOURCE",
+							"res": "DIL",
+							"amount": 2
+						}
+					}
+				]
+			},
+			"loss": {
+				"match": ["CARGO", "HUMAN", "TELLARITE"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "GAIN_RESOURCE",
+							"res": "DIL",
+							"amount": 1
+						}
+					},
+					{
+						"k": "TO_REINFORCEMENT",
+						"from": "RESERVE",
+						"filter": {
+							"not": {
+								"suits": ["INCIDENT"]
+							}
+						}
+					}
+				]
 			}
 		}
 	},
@@ -2514,6 +2671,54 @@
 						}
 					]
 				}
+			}
+		},
+		"campaign": {
+			"win": {
+				"match": ["SHIP"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 3
+						}
+					},
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 2
+						}
+					}
+				]
+			},
+			"loss": {
+				"match": ["WEAPON", "ATTACK", "KLINGON"],
+				"bonus": [
+					{
+						"k": "TO_REINFORCEMENT",
+						"from": "RESERVE",
+						"filter": {
+							"not": {
+								"suits": ["INCIDENT"]
+							}
+						}
+					},
+					{
+						"k": "TO_REINFORCEMENT",
+						"from": "AVAILABLE",
+						"filter": {
+							"not": {
+								"suits": ["INCIDENT"]
+							}
+						}
+					}
+				]
 			}
 		}
 	},
@@ -3484,6 +3689,81 @@
 					}
 				}
 			}
+		},
+		"campaign": {
+			"win": {
+				"match": ["ATTACK", "SHADY", "CLOAK"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "BEFORE_HAND",
+						"effect": {
+							"k": "SEQ",
+							"steps": [
+								{
+									"k": "FIND",
+									"filter": {},
+									"zones": [
+										{
+											"k": "DRAW",
+											"seat": 0
+										},
+										{
+											"k": "RESERVE",
+											"seat": 0
+										}
+									],
+									"bind": "$boost.found"
+								},
+								{
+									"k": "LOG",
+									"target": {
+										"zones": [
+											{
+												"k": "HAND",
+												"seat": 0
+											}
+										],
+										"bound": "$boost.found"
+									}
+								}
+							]
+						}
+					},
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "TAKE",
+							"deck": "REINFORCEMENT",
+							"count": 1
+						}
+					}
+				]
+			},
+			"loss": {
+				"match": ["WEAPON", "ATTACK", "ROMULAN"],
+				"bonus": [
+					{
+						"k": "TO_REINFORCEMENT",
+						"from": "RESERVE",
+						"filter": {
+							"not": {
+								"suits": ["INCIDENT"]
+							}
+						}
+					},
+					{
+						"k": "TO_REINFORCEMENT",
+						"from": "AVAILABLE",
+						"filter": {
+							"not": {
+								"suits": ["INCIDENT"]
+							}
+						}
+					}
+				]
+			}
 		}
 	},
 	{
@@ -4428,6 +4708,54 @@
 					]
 				}
 			}
+		},
+		"campaign": {
+			"win": {
+				"match": ["ANOMALY", "SCIENTIST"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 3
+						}
+					},
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "GAIN_RESOURCE",
+							"res": "LAT",
+							"amount": 2
+						}
+					}
+				]
+			},
+			"loss": {
+				"match": ["CARGO", "ALLY", "PERSON"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						}
+					},
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "GAIN_RESOURCE",
+							"res": "DIL",
+							"amount": 1
+						}
+					}
+				]
+			}
 		}
 	},
 	{
@@ -5052,6 +5380,52 @@
 				}
 			}
 		},
-		"special": "DILITHIUM"
+		"special": "DILITHIUM",
+		"campaign": {
+			"win": {
+				"match": ["PERSON", "CREATURE"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "DRAW",
+							"count": 2
+						}
+					},
+					{
+						"k": "TO_REINFORCEMENT",
+						"from": "RESERVE",
+						"filter": {
+							"not": {
+								"suits": ["INCIDENT"]
+							}
+						}
+					}
+				]
+			},
+			"loss": {
+				"match": ["CARGO", "STARFLEET", "PERSON"],
+				"bonus": [
+					{
+						"k": "BOOST",
+						"when": "AFTER_HAND",
+						"effect": {
+							"k": "DRAW",
+							"count": 1
+						}
+					},
+					{
+						"k": "TO_REINFORCEMENT",
+						"from": "AVAILABLE",
+						"filter": {
+							"not": {
+								"suits": ["INCIDENT"]
+							}
+						}
+					}
+				]
+			}
+		}
 	}
 ]

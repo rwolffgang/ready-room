@@ -183,9 +183,10 @@ function SaveRow({
 			: ended
 				? `ended on turn ${m.turnNumber}`
 				: `turn ${m.turnNumber} · ${m.phase}`
+	const solo = session.setup.mode === 'SOLO' ? session.setup.solo : undefined
 	const vs =
-		session.setup.mode === 'SOLO' && session.setup.solo !== undefined
-			? `vs ${soloBotLabel(session.setup.solo.level)}${session.setup.solo.conspiringAdmirals === true ? ' · Conspiring Admirals' : ''}`
+		solo !== undefined
+			? `vs ${soloBotLabel(solo.level)}${solo.conspiringAdmirals === true ? ' · Conspiring Admirals' : ''}${session.campaignId !== undefined ? ' · Five-Year Mission' : ''}`
 			: opponentsLabel(session.opponents)
 	return (
 		<li

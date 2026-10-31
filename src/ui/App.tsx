@@ -44,6 +44,7 @@ import {
 } from '../session/opponents'
 import { EndScreen } from './EndScreen'
 import { SOLO_LEVEL_LABEL } from './solo/labels'
+import { CampaignScreen, CampaignSetupPanel } from './solo/Campaign'
 
 function useRuleAnchor(): [string | null, (a: string | null) => void] {
 	const [anchor, setAnchor] = useState<string | null>(null)
@@ -68,6 +69,7 @@ export default function App() {
 	const [ruleAnchor, setRuleAnchor] = useRuleAnchor()
 	const inGame = useGameStore((s) => s.state !== null && s.session !== null)
 	const online = useGameStore((s) => s.online !== null)
+	const campaign = useGameStore((s) => s.campaignOpen)
 	// phone / phone-wide / tablet / console (docs/ui-mobile.md §2)
 	const { shell: chosen } = useShell()
 	// the LCARS console plays local games; an online game on a wide screen
@@ -91,6 +93,8 @@ export default function App() {
 				<OnlineLobby key={route} route={route} />
 			) : online ? (
 				<OnlineGame shell={shell} />
+			) : !inGame && campaign !== null && catalog !== null ? (
+				<CampaignScreen id={campaign} catalog={catalog} />
 			) : !inGame ? (
 				<SetupScreen catalogReady={catalog !== null} />
 			) : (
@@ -384,6 +388,9 @@ function SetupScreen({ catalogReady }: { catalogReady: boolean }) {
 							seed={seed}
 							onStart={(config) => startGame(config, undefined)}
 						/>
+					)}
+					{catalog !== null && (
+						<CampaignSetupPanel catalog={catalog} you={seat0} side={side0} />
 					)}
 					<button
 						type="button"

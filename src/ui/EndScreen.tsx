@@ -25,6 +25,7 @@ import type { SpecialtyId } from '../data/ids'
 import { deckLabel } from '../data/cardNames'
 import { seatLabel } from './format'
 import { soloBotLabel } from './solo/labels'
+import { CampaignEnd } from './solo/Campaign'
 import { Icon, SpecialtyLabel } from './icons'
 import { useGameStore, useProjected, useSession, useViewerSeat } from './store'
 
@@ -232,6 +233,8 @@ export function EndScreen({ onNewGame }: { onNewGame: () => void }) {
 				names={names}
 				breakdown={board.breakdown}
 			/>
+
+			<CampaignEnd />
 
 			<button
 				type="button"

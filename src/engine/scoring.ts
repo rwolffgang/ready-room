@@ -476,11 +476,15 @@ export function finalizeGame(state: GameState): GameState {
 			scoreboard.winners = [0]
 			scoreboard.cadetLoss = false
 		} else if (state.mode === 'SOLO') {
-			// rules/13 §13.1: you win only with MORE VP — a tie is the Bot's
+			// rules/13 §13.1: you win only with MORE VP — a tie is the Bot's;
+			// a lost campaign challenge is the Bot's whatever the score
+			// (rules/14 §14.5)
 			const bot = state.solo?.bot ?? 1
 			const you = bot === 1 ? 0 : 1
 			const [mine, its] = you === 0 ? [b0.total, b1.total] : [b1.total, b0.total]
-			scoreboard.winners = [mine > its ? you : bot]
+			scoreboard.winners = [
+				mine > its && state.solo?.lost === undefined ? you : bot,
+			]
 		} else {
 			scoreboard.winners = winningSeats(b0.total, b1.total)
 		}

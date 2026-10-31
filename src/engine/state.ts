@@ -487,6 +487,54 @@ export interface SoloState {
 	marketOwned: string[]
 	/** narration of the Bot's current beat */
 	beat?: BotBeatInfo | undefined
+	/** a Five-Year Mission game's challenges still running (rules/14 §14.5) */
+	campaign?: CampaignState | undefined
+	/** what START resolves first in a campaign game: the boosts, and whether
+	 *  setup held your opening hand back for them (rules/14 §14.3) */
+	start?: { boosts: BonusRef[]; held: boolean } | undefined
+	/** a challenge lost you the game (rules/14 §14.5) */
+	lost?: 'STARTING_SHIP' | undefined
+}
+
+/** A campaign bonus, by where it is printed: on a Bot crew's Automated
+ *  Command card, in its win or loss list, at `index` (rules/14 §14.3). */
+export interface BonusRef {
+	deck: DeckId
+	side: 'win' | 'loss'
+	index: number
+}
+
+/** What a Five-Year Mission campaign brings into one of its games (rules/14).
+ *  Setup and START apply it, so the game still replays from its config and
+ *  intent log alone. */
+export interface CampaignSetup {
+	/** your Reinforcement pile, as card defs: a crew card leaves your deck for
+	 *  it, a Market card leaves the Market */
+	reinforcement: string[]
+	/** the BOOST bonuses earned so far, resolved as the game starts */
+	boosts: BonusRef[]
+	/** the campaign Directive goes into your Reserve deck, not your starting
+	 *  deck (a challenge, after a win) */
+	directiveToReserve?: boolean | undefined
+	/** start without these resources (a challenge) */
+	withoutResources?: ('DIL' | 'LAT')[] | undefined
+	/** deal yourself a random Reserve deck (a challenge) */
+	shuffleReserve?: boolean | undefined
+	/** an INCIDENT starts in your Draw deck (a challenge) */
+	incidentInDeck?: boolean | undefined
+	/** you lose if your starting SHIP is dismissed or recalled (a challenge) */
+	startingShip?: boolean | undefined
+	/** Away Team tokens set aside until your Reserve deck is empty (a
+	 *  challenge) */
+	awayTeamsAside?: number | undefined
+}
+
+/** The challenges a campaign game keeps watching (rules/14 §14.5). */
+export interface CampaignState {
+	/** the SHIP whose loss loses the game */
+	startingShip?: CardInstanceId | undefined
+	/** Away Team tokens still set aside */
+	awayTeamsAside?: number | undefined
 }
 
 // ---------------------------------------------------------------------------

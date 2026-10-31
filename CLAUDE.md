@@ -125,7 +125,11 @@ resolves cards through its crew's Automated Command rows. The mechanics are effe
 `crosscheck-stcc` keeps the two in step. Its turn advances one beat per logged `BOT_STEP` intent,
 and choices that land on it are answered by `solo/policy.ts` through the virtual-seat pilot in
 `intents.ts`. Your cards' effects on it go through hooks guarded by `isSoloBot` (steal, draw, take,
-recall, log, outcome gate). The Five-Year Mission campaign (`rules/14`) builds on it.
+recall, log, outcome gate). The Five-Year Mission campaign (`rules/14`) builds on it: the record
+(ranks, upgrades, logbook) is `src/session/campaign.ts`, and what a campaign brings into one game
+(`SetupConfig.solo.campaign`: Reinforcement pile, boosts, challenges) is applied by
+`src/engine/solo/campaign.ts`, so each campaign game still replays from its config. The UI for both
+is `src/ui/solo/`.
 
 ## House AI: how to keep it working
 

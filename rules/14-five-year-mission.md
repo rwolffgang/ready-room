@@ -65,15 +65,15 @@ Reinforcement deck.
 
 You may add any number of these to a campaign, at any mode:
 
-| Challenge                              | Effect                                                                                                                                                                                                                                                                                          |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Live Long and Prosper                  | After a win, start the next game without Dilithium **or** without Latinum (your choice). Win that one too and the next starts without both, and so on until you lose. A loss resets your starting resources to normal.                                                                          |
-| That is Not a Weakness; That is Life   | From the rank of Lieutenant on, randomize your Reserve deck at setup. Note its size, shuffle your RESERVE and AVAILABLE cards together, deal a new Reserve deck of the same size, and use the rest as your starting Draw deck.                                                                  |
-| Two Weeks to the Closest Outpost       | After a win, shuffle Reinforce into your Reserve deck instead of your starting deck. After a loss it goes back into your starting deck.                                                                                                                                                         |
-| Running Like a Baby Gazelle            | After two wins in a row, shuffle one INCIDENT from the Incident deck into your starting Draw deck at setup. Keep doing this (at most one) every game until you lose.                                                                                                                             |
-| Rules of Acquisition                   | After a win, Option B is not available. You must add a matching Market card, or get no upgrade.                                                                                                                                                                                                 |
-| Only Ship in the Quadrant              | If your starting SHIP is ever dismissed or recalled, for any reason, you lose the game. Not available for crews without a starting deployed SHIP.                                                                                                                                              |
-| They Will Arrive on Tuesday            | At setup, set one of your Away Team tokens aside. It returns to your Captain when your Reserve deck is empty. After a win, set two aside for the next game.                                                                                                                                      |
+| Challenge                            | Effect                                                                                                                                                                                                                         |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Live Long and Prosper                | After a win, start the next game without Dilithium **or** without Latinum (your choice). Win that one too and the next starts without both, and so on until you lose. A loss resets your starting resources to normal.         |
+| That is Not a Weakness; That is Life | From the rank of Lieutenant on, randomize your Reserve deck at setup. Note its size, shuffle your RESERVE and AVAILABLE cards together, deal a new Reserve deck of the same size, and use the rest as your starting Draw deck. |
+| Two Weeks to the Closest Outpost     | After a win, shuffle Reinforce into your Reserve deck instead of your starting deck. After a loss it goes back into your starting deck.                                                                                        |
+| Running Like a Baby Gazelle          | After two wins in a row, shuffle one INCIDENT from the Incident deck into your starting Draw deck at setup. Keep doing this (at most one) every game until you lose.                                                           |
+| Rules of Acquisition                 | After a win, Option B is not available. You must add a matching Market card, or get no upgrade.                                                                                                                                |
+| Only Ship in the Quadrant            | If your starting SHIP is ever dismissed or recalled, for any reason, you lose the game. Not available for crews without a starting deployed SHIP.                                                                              |
+| They Will Arrive on Tuesday          | At setup, set one of your Away Team tokens aside. It returns to your Captain when your Reserve deck is empty. After a win, set two aside for the next game.                                                                    |
 
 ## 14.6 Performance review (solo p.18)
 
@@ -86,5 +86,23 @@ games, the fastest being the best. The app words the ratings in its own way.
 - **Campaign record and rules** (ranks, mode table, rematch rule, upgrade validation):
   `src/session/campaign.ts`.
 - **Per-game campaign context** (`SetupConfig.solo.campaign`: Reinforcement cards, boosts,
-  challenge flags) is replayed by the engine. Every campaign game therefore replays from its seed,
-  setup and intent log alone.
+  challenge flags) is replayed by the engine (`src/engine/solo/campaign.ts`). Every campaign game
+  therefore replays from its seed, setup and intent log alone.
+- **The campaign Directive** is `1DIR02/2`.
+- **Our ids and labels**, kept free of the rulebook's titles:
+
+  | Rulebook                             | Id                     | In the app      |
+  | ------------------------------------ | ---------------------- | --------------- |
+  | Set Phasers to Stun                  | `EASY`                 | Easy            |
+  | Yellow Alert                         | `NORMAL`               | Normal          |
+  | Gates of Sto'Vo'Kor                  | `HARD`                 | Hard            |
+  | The Kobayashi Maru                   | `BRUTAL`               | Brutal          |
+  | Live Long and Prosper                | `LEAN_START`           | Lean start      |
+  | That is Not a Weakness; That is Life | `SHUFFLED_RESERVE`     | Random Reserve  |
+  | Two Weeks to the Closest Outpost     | `DIRECTIVE_IN_RESERVE` | Distant support |
+  | Running Like a Baby Gazelle          | `INCIDENT_STREAK`      | Trouble follows |
+  | Rules of Acquisition                 | `MARKET_ONLY`          | Market only     |
+  | Only Ship in the Quadrant            | `ONE_SHIP`             | One ship        |
+  | They Will Arrive on Tuesday          | `LATE_TEAMS`           | Late Away Teams |
+
+- Interpretations are logged in `docs/card-rulings.md` 065–068.

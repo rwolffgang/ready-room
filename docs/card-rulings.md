@@ -1020,8 +1020,63 @@ BEAM, GAIN LAT 1])` (no COST_BEAM).
   even in the Clean-up Step", per the STCC errata).
 - **Interpretation:**
   - A played card sits in your Staging Area and goes to your Discard pile at Clean-up. That
-    *is* "discard this card", so the play operation is the PERSON-discard cost and the draw.
+    _is_ "discard this card", so the play operation is the PERSON-discard cost and the draw.
   - The protection is a card flag, `discardProtected`. The card is never a candidate for a
     hand discard, a cost discard, a beam, or the Clean-up "discard any cards from hand".
 - **Keyed on:** `src/data/cards/solo/directives.json`, `discardCandidates` in
   `src/engine/resolver/runtime.ts`.
+
+## 065 — Five-Year Mission boosts "before drawing the starting hand"
+
+- **Question:** two Bots' campaign bonuses let you find cards (or find a LOCATION and free play
+  it) before you draw your starting hand. Where do you look, and when do they resolve?
+- **Interpretation:**
+  - Setup holds your opening hand back. The boosts resolve as the game starts, before your first
+    Resupply step. Then you draw your hand, and then the other boosts ("gain 3 Research", "after
+    drawing the starting hand, draw 2") resolve.
+  - "Find" looks through your Draw deck and Discard pile, plus your Reserve deck where the
+    bonus allows it. Your hand is empty at that point, so it is left out; finding a card that is
+    already in hand would do nothing.
+- **Keyed on:** `pushCampaignStart` in `src/engine/solo/campaign.ts`, the `campaign` rewards in
+  `src/data/cards/solo/bots.json`.
+
+## 066 — Five-Year Mission upgrades: a free choice between Option A and B
+
+- **Question:** "Choose one: Option A … If none of your Market cards matches, you must take
+  Option B." May you take Option B when a Market card matches?
+- **Interpretation:**
+  - Yes. Option B is forced only when no card matches. The Market-only challenge closes Option
+    B after a win.
+  - Option A offers each matching Market card you owned at any point in the game, once. A card
+    already in your Reinforcement pile is not offered again.
+  - A REINFORCE bonus offers your crew cards whose starting position is the one it names
+    (Reserve deck or Available cards), never an INCIDENT, and never a card already in the pile.
+  - When nothing is on offer, the game passes without an upgrade.
+- **Keyed on:** `upgradeOptions` / `applyUpgrade` in `src/session/campaign.ts`.
+
+## 067 — Where the Reinforcement pile's cards come from
+
+- **Question:** a Market card added to the Reinforcement pile, and a crew card moved there by a
+  REINFORCE bonus: where are they in later games?
+- **Interpretation:**
+  - A Market card leaves the Market: at setup it comes out of its Market deck (or the face-up
+    offer, which is then refilled) and starts in your Reinforcement pile.
+  - A crew card leaves your deck: it starts in your Reinforcement pile, not where its position
+    indicator puts it.
+  - The pile is yours and visible to you. Its cards don't score until the campaign Directive
+    takes them into your hand.
+- **Keyed on:** `setupCampaignDeck` in `src/engine/solo/campaign.ts`.
+
+## 068 — The campaign challenges in the engine
+
+- **Interpretation:**
+  - **Lean start:** after a single win you choose which resource to start without, when you start
+    the next game.
+  - **Late Away Teams:** a set-aside token leaves both your pool and your total. It comes back
+    (to your Captain) at the first check after your Reserve deck is empty.
+  - **One ship:** your starting SHIP leaving your Fleet for any reason loses the game on the
+    spot. The game goes to final scoring, and the Bot wins whatever the score.
+  - **Random Reserve:** "from the rank of Lieutenant on" reads your rank when the game is set
+    up.
+- **Keyed on:** `campaignSetup` in `src/session/campaign.ts`, `campaignCheck` in
+  `src/engine/solo/campaign.ts`.

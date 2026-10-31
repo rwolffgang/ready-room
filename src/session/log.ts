@@ -83,6 +83,9 @@ export interface Session {
 	 *  before the house AI load unchanged (no version bump). The engine never
 	 *  sees it: bots answer through ordinary intents in the log. */
 	opponents?: Opponents | undefined
+	/** The Five-Year Mission campaign this game belongs to
+	 *  (src/session/campaign.ts); absent for any other game. */
+	campaignId?: string | undefined
 }
 
 export interface CreateSessionOptions {
@@ -90,6 +93,8 @@ export interface CreateSessionOptions {
 	now?: () => Date
 	/** House-AI seats (see Session.opponents). */
 	opponents?: Opponents | undefined
+	/** The campaign the game belongs to (see Session.campaignId). */
+	campaignId?: string | undefined
 }
 
 /** A short, unique, storage-friendly game id (session layer only — the engine
@@ -137,6 +142,7 @@ export function createSession(
 	}
 	if (opts.opponents !== undefined && Object.keys(opts.opponents).length > 0)
 		session.opponents = { ...opts.opponents }
+	if (opts.campaignId !== undefined) session.campaignId = opts.campaignId
 	return session
 }
 

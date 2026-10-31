@@ -131,5 +131,66 @@
 				}
 			}
 		]
+	},
+	{
+		"id": "1DIR02-2",
+		"cardId": "1DIR02/2",
+		"suit": "DIRECTIVE",
+		"deck": "SOLO",
+		"traits": [],
+		"skills": [],
+		"focus": null,
+		"vp": 0,
+		"vpAsterisk": false,
+		"startPosition": "AVAILABLE",
+		"developmentCost": null,
+		"operations": [
+			{
+				"type": "PLAY",
+				"costsAction": false,
+				"isAttack": false,
+				"effect": {
+					"k": "TAKE",
+					"deck": "REINFORCEMENT",
+					"count": 1
+				}
+			},
+			{
+				"type": "PLAY",
+				"costsAction": false,
+				"isAttack": false,
+				"effect": {
+					"k": "IF",
+					"cond": {
+						"k": "NOT",
+						"term": {
+							"k": "COUNT_AT_LEAST",
+							"query": {
+								"zones": [
+									{
+										"k": "REINFORCEMENT",
+										"seat": 0
+									}
+								]
+							},
+							"value": 1
+						}
+					},
+					"then": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "DRAW",
+								"count": 1
+							},
+							{
+								"k": "LOG",
+								"target": "THIS"
+							}
+						]
+					}
+				}
+			}
+		]
 	}
 ]

@@ -115,6 +115,8 @@ const ZoneSpecSchema: z.ZodType<ZoneSpec> = z.lazy(() =>
 					'DUTY_OFFICER',
 					'CAPTAIN',
 					'STATUS',
+					// your Five-Year Mission Reinforcement pile (rules/14 §14.4)
+					'REINFORCEMENT',
 				]),
 				seat: SeatSchema,
 			})
@@ -643,7 +645,9 @@ export const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
 		z
 			.object({
 				k: z.literal('TAKE'),
-				deck: z.enum(['INCIDENT', 'ENCOUNTER']),
+				// REINFORCEMENT: a card of your choice from your Reinforcement
+				// pile (rules/14 §14.4, ruling 8)
+				deck: z.enum(['INCIDENT', 'ENCOUNTER', 'REINFORCEMENT']),
 				count: z.number().int().min(1),
 				look: z.number().int().min(1).optional(),
 				returnUnpicked: z.boolean().optional(),
@@ -1517,8 +1521,9 @@ export type BotBonus = z.infer<typeof BotBonusSchema>
 
 const BotRewardSchema = z
 	.object({
-		/** the Market cards Option A may add to the Reinforcement deck */
-		cards: CardFilterSchema,
+		/** the Market cards Option A may add to the Reinforcement deck: any
+		 *  card of one of these suits or with one of these traits */
+		match: z.array(z.union([SuitSchema, TraitSchema])).min(1),
 		/** Option B, in the printed order */
 		bonus: z.array(BotBonusSchema),
 	})

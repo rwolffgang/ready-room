@@ -11,6 +11,7 @@
 // Burn would compare.
 
 import type { GameState } from './state'
+import { campaignCheck } from './solo/campaign'
 import { cardDef } from './cards'
 import type { CardInstanceId } from './ids'
 import type { Seat } from './resolver/queries'
@@ -26,7 +27,8 @@ export function checkEndgame(state: GameState): GameState {
 	if (incident !== undefined && incident.length === 0) {
 		return { ...state, result: { kind: 'BURN' }, phase: { k: 'GAME_OVER' } }
 	}
-	return state
+	// a Five-Year Mission game's challenges (rules/14 §14.5)
+	return state.mode === 'SOLO' ? campaignCheck(state) : state
 }
 
 /** INCIDENT cards `seat` owns in hand + Discard pile + Draw deck + Captain's

@@ -54,6 +54,7 @@ const PER_PLAYER_ZONES = [
 	'DUTY_OFFICER',
 	'CAPTAIN',
 	'STATUS',
+	'REINFORCEMENT',
 ] as const
 
 function isPerPlayerZoneSpec(

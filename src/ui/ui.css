@@ -3954,3 +3954,80 @@ h3,
 	margin: 0;
 	font-size: 1.05rem;
 }
+
+/* src/ui/solo/Campaign.tsx: the Five-Year Mission */
+.campaign-setup fieldset,
+.campaign-offers {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding: 6px 8px;
+	border: 1px solid var(--line, #3a3f4d);
+	border-radius: 8px;
+}
+.campaign-setup label,
+.campaign-offers label {
+	display: block;
+	line-height: 1.35;
+}
+.campaign-list {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.campaign-list li {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+.campaign-list li > span {
+	flex: 1 1 200px;
+	min-width: 0;
+}
+.campaign-screen {
+	display: grid;
+	gap: 14px;
+	max-width: 800px;
+	margin: 4vh auto;
+	padding: 24px 16px;
+}
+.campaign-screen h1 {
+	margin: 0;
+	font-size: 30px;
+	color: var(--orange);
+	letter-spacing: 0.04em;
+}
+.campaign-screen h2 {
+	margin: 0 0 6px;
+	font-size: 1.1rem;
+}
+.campaign-screen h3 {
+	margin: 12px 0 4px;
+	font-size: 0.95rem;
+}
+.campaign-screen .panel {
+	display: grid;
+	gap: 8px;
+	padding: 12px 14px;
+}
+.campaign-rank {
+	margin: 4px 0 0;
+}
+.campaign-cards {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding-left: 18px;
+}
+.campaign-log table {
+	width: 100%;
+}
+.campaign-end {
+	display: grid;
+	gap: 8px;
+	justify-items: start;
+	padding: 12px 14px;
+}

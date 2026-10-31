@@ -226,7 +226,7 @@ export type EffectNode =
 	  } // 2 Glory consolation if exhausted
 	| {
 			k: 'TAKE'
-			deck: 'INCIDENT' | 'ENCOUNTER'
+			deck: 'INCIDENT' | 'ENCOUNTER' | 'REINFORCEMENT'
 			count: number
 			look?: number | undefined // look at the top N; the taker chooses `count` of them
 			returnUnpicked?: boolean | undefined // the unchosen looked-at cards go to the bottom of the deck (SPACEFOLD, 1PIC18)

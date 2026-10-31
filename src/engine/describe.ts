@@ -923,6 +923,8 @@ function render(node: Effect): string {
 					: ''
 			}.`
 		case 'TAKE':
+			if (node.deck === 'REINFORCEMENT')
+				return `Take ${node.count === 1 ? 'a card' : `${node.count} cards`} from your Reinforcement pile.`
 			return `Take ${node.count} ${node.deck === 'INCIDENT' ? 'Incident' : 'Encounter'} card${
 				node.count === 1 ? '' : 's'
 			}${node.look !== undefined ? `, look at the top ${node.look}` : ''}${

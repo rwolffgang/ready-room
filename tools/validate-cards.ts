@@ -51,10 +51,10 @@ const GROUPS: ReadonlyArray<{ file: string; label: string; expected: number }> =
 		// fan-made custom deck (src/data/custom/firefly.json)
 		{ file: 'crew/mal.json', label: 'MAL', expected: 25 },
 		// the solo Directives (rules/13 §13.14; rules/14 §14.4 adds the campaign one)
-		{ file: 'solo/directives.json', label: 'SOLO', expected: 1 },
+		{ file: 'solo/directives.json', label: 'SOLO', expected: 2 },
 	]
 
-const OVERALL_EXPECTED = 326
+const OVERALL_EXPECTED = 327
 
 // ---------------------------------------------------------------------------
 // Helpers

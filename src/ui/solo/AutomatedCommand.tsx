@@ -73,7 +73,7 @@ export function segments(text: string): { tone: Tone; text: string }[] {
 	return out
 }
 
-function AcText({ text }: { text: string }) {
+export function AcText({ text }: { text: string }) {
 	const clean = text.replace(/\^|\*/g, '')
 	return (
 		<>

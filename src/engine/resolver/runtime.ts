@@ -46,13 +46,19 @@ import {
 	stealProtected,
 } from '../modifiers'
 import type { GainCtx } from '../modifiers'
-import type { ResourceId, SpecialtyId, TraitId } from '../../data/ids'
+import type {
+	MarketSuit,
+	ResourceId,
+	SpecialtyId,
+	TraitId,
+} from '../../data/ids'
 import {
 	isCadetOpponent,
 	opponentAwayTeamsAt,
 	opponentResource,
 } from '../../bot/cadet'
 import { isSoloBot } from '../solo/seat'
+import { MARKET_SUITS_FOUR } from '../market'
 
 /** A neutral EffectCtx for queries/amounts that do not depend on the actor
  *  (seat-independent references such as MARKET_OFFER). */
@@ -737,10 +743,24 @@ export function setOwner(
 	const card = state.cards[iid]
 	if (!card) return state
 	if (card.owner === seat) return state
-	return {
+	const next = {
 		...state,
 		cards: { ...state.cards, [iid]: { ...card, owner: seat } },
 	}
+	// a solo game remembers the Market cards you owned: a campaign upgrade
+	// may add one to your Reinforcement pile (rules/14 §14.3 Option A)
+	const solo = state.solo
+	if (
+		state.mode !== 'SOLO' ||
+		solo === undefined ||
+		seat === solo.bot ||
+		solo.marketOwned.includes(card.def)
+	)
+		return next
+	const def = cardDef(card.def)
+	if (def.deck !== 'COMMON' || !MARKET_SUITS_FOUR.includes(def.suit as MarketSuit))
+		return next
+	return { ...next, solo: { ...solo, marketOwned: [...solo.marketOwned, card.def] } }
 }
 
 /** Gain a faceup Market card: ownership, resource tokens on it (Glory from the

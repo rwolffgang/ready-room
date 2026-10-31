@@ -2,7 +2,7 @@ import type { Effect } from '../nodes'
 import type { Primitive } from './index'
 import { moveCard, emit, setOwner, gainResource, pickCards } from '../runtime'
 import { isCadetOpponent } from '../../../bot/cadet'
-import { otherSeat, zonesOf, type GameState } from '../../state'
+import { otherSeat, zoneKey, zonesOf, type GameState } from '../../state'
 import type { CardInstanceId } from '../../ids'
 import type { EffectCtx } from '../../state'
 import type { ZoneRef } from '../queries'
@@ -23,10 +23,14 @@ import { isSoloBot } from '../../solo/seat'
  *  - `bind`: the (last) taken card.
  *  Cadet mode (rules/10 §10.2 #4): a Forced INCIDENT take is skipped for the
  *  virtual opponent and the human gains 1 Glory; ENCOUNTERs are unaffected.
+ *  REINFORCEMENT (rules/14 §14.4, ruling 8): the taker picks any `count`
+ *  cards of their own Reinforcement pile, which they can see; no event.
  */
 export const take: Primitive<Extract<Effect, { k: 'TAKE' }>> = {
 	isCost: false,
-	canResolve(state, node, _ctx) {
+	canResolve(state, node, ctx) {
+		if (node.deck === 'REINFORCEMENT')
+			return zonesOf(state, { k: 'REINFORCEMENT', seat: ctx.actor }).length > 0
 		return (
 			(state.zones[
 				node.deck === 'INCIDENT' ? 'INCIDENT_DECK' : 'ENCOUNTER_DECK'
@@ -34,6 +38,7 @@ export const take: Primitive<Extract<Effect, { k: 'TAKE' }>> = {
 		)
 	},
 	execute(state, node, ctx, _frame) {
+		if (node.deck === 'REINFORCEMENT') return takeReinforcement(state, node, ctx)
 		const key =
 			node.deck === 'INCIDENT'
 				? ('INCIDENT_DECK' as const)
@@ -72,6 +77,35 @@ export const take: Primitive<Extract<Effect, { k: 'TAKE' }>> = {
 		}
 		return next
 	},
+}
+
+/** A card of your choice from your Reinforcement pile, to your hand (or
+ *  wherever `to` says). It is your own card already: nothing fires. */
+function takeReinforcement(
+	state: GameState,
+	node: Effect & { k: 'TAKE' },
+	ctx: EffectCtx,
+): GameState {
+	const pile = zonesOf(state, { k: 'REINFORCEMENT', seat: ctx.actor })
+	const n = Math.min(node.count, pile.length)
+	if (n === 0) return state
+	const r = pickCards(state, node, ctx, 'take.reinforcement', {
+		prompt: `Take ${n === 1 ? 'a card' : `${n} cards`} from your Reinforcement pile`,
+		candidates: pile,
+		min: n,
+		max: n,
+		from: zoneKey({ k: 'REINFORCEMENT', seat: ctx.actor }),
+	})
+	if (r.kind === 'suspended') return r.state
+	if (r.kind === 'none') return state
+	let next = state
+	for (const iid of [...new Set(r.iids)]) {
+		next = setOwner(next, iid, ctx.actor)
+		const dest = destination(node, ctx.actor)
+		next = moveCard(next, iid, dest.zone, dest.toTop ? { toTop: true } : undefined)
+		if (node.bind !== undefined) ctx.bindings[node.bind] = iid
+	}
+	return next
 }
 
 function finishTake(

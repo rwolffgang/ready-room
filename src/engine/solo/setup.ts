@@ -73,8 +73,11 @@ export function setupSoloBot(
 	const challenge = directives.filter(
 		(d) => solo.conspiringAdmirals === true && d.traits.includes('SURPRISE'),
 	)
+	// (a campaign game may have dealt its Directive to you already)
+	const dealt = new Set(Object.values(s.cards).map((c) => c.def))
 	for (const d of directives)
-		if (!challenge.includes(d)) s = mintInto(s, d.id, null, { k: 'BOX' }, 'solo').state
+		if (!challenge.includes(d) && !dealt.has(d.id))
+			s = mintInto(s, d.id, null, { k: 'BOX' }, 'solo').state
 	// Bot deck: Available shuffled, Deployed + Controlled shuffled on top.
 	const deck: ZoneRef = { k: 'DRAW', seat: bot }
 	const avail = mintShuffled(s, [...by('AVAILABLE'), ...challenge], deck, bot)

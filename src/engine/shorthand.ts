@@ -763,6 +763,9 @@ export function shorthand(e: Effect): Tok[] {
 				},
 			]
 		case 'TAKE':
+			// your Reinforcement pile: a card of your choice (rules/14 §14.4)
+			if (e.deck === 'REINFORCEMENT')
+				return [glyph('RESERVE', `+${e.count}`), word('reinforcement')]
 			return [
 				{
 					k: 'suit',

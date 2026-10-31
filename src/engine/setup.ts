@@ -24,7 +24,7 @@ import type { Effect } from './resolver/nodes'
 import type { GameState, MissionState, PlayerState, TrackTable } from './state'
 import type { Seat, ZoneRef } from './resolver/queries'
 import { newGameState, addCard, moveCard, zoneKey, inPlayCards } from './state'
-import type { GameMode, SoloLevel } from './state'
+import type { CampaignSetup, GameMode, SoloLevel } from './state'
 import { registerCards, cardDef } from './cards'
 import { registerBots } from './solo/acRegistry'
 import { setupSoloBot } from './solo/setup'
@@ -32,6 +32,11 @@ import { shuffle, next } from './rng'
 import { effectiveHandSize } from './modifiers'
 import { toIid, type CardInstanceId } from './ids'
 
+import {
+	finishCampaignSetup,
+	holdsOpeningHand,
+	setupCampaignDeck,
+} from './solo/campaign'
 export type { GameMode, SoloLevel } from './state'
 
 export interface SetupPlayer {
@@ -57,6 +62,8 @@ export interface SoloSetup {
 	level: SoloLevel
 	/** the Conspiring Admirals challenge (rules/13 §13.14) */
 	conspiringAdmirals?: boolean | undefined
+	/** a Five-Year Mission game (rules/14) */
+	campaign?: CampaignSetup | undefined
 }
 
 /** A Stardate card: the registered CardDef carries the Clean-up (wipe) effect;
@@ -135,6 +142,7 @@ export function setupGame(
 		config.mode === 'SOLO'
 			? setupSoloBot(s, 1, config, catalog)
 			: setupPlayerBoard(s, 1, config, catalog)
+	s = finishCampaignSetup(s, config)
 	s = assertSetupCompleteness(s, config, catalog)
 	return { ...s, phase: { k: 'SETUP' } }
 }
@@ -378,7 +386,10 @@ export function setupPlayerBoard(
 	s = setupMissions(s, seat, config, catalog)
 	s = setupPlayerRecord(s, seat, config, catalog)
 	s = attachSetupModifiers(s, seat)
-	s = drawOpeningHand(s, seat)
+	// a Five-Year Mission game changes your deck before you draw (rules/14);
+	// a "before drawing the starting hand" boost holds the hand for START
+	s = setupCampaignDeck(s, seat, config, catalog)
+	if (!holdsOpeningHand(config, seat)) s = drawOpeningHand(s, seat)
 	return s
 }
 

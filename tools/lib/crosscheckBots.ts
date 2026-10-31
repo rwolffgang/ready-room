@@ -7,7 +7,11 @@
 //     describe() of it — a coarse recall check that catches a dropped step.
 // Run through `npx tsx tools/crosscheck-stcc.ts` (and solo/crosscheck.test.ts).
 
-import { normalizeCardNumber, splitTokens, toTraitId } from '../../src/data/stcc'
+import {
+	normalizeCardNumber,
+	splitTokens,
+	toTraitId,
+} from '../../src/data/stcc'
 import type { StccBot, StccCard } from '../../src/data/stcc'
 import type { BotCard, CardDef } from '../../src/data/schema'
 import type { Effect } from '../../src/engine/resolver/nodes'
@@ -82,8 +86,51 @@ function checkRow(
 			`${where}: ${red ? 'printed attack but no ATTACK node' : 'ATTACK node but no printed attack'}`,
 		)
 	const accepted = ACCEPTED[where] ?? []
-	const missing = missingWords(text, effect).filter((w) => !accepted.includes(w))
+	const missing = missingWords(text, effect).filter(
+		(w) => !accepted.includes(w),
+	)
 	if (missing.length > 0) out.push(`${where}: missing ${missing.join(', ')}`)
+}
+
+/** The Five-Year Mission rewards (rules/14 §14.3): Option A's suits/traits
+ *  and, in printed order, each Option B bonus's kind (a BOOST, or a crew card
+ *  moved to the Reinforcement pile from the Reserve deck / the Available
+ *  cards). */
+function checkCampaign(bot: BotCard, s: StccBot, out: string[]): void {
+	if (s.campaign == null) return
+	if (bot.campaign === undefined) {
+		out.push(`${bot.deck}: no campaign rewards`)
+		return
+	}
+	for (const side of ['win', 'loss'] as const) {
+		const theirs = s.campaign[side]
+		const ours = bot.campaign[side]
+		const where = `${bot.deck} campaign ${side}`
+		const keys = splitTokens(theirs.cards)
+			.flatMap((p) => (p.k === 'token' ? [toTraitId(p.name)] : []))
+			.sort()
+		if (JSON.stringify(keys) !== JSON.stringify([...ours.match].sort()))
+			out.push(
+				`${where}: matches ${ours.match.join('/')}, STCC ${keys.join('/')}`,
+			)
+		// every printed bonus is "BOOST: …" or a move to the pile
+		const kinds = theirs.bonus.map((b) =>
+			/^\s*BOOST:/i.test(b)
+				? 'BOOST'
+				: /reserve/i.test(b)
+					? 'TO_RESERVE'
+					: 'TO_AVAILABLE',
+		)
+		const mine = ours.bonus.map((b) =>
+			b.k === 'BOOST'
+				? 'BOOST'
+				: b.from === 'RESERVE'
+					? 'TO_RESERVE'
+					: 'TO_AVAILABLE',
+		)
+		if (JSON.stringify(kinds) !== JSON.stringify(mine))
+			out.push(`${where}: bonuses ${mine.join(', ')}, STCC ${kinds.join(', ')}`)
+	}
 }
 
 /** The issues found (empty = in step). `defs` + `stcc` link each of our
@@ -140,6 +187,7 @@ export function crosscheckBots(
 			checkRow(`${bot.deck} ${suit}`, row.text, ours.noDo, out)
 			checkRow(`${bot.deck} ${suit} (DO)`, row.do_text, ours.do, out)
 		}
+		checkCampaign(bot, s, out)
 	}
 	// crews we have decks for whose STCC Bot has no mechanics yet
 	for (const s of stccBots.values()) {

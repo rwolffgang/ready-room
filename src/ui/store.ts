@@ -743,6 +743,8 @@ export interface GameStore {
 	online: OnlineState | null
 	/** The Shorthand guide's open section, or null (src/ui/guide). */
 	guide: GuideSection | null
+	/** the Five-Year Mission whose logbook is open, between its games */
+	campaignOpen: string | null
 	/** Phase B: when off (default), cards show their printed card art; when
 	 *  on, they render the full text card (name/traits/ops). In-memory only —
 	 *  a deliberate preference, not part of a save. */
@@ -750,8 +752,13 @@ export interface GameStore {
 	// actions
 	loadCatalog: () => void
 	newGame: () => void
-	/** `opponents`: the house-AI seats (absent = hot-seat). */
-	startGame: (config: SetupConfig, opponents?: Opponents) => void
+	/** `opponents`: the house-AI seats (absent = hot-seat); `campaignId`: the
+	 *  Five-Year Mission the game belongs to. */
+	startGame: (
+		config: SetupConfig,
+		opponents?: Opponents,
+		opts?: { campaignId?: string | undefined },
+	) => void
 	resumeGame: (session: Session) => void
 	dispatch: (intent: Intent) => void
 	settle: (selection: unknown) => void
@@ -787,6 +794,7 @@ export interface GameStore {
 	clearWarning: () => void
 	openGuide: (section?: GuideSection) => void
 	closeGuide: () => void
+	openCampaign: (id: string | null) => void
 	// online play (src/ui/online/controller.ts)
 	openOnline: (creds: SeatCredentials) => void
 	closeOnline: () => void
@@ -947,6 +955,7 @@ export const useGameStore = create<GameStore>((set) => ({
 	showCardDetails: false,
 	online: null,
 	guide: null,
+	campaignOpen: null,
 
 	loadCatalog: () => {
 		if (useGameStore.getState().catalog !== null) return
@@ -991,7 +1000,7 @@ export const useGameStore = create<GameStore>((set) => ({
 		})
 	},
 
-	startGame: (config, opponents) => {
+	startGame: (config, opponents, opts) => {
 		cancelPendingDetail()
 		cancelBot()
 		onlineController.close()
@@ -1001,7 +1010,10 @@ export const useGameStore = create<GameStore>((set) => ({
 			if (catalog === null) {
 				catalog = loadBrowserCatalog()
 			}
-			const session = createSession(config, catalog, { opponents })
+			const session = createSession(config, catalog, {
+				opponents,
+				campaignId: opts?.campaignId,
+			})
 			adapter?.dispose()
 			adapter = makeAdapter(session, catalog)
 			deciders = []
@@ -1336,6 +1348,7 @@ export const useGameStore = create<GameStore>((set) => ({
 		set({ guide: section })
 	},
 	closeGuide: () => set({ guide: null }),
+	openCampaign: (id) => set({ campaignOpen: id }),
 
 	openOnline: (creds) => {
 		cancelPendingDetail()
