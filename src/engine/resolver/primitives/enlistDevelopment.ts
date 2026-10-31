@@ -1,6 +1,6 @@
 import type { Effect } from '../nodes'
 import type { Primitive } from './index'
-import { pickCards, answered, answerSingle, moveCard } from '../runtime'
+import { pickCards, moveCard } from '../runtime'
 import { evalAmount, resolveQuery } from '../../queries/resolveQuery'
 import { canPayAll } from './index'
 import { cardDef } from '../../cards'
@@ -19,15 +19,8 @@ export const enlistDevelopment: Primitive<
 		return legalCandidates(state, node, ctx).length > 0
 	},
 	execute(state, node, ctx, _frame) {
-		if (answered(ctx, 'enlist.dev')) {
-			const iid = answerSingle(ctx, 'enlist.dev')
-			return moveCard(
-				state,
-				iid,
-				{ k: 'DRAW', seat: ctx.actor },
-				{ toTop: true },
-			)
-		}
+		// A picked Development (several candidates) resumes here too: pickCards
+		// returns the answer, and it pays exactly like an auto-picked one.
 		const cands = legalCandidates(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'enlist.dev', {
 			prompt: 'Enlist a Development',
