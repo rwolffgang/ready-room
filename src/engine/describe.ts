@@ -1179,6 +1179,10 @@ function render(node: Effect): string {
 			break
 		case 'BOT_TAKE_CONTROL':
 			return 'Take control of the neutral LOCATION with most Bot tokens (minimum 1).'
+		case 'BOT_REMOVE_AWAY_TEAM':
+			return node.count === 1
+				? 'Remove an Away Team.'
+				: `Remove ${node.count} Away Teams.`
 	}
 }
 

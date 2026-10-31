@@ -1,0 +1,5057 @@
+[
+	{
+		"deck": "PIC",
+		"traits": [
+			{
+				"match": ["SYNTHETIC", "ANDROID"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			{
+				"match": ["KLINGON"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "ATTACK",
+								"body": {
+									"k": "FORCE",
+									"body": {
+										"k": "REMOVE_AWAY_TEAM",
+										"count": 1,
+										"target": {
+											"zones": ["LOCATIONS"],
+											"filter": {
+												"suits": ["LOCATION"]
+											}
+										},
+										"whose": "SELF"
+									}
+								}
+							},
+							"otherwise": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "GAIN_RESOURCE",
+										"res": "GLO",
+										"amount": 1
+									},
+									{
+										"k": "BOT_ACQUIRE",
+										"mode": "TAKE",
+										"from": "INCIDENT"
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"match": ["ALIEN"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "SPECIALTY_AT_LEAST",
+								"specialty": "INFLUENCE",
+								"value": 5
+							},
+							"then": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": "RESEARCH",
+										"amount": 1
+									},
+									{
+										"k": "BOT_ACQUIRE",
+										"mode": "GAIN",
+										"pref": [
+											[
+												{
+													"suits": ["CARGO"]
+												}
+											]
+										]
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			{
+				"match": ["DOCTOR"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "RETURN_INCIDENT",
+								"target": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["INCIDENT"]
+									}
+								}
+							},
+							"otherwise": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "GAIN_RESOURCE",
+										"res": "GLO",
+										"amount": 2
+									},
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": "RESEARCH",
+										"amount": 1
+									}
+								]
+							}
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			{
+				"match": ["ATTACK"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "COST_PUT",
+								"filter": {
+									"suits": ["SHIP"]
+								},
+								"count": 1,
+								"from": {
+									"k": "DISCARD",
+									"seat": 0
+								},
+								"to": {
+									"k": "DRAW",
+									"seat": 0
+								}
+							},
+							"otherwise": {
+								"k": "ADVANCE_SPECIALTY",
+								"specialty": "INFLUENCE",
+								"amount": 1
+							}
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				}
+			}
+		],
+		"suits": {
+			"INCIDENT": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 1
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"SHIP": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "EXPLORE"
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["PERSON"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "BOT_SEND_AWAY_TEAM",
+								"count": 1
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "EXPLORE"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				}
+			},
+			"ALLY": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": {
+								"k": "COUNT",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["PERSON"]
+									}
+								}
+							}
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": {
+								"k": "COUNT",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								}
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["KLINGON"]
+									}
+								],
+								[
+									{
+										"suits": ["PERSON"]
+									},
+									{
+										"suits": ["SHIP"]
+									},
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"CARGO": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 2
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							],
+							"bind": "gained"
+						},
+						{
+							"k": "BOT_DEPLOY",
+							"target": {
+								"bound": "gained"
+							},
+							"then": "EXPLORE"
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			"PERSON": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["RESEARCH", "INFLUENCE"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["RESEARCH", "INFLUENCE"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				}
+			},
+			"DIRECTIVE": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "TRY",
+							"body": {
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"traits": ["KLINGON"]
+										}
+									]
+								]
+							},
+							"otherwise": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "BOT_ACQUIRE",
+										"mode": "GAIN",
+										"pref": [
+											[
+												{
+													"suits": ["SHIP"]
+												},
+												{
+													"suits": ["ALLY"]
+												}
+											]
+										]
+									},
+									{
+										"k": "BOT_ACQUIRE",
+										"mode": "TAKE",
+										"from": "INCIDENT"
+									}
+								]
+							}
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["RESEARCH", "INFLUENCE"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				},
+				"do": {
+					"k": "TRY",
+					"body": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "LOCATION_AREA",
+											"seat": 0
+										}
+									]
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 2
+							},
+							{
+								"k": "BOT_ACQUIRE",
+								"mode": "TAKE",
+								"from": "ENCOUNTER"
+							},
+							{
+								"k": "LOG",
+								"target": "THIS"
+							}
+						]
+					},
+					"otherwise": {
+						"k": "BOT_ACQUIRE",
+						"mode": "GAIN",
+						"pref": [
+							[
+								{
+									"focus": ["RESEARCH"]
+								}
+							],
+							[
+								{
+									"traits": ["ALIEN"]
+								}
+							],
+							[
+								{
+									"suits": ["CARGO"]
+								},
+								{
+									"suits": ["ALLY"]
+								}
+							]
+						]
+					},
+					"test": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "LOCATION_AREA",
+											"seat": 0
+										}
+									]
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 2
+							}
+						]
+					}
+				}
+			},
+			"ENCOUNTER": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 2
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"pref": [
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "HIGHER",
+								"of": ["RESEARCH", "INFLUENCE"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"pref": [
+								[
+									{
+										"traits": ["KLINGON"]
+									}
+								],
+								[
+									{
+										"suits": ["ALLY"]
+									}
+								],
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"LOCATION": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 1
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	{
+		"deck": "SHR",
+		"traits": [
+			{
+				"match": ["WEAPON"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_JUNK"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "ATTACK",
+							"body": {
+								"k": "FORCE",
+								"body": {
+									"k": "CHOOSE_ONE",
+									"options": [
+										{
+											"label": "you take an INCIDENT",
+											"body": {
+												"k": "TAKE",
+												"deck": "INCIDENT",
+												"count": 1
+											}
+										},
+										{
+											"label": "you remove an Away Team",
+											"body": {
+												"k": "REMOVE_AWAY_TEAM",
+												"count": 1,
+												"target": {
+													"zones": ["LOCATIONS"],
+													"filter": {
+														"suits": ["LOCATION"]
+													}
+												},
+												"whose": "SELF"
+											}
+										}
+									]
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"match": ["ATTACK"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "ATTACK",
+							"body": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "FORCE",
+										"body": {
+											"k": "DISCARD",
+											"count": 1,
+											"from": "DECK_TOP",
+											"bind": "milled"
+										}
+									},
+									{
+										"k": "IF",
+										"cond": {
+											"k": "BOUND_IS",
+											"bind": "milled",
+											"filter": {
+												"suits": ["PERSON"]
+											}
+										},
+										"then": {
+											"k": "SEQ",
+											"steps": [
+												{
+													"k": "FORCE",
+													"body": {
+														"k": "TAKE",
+														"deck": "INCIDENT",
+														"count": 1
+													}
+												},
+												{
+													"k": "BOT_ACQUIRE",
+													"mode": "TAKE",
+													"from": "INCIDENT"
+												}
+											]
+										},
+										"else": {
+											"k": "ADVANCE_SPECIALTY",
+											"specialty": "MILITARY",
+											"amount": 1
+										}
+									}
+								]
+							}
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			{
+				"match": ["BUSINESS"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["WEAPON"]
+									}
+								],
+								[
+									{
+										"suits": ["CARGO"]
+									},
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_RESOLVE",
+							"from": "DECK_TOP"
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			{
+				"match": ["AMBASSADOR"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 2
+						},
+						{
+							"k": "FORCE",
+							"body": {
+								"k": "MAY",
+								"body": {
+									"k": "RETURN_INCIDENT",
+									"target": {
+										"zones": [
+											{
+												"k": "HAND",
+												"seat": 0
+											},
+											{
+												"k": "DISCARD",
+												"seat": 0
+											}
+										],
+										"filter": {
+											"suits": ["INCIDENT"]
+										}
+									}
+								}
+							}
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "STAGING",
+											"seat": 0
+										}
+									],
+									"thisCard": true,
+									"filter": {
+										"suits": ["PERSON"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "BOT_PROMOTE",
+								"target": "THIS"
+							},
+							"else": {
+								"k": "LOG",
+								"target": "THIS"
+							}
+						}
+					]
+				}
+			}
+		],
+		"suits": {
+			"INCIDENT": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 1
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"SHIP": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "EXPLORE"
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["PERSON"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "BOT_SEND_AWAY_TEAM",
+								"count": 1
+							}
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["CARGO"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "ADVANCE_SPECIALTY",
+								"specialty": "INFLUENCE",
+								"amount": 1
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "ENGAGE"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						}
+					]
+				}
+			},
+			"ALLY": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": {
+								"k": "COUNT",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["PERSON"]
+									}
+								}
+							}
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": {
+								"k": "COUNT",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								}
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["BUSINESS"]
+									}
+								],
+								[
+									{
+										"suits": ["PERSON"]
+									},
+									{
+										"suits": ["SHIP"]
+									},
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"traits": ["ATTACK"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": "MILITARY",
+										"amount": 1
+									},
+									{
+										"k": "GAIN_RESOURCE",
+										"res": "GLO",
+										"amount": 1
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"CARGO": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 2
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["BUSINESS"]
+									}
+								],
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"PERSON": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["INFLUENCE", "MILITARY"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"pref": [
+								[
+									{
+										"suits": ["SHIP"]
+									},
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						}
+					]
+				}
+			},
+			"DIRECTIVE": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["BUSINESS"]
+									}
+								],
+								[
+									{
+										"suits": ["CARGO"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "SPECIALTY_AT_LEAST",
+								"specialty": "INFLUENCE",
+								"value": 5
+							},
+							"then": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "GAIN_RESOURCE",
+										"res": "GLO",
+										"amount": 1
+									},
+									{
+										"k": "BOT_ACQUIRE",
+										"mode": "TAKE",
+										"from": "INCIDENT"
+									}
+								]
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "TRY",
+					"body": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "LOCATION_AREA",
+											"seat": 0
+										}
+									]
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 2
+							},
+							{
+								"k": "BOT_ACQUIRE",
+								"mode": "TAKE",
+								"from": "ENCOUNTER"
+							},
+							{
+								"k": "LOG",
+								"target": "THIS"
+							}
+						]
+					},
+					"otherwise": {
+						"k": "BOT_ACQUIRE",
+						"mode": "GAIN",
+						"pref": [
+							[
+								{
+									"suits": ["CARGO"]
+								},
+								{
+									"suits": ["SHIP"]
+								}
+							]
+						]
+					},
+					"test": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "LOCATION_AREA",
+											"seat": 0
+										}
+									]
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 2
+							}
+						]
+					}
+				}
+			},
+			"ENCOUNTER": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["CARGO"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"pref": [
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								],
+								[
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"LOCATION": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 1
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	{
+		"deck": "KOL",
+		"traits": [
+			{
+				"match": ["WEAPON"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_JUNK"
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "AND",
+								"terms": [
+									{
+										"k": "SPECIALTY_AT_LEAST",
+										"specialty": "MILITARY",
+										"value": 9
+									},
+									{
+										"k": "COUNT_AT_LEAST",
+										"query": {
+											"zones": [
+												{
+													"k": "DUTY_OFFICER",
+													"seat": 0
+												}
+											],
+											"filter": {
+												"traits": ["KLINGON"]
+											}
+										},
+										"value": 1
+									}
+								]
+							},
+							"then": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "DISMISS",
+										"target": {
+											"zones": [
+												{
+													"k": "DUTY_OFFICER",
+													"seat": 0
+												}
+											]
+										}
+									},
+									{
+										"k": "GAIN_RESOURCE",
+										"res": "GLO",
+										"amount": 4
+									},
+									{
+										"k": "LOG",
+										"target": "THIS"
+									}
+								]
+							},
+							"else": {
+								"k": "TRY",
+								"body": {
+									"k": "ATTACK",
+									"body": {
+										"k": "FORCE",
+										"body": {
+											"k": "REMOVE_AWAY_TEAM",
+											"count": 1,
+											"target": {
+												"zones": ["LOCATIONS"],
+												"filter": {
+													"suits": ["LOCATION"]
+												}
+											},
+											"whose": "SELF"
+										}
+									}
+								},
+								"otherwise": {
+									"k": "ADVANCE_SPECIALTY",
+									"specialty": "MILITARY",
+									"amount": 1
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"match": ["ATTACK"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_JUNK"
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "COST_PUT",
+								"filter": {
+									"suits": ["SHIP"]
+								},
+								"count": 1,
+								"from": {
+									"k": "DISCARD",
+									"seat": 0
+								},
+								"to": {
+									"k": "DRAW",
+									"seat": 0
+								}
+							},
+							"otherwise": {
+								"k": "TRY",
+								"body": {
+									"k": "ATTACK",
+									"body": {
+										"k": "FORCE",
+										"body": {
+											"k": "DISMISS",
+											"target": {
+												"zones": [
+													{
+														"k": "FLEET",
+														"seat": 0
+													}
+												],
+												"filter": {
+													"suits": ["SHIP"]
+												}
+											}
+										}
+									}
+								},
+								"otherwise": {
+									"k": "GAIN_RESOURCE",
+									"res": "GLO",
+									"amount": 1
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"match": ["ROMULAN"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "SUPPLEMENT",
+							"op": "TAKE",
+							"count": 1
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			{
+				"match": ["SCIENTIST"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 1
+						},
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						}
+					]
+				}
+			}
+		],
+		"suits": {
+			"INCIDENT": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"focus": ["MILITARY"]
+									}
+								],
+								[
+									{
+										"suits": ["PERSON"]
+									},
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "FORCE",
+							"body": {
+								"k": "MAY",
+								"body": {
+									"k": "DRAW",
+									"count": 1
+								}
+							}
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"traits": ["ROMULAN"]
+										}
+									]
+								]
+							},
+							"otherwise": {
+								"k": "BOT_ACQUIRE",
+								"mode": "TAKE",
+								"pref": [
+									[
+										{
+											"focus": ["MILITARY"]
+										}
+									],
+									[
+										{
+											"suits": ["CARGO"]
+										}
+									]
+								]
+							}
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"SHIP": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "EXPLORE"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "ENGAGE"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				}
+			},
+			"ALLY": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "TRY",
+							"body": {
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"traits": ["ROMULAN"]
+										}
+									]
+								]
+							},
+							"otherwise": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "BOT_ACQUIRE",
+										"mode": "TAKE",
+										"pref": [
+											[
+												{
+													"suits": ["SHIP"]
+												},
+												{
+													"suits": ["PERSON"]
+												}
+											]
+										]
+									},
+									{
+										"k": "ATTACK",
+										"body": {
+											"k": "FORCE",
+											"body": {
+												"k": "TAKE",
+												"deck": "INCIDENT",
+												"count": 1
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "TRY",
+							"body": {
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"traits": ["ROMULAN"]
+										}
+									]
+								]
+							},
+							"otherwise": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "BOT_ACQUIRE",
+										"mode": "TAKE",
+										"from": "INCIDENT"
+									},
+									{
+										"k": "GAIN_RESOURCE",
+										"res": "GLO",
+										"amount": 1
+									},
+									{
+										"k": "ATTACK",
+										"body": {
+											"k": "FORCE",
+											"body": {
+												"k": "TAKE",
+												"deck": "INCIDENT",
+												"count": 1,
+												"to": "DISCARD"
+											}
+										}
+									},
+									{
+										"k": "DISMISS",
+										"target": {
+											"zones": [
+												{
+													"k": "DUTY_OFFICER",
+													"seat": 0
+												}
+											]
+										}
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"CARGO": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									},
+									{
+										"suits": ["SHIP"]
+									},
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "SUPPLEMENT",
+							"op": "DISCARD",
+							"count": 1
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			"PERSON": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["INFLUENCE", "MILITARY"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["WEAPON"]
+									}
+								],
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["CARGO"]
+									}
+								]
+							]
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "COST_PUT",
+								"filter": {
+									"suits": ["SHIP"]
+								},
+								"count": 1,
+								"from": {
+									"k": "DISCARD",
+									"seat": 0
+								},
+								"to": {
+									"k": "DRAW",
+									"seat": 0
+								}
+							},
+							"otherwise": {
+								"k": "BOT_ACQUIRE",
+								"mode": "TAKE",
+								"pref": [
+									[
+										{
+											"suits": ["SHIP"]
+										}
+									]
+								]
+							}
+						}
+					]
+				}
+			},
+			"DIRECTIVE": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"from": "INCIDENT"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				},
+				"do": {
+					"k": "TRY",
+					"body": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "FLEET",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 1
+							},
+							{
+								"k": "BOT_ACQUIRE",
+								"mode": "TAKE",
+								"from": "ENCOUNTER"
+							},
+							{
+								"k": "LOG",
+								"target": "THIS"
+							},
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "DUTY_OFFICER",
+											"seat": 0
+										}
+									]
+								}
+							}
+						]
+					},
+					"otherwise": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "GAIN_RESOURCE",
+								"res": "GLO",
+								"amount": 1
+							},
+							{
+								"k": "ADVANCE_SPECIALTY",
+								"specialty": "MILITARY",
+								"amount": 1
+							},
+							{
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"suits": ["PERSON"]
+										}
+									]
+								]
+							}
+						]
+					},
+					"test": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "FLEET",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 1
+							}
+						]
+					}
+				}
+			},
+			"ENCOUNTER": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									},
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "HIGHER",
+								"of": ["INFLUENCE", "MILITARY"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							],
+							"bind": "gained"
+						},
+						{
+							"k": "BOT_DEPLOY",
+							"target": {
+								"bound": "gained"
+							},
+							"then": "ENGAGE"
+						}
+					]
+				}
+			},
+			"LOCATION": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "GAIN_RESOURCE",
+								"res": "GLO",
+								"amount": 1
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "DISMISS",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						},
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 1
+						},
+						{
+							"k": "BOT_RESOLVE",
+							"from": "DECK_TOP"
+						}
+					]
+				}
+			}
+		}
+	},
+	{
+		"deck": "SEL",
+		"traits": [
+			{
+				"match": ["SHADY"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["KLINGON"]
+									}
+								],
+								[
+									{
+										"traits": ["SHADY"]
+									}
+								]
+							]
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "SPECIALTY_AT_LEAST",
+								"specialty": "MILITARY",
+								"value": 8
+							},
+							"then": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "BOT_TAKE_CONTROL"
+									},
+									{
+										"k": "LOG",
+										"target": "THIS"
+									}
+								]
+							},
+							"else": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": "MILITARY",
+										"amount": 1
+									},
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": "INFLUENCE",
+										"amount": 1
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"match": ["CLOAK"],
+				"effect": {
+					"k": "IF",
+					"cond": {
+						"k": "COUNT_AT_LEAST",
+						"query": {
+							"zones": [
+								{
+									"k": "STAGING",
+									"seat": 0
+								}
+							],
+							"thisCard": true,
+							"filter": {
+								"suits": ["SHIP"]
+							}
+						},
+						"value": 1
+					},
+					"then": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "BOT_SEND_AWAY_TEAM",
+								"count": 1,
+								"ignoreShips": true
+							},
+							{
+								"k": "BOT_DEPLOY",
+								"target": "THIS",
+								"then": "ENGAGE"
+							}
+						]
+					},
+					"else": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": "THIS"
+							},
+							{
+								"k": "GAIN_RESOURCE",
+								"res": "GLO",
+								"amount": 3
+							}
+						]
+					}
+				}
+			},
+			{
+				"match": ["VULCAN"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["RESEARCH", "INFLUENCE"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["KLINGON"]
+									}
+								],
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			{
+				"match": ["KLINGON"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["INFLUENCE", "MILITARY"]
+							},
+							"amount": 2
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "STAGING",
+											"seat": 0
+										}
+									],
+									"thisCard": true,
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "BOT_DEPLOY",
+								"target": "THIS",
+								"then": "EXPLORE"
+							},
+							"else": {
+								"k": "ATTACK",
+								"body": {
+									"k": "FORCE",
+									"body": {
+										"k": "CHOOSE_ONE",
+										"options": [
+											{
+												"label": "you dismiss a SHIP",
+												"body": {
+													"k": "DISMISS",
+													"target": {
+														"zones": [
+															{
+																"k": "FLEET",
+																"seat": 0
+															}
+														],
+														"filter": {
+															"suits": ["SHIP"]
+														}
+													}
+												}
+											},
+											{
+												"label": "the Bot resolves the top card of its deck",
+												"body": {
+													"k": "OPPONENT",
+													"body": {
+														"k": "BOT_RESOLVE",
+														"from": "DECK_TOP"
+													}
+												}
+											}
+										]
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"match": ["ATTACK"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_JUNK"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "ATTACK",
+							"body": {
+								"k": "FORCE",
+								"body": {
+									"k": "CHOOSE_ONE",
+									"options": [
+										{
+											"label": "you take an INCIDENT",
+											"body": {
+												"k": "TAKE",
+												"deck": "INCIDENT",
+												"count": 1
+											}
+										},
+										{
+											"label": "you dismiss your Duty Officer",
+											"body": {
+												"k": "DISMISS",
+												"target": {
+													"zones": [
+														{
+															"k": "DUTY_OFFICER",
+															"seat": 0
+														}
+													]
+												}
+											}
+										}
+									]
+								}
+							}
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "SPECIALTY_AT_LEAST",
+								"specialty": "MILITARY",
+								"value": 8
+							},
+							"then": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "LOG",
+										"target": "THIS"
+									},
+									{
+										"k": "ATTACK",
+										"body": {
+											"k": "FORCE",
+											"body": {
+												"k": "CHOOSE_ONE",
+												"options": [
+													{
+														"label": "you log a controlled LOCATION",
+														"body": {
+															"k": "LOG",
+															"target": {
+																"zones": [
+																	{
+																		"k": "LOCATION_AREA",
+																		"seat": 0
+																	}
+																]
+															}
+														}
+													},
+													{
+														"label": "you discard a card",
+														"body": {
+															"k": "DISCARD",
+															"count": 1,
+															"from": "HAND"
+														}
+													}
+												]
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"suits": {
+			"INCIDENT": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["RESEARCH", "INFLUENCE", "MILITARY"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									},
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "FORCE",
+							"body": {
+								"k": "MAY",
+								"body": {
+									"k": "DRAW",
+									"count": 1
+								}
+							}
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"SHIP": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "EXPLORE"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "ENGAGE"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				}
+			},
+			"ALLY": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["KLINGON"]
+									}
+								],
+								[
+									{
+										"traits": ["SHADY"]
+									}
+								],
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1,
+							"ignoreShips": true
+						},
+						{
+							"k": "FORCE",
+							"body": {
+								"k": "MAY",
+								"body": {
+									"k": "DRAW",
+									"count": 1
+								}
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"from": "INCIDENT"
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["RESEARCH", "INFLUENCE", "MILITARY"]
+							},
+							"amount": 2
+						},
+						{
+							"k": "ATTACK",
+							"body": {
+								"k": "FORCE",
+								"body": {
+									"k": "TAKE",
+									"deck": "INCIDENT",
+									"count": 1
+								}
+							}
+						},
+						{
+							"k": "DISMISS",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"CARGO": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["ALLY"]
+									}
+								],
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "SPECIALTY_AT_LEAST",
+								"specialty": "MILITARY",
+								"value": 7
+							},
+							"then": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": "RESEARCH",
+										"amount": 1
+									},
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": "INFLUENCE",
+										"amount": 1
+									}
+								]
+							},
+							"else": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "GAIN_RESOURCE",
+										"res": "GLO",
+										"amount": 2
+									},
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": "MILITARY",
+										"amount": 1
+									}
+								]
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_RESOLVE",
+							"from": "SUPPLEMENT_TOP"
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"PERSON": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"traits": ["VULCAN"]
+										}
+									],
+									[
+										{
+											"traits": ["KLINGON"]
+										}
+									]
+								]
+							},
+							"otherwise": {
+								"k": "TRY",
+								"body": {
+									"k": "SEQ",
+									"steps": [
+										{
+											"k": "DISMISS",
+											"target": {
+												"zones": [
+													{
+														"k": "FLEET",
+														"seat": 0
+													}
+												],
+												"filter": {
+													"suits": ["SHIP"]
+												}
+											}
+										},
+										{
+											"k": "BOT_ACQUIRE",
+											"mode": "GAIN",
+											"pref": [
+												[
+													{
+														"suits": ["PERSON"]
+													},
+													{
+														"suits": ["SHIP"]
+													}
+												]
+											]
+										}
+									]
+								},
+								"otherwise": {
+									"k": "BOT_ACQUIRE",
+									"mode": "GAIN",
+									"pref": [
+										[
+											{
+												"suits": ["CARGO"]
+											}
+										]
+									]
+								}
+							}
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"traits": ["SHADY"]
+										}
+									],
+									[
+										{
+											"traits": ["VULCAN"]
+										}
+									]
+								]
+							},
+							"otherwise": {
+								"k": "ADVANCE_SPECIALTY",
+								"specialty": "MILITARY",
+								"amount": 2
+							}
+						}
+					]
+				}
+			},
+			"DIRECTIVE": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["RESEARCH", "INFLUENCE", "MILITARY"]
+							},
+							"amount": 2
+						}
+					]
+				},
+				"do": {
+					"k": "TRY",
+					"body": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 2
+							},
+							{
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"from": "ENCOUNTER"
+							},
+							{
+								"k": "LOG",
+								"target": "THIS"
+							},
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "DUTY_OFFICER",
+											"seat": 0
+										}
+									]
+								}
+							}
+						]
+					},
+					"otherwise": {
+						"k": "BOT_ACQUIRE",
+						"mode": "GAIN",
+						"pref": [
+							[
+								{
+									"traits": ["SHADY"]
+								}
+							],
+							[
+								{
+									"traits": ["ATTACK"]
+								}
+							],
+							[
+								{
+									"suits": ["CARGO"]
+								},
+								{
+									"suits": ["SHIP"]
+								}
+							]
+						]
+					},
+					"test": {
+						"k": "BOT_REMOVE_AWAY_TEAM",
+						"count": 2
+					}
+				}
+			},
+			"ENCOUNTER": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_RESOLVE",
+							"from": "SUPPLEMENT_TOP"
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 2
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"LOCATION": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							],
+							"bind": "gained"
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": {
+								"bound": "gained"
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "TRY",
+					"body": {
+						"k": "BOT_ACQUIRE",
+						"mode": "GAIN",
+						"pref": [
+							[
+								{
+									"traits": ["SHADY"]
+								}
+							]
+						]
+					},
+					"otherwise": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "DISMISS",
+								"target": {
+									"zones": [
+										{
+											"k": "DUTY_OFFICER",
+											"seat": 0
+										}
+									]
+								}
+							},
+							{
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"suits": ["PERSON"]
+										},
+										{
+											"suits": ["CARGO"]
+										},
+										{
+											"suits": ["ALLY"]
+										}
+									]
+								]
+							},
+							{
+								"k": "ATTACK",
+								"body": {
+									"k": "FORCE",
+									"body": {
+										"k": "DISCARD",
+										"count": 1,
+										"from": "HAND"
+									}
+								}
+							}
+						]
+					}
+				}
+			}
+		}
+	},
+	{
+		"deck": "SIS",
+		"traits": [
+			{
+				"match": ["TRANSCENDENT"],
+				"effect": {
+					"k": "TRY",
+					"body": {
+						"k": "BOT_ACQUIRE",
+						"mode": "GAIN",
+						"pref": [
+							[
+								{
+									"traits": ["BAJORAN"]
+								}
+							],
+							[
+								{
+									"traits": ["DOMINION"]
+								}
+							],
+							[
+								{
+									"traits": ["CHANGELING"]
+								}
+							]
+						]
+					},
+					"otherwise": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "ADVANCE_SPECIALTY",
+								"specialty": "MILITARY",
+								"amount": 2
+							},
+							{
+								"k": "GAIN_RESOURCE",
+								"res": "GLO",
+								"amount": 1
+							}
+						]
+					}
+				}
+			},
+			{
+				"match": ["STARBASE"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "STAGING",
+											"seat": 0
+										}
+									],
+									"thisCard": true,
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "BOT_DEPLOY",
+								"target": "THIS"
+							},
+							"else": {
+								"k": "GAIN_RESOURCE",
+								"res": "GLO",
+								"amount": 1
+							}
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "BOT_RESOLVE",
+								"from": "DISCARD",
+								"filter": {
+									"suits": ["PERSON"]
+								}
+							},
+							"otherwise": {
+								"k": "ADVANCE_SPECIALTY",
+								"specialty": "INFLUENCE",
+								"amount": 2
+							}
+						}
+					]
+				}
+			},
+			{
+				"match": ["BAJORAN"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"from": "INCIDENT"
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["ALLY"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "BOT_SEND_AWAY_TEAM",
+								"count": 2
+							},
+							"else": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "ATTACK",
+										"body": {
+											"k": "FORCE",
+											"body": {
+												"k": "DISMISS",
+												"target": {
+													"zones": [
+														{
+															"k": "DUTY_OFFICER",
+															"seat": 0
+														}
+													]
+												}
+											}
+										}
+									},
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": "MILITARY",
+										"amount": 2
+									}
+								]
+							}
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			{
+				"match": ["CHANGELING", "DOMINION"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_RESOLVE",
+							"from": "DECK_TOP"
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			{
+				"match": ["ATTACK"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1,
+							"prefer": ["STARBASE", "STARFLEET"]
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "STAGING",
+											"seat": 0
+										}
+									],
+									"thisCard": true,
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "ATTACK",
+										"body": {
+											"k": "FORCE",
+											"body": {
+												"k": "DISCARD",
+												"count": 1,
+												"from": "HAND"
+											}
+										}
+									},
+									{
+										"k": "BOT_DEPLOY",
+										"target": "THIS",
+										"then": "ENGAGE"
+									}
+								]
+							},
+							"else": {
+								"k": "ADVANCE_SPECIALTY",
+								"specialty": "MILITARY",
+								"amount": 2
+							}
+						}
+					]
+				}
+			}
+		],
+		"suits": {
+			"INCIDENT": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"focus": ["MILITARY"]
+									}
+								],
+								[
+									{
+										"focus": ["INFLUENCE"]
+									}
+								],
+								[
+									{
+										"suits": ["PERSON"]
+									},
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"pref": [
+								[
+									{
+										"focus": ["MILITARY"]
+									}
+								],
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								],
+								[
+									{
+										"suits": ["CARGO"]
+									}
+								]
+							]
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"SHIP": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "EXPLORE"
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["PERSON"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "BOT_SEND_AWAY_TEAM",
+								"count": 1,
+								"prefer": ["STARBASE", "STARFLEET"]
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "TRY",
+							"body": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "LOG",
+										"target": {
+											"zones": ["IN_PLAY"],
+											"filter": {
+												"traits": ["STARBASE"]
+											}
+										}
+									},
+									{
+										"k": "BOT_RESOLVE",
+										"from": "SUPPLEMENT_TOP"
+									}
+								]
+							}
+						},
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "EXPLORE"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				}
+			},
+			"ALLY": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": {
+								"k": "COUNT",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["PERSON"]
+									}
+								}
+							}
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": {
+								"k": "COUNT",
+								"query": {
+									"zones": [
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								}
+							},
+							"prefer": ["STARBASE", "STARFLEET"]
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["INFLUENCE", "MILITARY"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["CARGO"]
+									}
+								],
+								[
+									{
+										"suits": ["SHIP"]
+									},
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"CARGO": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DISCARD",
+										"seat": 0
+									}
+								],
+								"filter": {
+									"suits": ["PERSON"]
+								}
+							}
+						},
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"focus": ["INFLUENCE"]
+									}
+								],
+								[
+									{
+										"focus": ["MILITARY"]
+									}
+								],
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			"PERSON": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["INFLUENCE", "MILITARY"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["SHIP"]
+									},
+									{
+										"focus": ["INFLUENCE"]
+									}
+								]
+							]
+						}
+					]
+				}
+			},
+			"DIRECTIVE": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "LOG",
+										"target": {
+											"zones": [
+												{
+													"k": "DISCARD",
+													"seat": 0
+												}
+											],
+											"filter": {
+												"suits": ["PERSON"]
+											}
+										}
+									},
+									{
+										"k": "BOT_SEND_AWAY_TEAM",
+										"count": 1
+									}
+								]
+							},
+							"otherwise": {
+								"k": "SEQ",
+								"steps": [
+									{
+										"k": "ADVANCE_SPECIALTY",
+										"specialty": {
+											"pick": "LOWER",
+											"of": ["INFLUENCE", "MILITARY"]
+										},
+										"amount": 1
+									},
+									{
+										"k": "BOT_ACQUIRE",
+										"mode": "GAIN",
+										"pref": [
+											[
+												{
+													"suits": ["PERSON"]
+												}
+											]
+										]
+									}
+								]
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "TRY",
+					"body": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "LOCATION_AREA",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"not": {
+											"traits": ["STARBASE"]
+										}
+									}
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 2
+							},
+							{
+								"k": "BOT_ACQUIRE",
+								"mode": "TAKE",
+								"from": "ENCOUNTER"
+							},
+							{
+								"k": "LOG",
+								"target": "THIS"
+							}
+						]
+					},
+					"otherwise": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "BOT_SEND_AWAY_TEAM",
+								"count": 1
+							},
+							{
+								"k": "ADVANCE_SPECIALTY",
+								"specialty": "INFLUENCE",
+								"amount": 1
+							},
+							{
+								"k": "DISMISS",
+								"target": {
+									"zones": [
+										{
+											"k": "DUTY_OFFICER",
+											"seat": 0
+										}
+									]
+								}
+							}
+						]
+					},
+					"test": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "LOCATION_AREA",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"not": {
+											"traits": ["STARBASE"]
+										}
+									}
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 2
+							}
+						]
+					}
+				}
+			},
+			"ENCOUNTER": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"pref": [
+								[
+									{
+										"focus": ["INFLUENCE"]
+									}
+								],
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"pref": [
+								[
+									{
+										"suits": ["SHIP"]
+									},
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						}
+					]
+				}
+			},
+			"LOCATION": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "TRY",
+							"body": {
+								"k": "COST_PUT",
+								"filter": {
+									"suits": ["SHIP"]
+								},
+								"count": 1,
+								"from": {
+									"k": "DISCARD",
+									"seat": 0
+								},
+								"to": {
+									"k": "DRAW",
+									"seat": 0
+								}
+							}
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	{
+		"deck": "BUR",
+		"traits": [
+			{
+				"match": ["CREATURE"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									},
+									{
+										"suits": ["CARGO"]
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_DEPLOY",
+							"target": "DISCARD",
+							"then": "EXPLORE"
+						}
+					]
+				}
+			},
+			{
+				"match": ["SCIENTIST"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"from": "INCIDENT"
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["ALLY"]
+									}
+								]
+							]
+						}
+					]
+				}
+			},
+			{
+				"match": ["ANOMALY"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_PROMOTE",
+							"target": "DISCARD"
+						},
+						{
+							"k": "IF",
+							"cond": {
+								"k": "COUNT_AT_LEAST",
+								"query": {
+									"zones": [
+										{
+											"k": "STAGING",
+											"seat": 0
+										}
+									],
+									"thisCard": true,
+									"filter": {
+										"suits": ["SHIP"]
+									}
+								},
+								"value": 1
+							},
+							"then": {
+								"k": "BOT_DEPLOY",
+								"target": "THIS",
+								"then": "EXPLORE"
+							},
+							"else": {
+								"k": "GAIN_RESOURCE",
+								"res": "GLO",
+								"amount": 2
+							}
+						}
+					]
+				}
+			},
+			{
+				"match": ["KELPIEN"],
+				"effect": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "TRY",
+							"body": {
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"traits": ["KELPIEN"]
+										}
+									]
+								]
+							},
+							"otherwise": {
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"most": "DIL"
+										}
+									],
+									[
+										{
+											"most": "GLO"
+										}
+									]
+								]
+							}
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				}
+			}
+		],
+		"suits": {
+			"INCIDENT": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 1
+						},
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["SCIENTIST"]
+									}
+								],
+								[
+									{
+										"traits": ["CREATURE"]
+									}
+								],
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 2
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "RETURN_INCIDENT",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"SHIP": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "ENGAGE"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_DEPLOY",
+							"target": "THIS",
+							"then": "EXPLORE"
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				}
+			},
+			"ALLY": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"from": "INCIDENT"
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 1
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 3
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				}
+			},
+			"CARGO": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"most": "DIL"
+									}
+								],
+								[
+									{
+										"most": "GLO"
+									}
+								]
+							]
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			"PERSON": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						},
+						{
+							"k": "BOT_PROMOTE",
+							"target": "THIS"
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["RESEARCH", "INFLUENCE"]
+							},
+							"amount": 1
+						},
+						{
+							"k": "BOT_SEND_AWAY_TEAM",
+							"count": 1
+						}
+					]
+				}
+			},
+			"DIRECTIVE": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 2
+						},
+						{
+							"k": "REMOVE_STARDATE_GLORY",
+							"amount": 1
+						}
+					]
+				},
+				"do": {
+					"k": "TRY",
+					"body": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "LOCATION_AREA",
+											"seat": 0
+										}
+									]
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 1
+							},
+							{
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"from": "ENCOUNTER"
+							}
+						]
+					},
+					"otherwise": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "BOT_DECK",
+								"from": "DECK",
+								"op": "DISCARD",
+								"count": 2
+							},
+							{
+								"k": "BOT_ACQUIRE",
+								"mode": "GAIN",
+								"pref": [
+									[
+										{
+											"most": "DIL"
+										}
+									],
+									[
+										{
+											"most": "GLO"
+										}
+									]
+								]
+							}
+						]
+					},
+					"test": {
+						"k": "SEQ",
+						"steps": [
+							{
+								"k": "LOG",
+								"target": {
+									"zones": [
+										{
+											"k": "LOCATION_AREA",
+											"seat": 0
+										}
+									]
+								}
+							},
+							{
+								"k": "BOT_REMOVE_AWAY_TEAM",
+								"count": 1
+							}
+						]
+					}
+				}
+			},
+			"ENCOUNTER": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 2
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "TAKE",
+							"pref": [
+								[
+									{
+										"suits": ["PERSON"]
+									}
+								]
+							]
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "INFLUENCE",
+							"amount": 1
+						},
+						{
+							"k": "BOT_ACQUIRE",
+							"mode": "GAIN",
+							"pref": [
+								[
+									{
+										"traits": ["SCIENTIST"]
+									}
+								],
+								[
+									{
+										"traits": ["ANOMALY"]
+									}
+								],
+								[
+									{
+										"suits": ["SHIP"]
+									}
+								]
+							]
+						},
+						{
+							"k": "LOG",
+							"target": "THIS"
+						}
+					]
+				}
+			},
+			"LOCATION": {
+				"noDo": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "DISCARD",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "MILITARY",
+							"amount": 1
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": {
+								"pick": "LOWER",
+								"of": ["RESEARCH", "INFLUENCE"]
+							},
+							"amount": 1
+						}
+					]
+				},
+				"do": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "BOT_DECK",
+							"from": "DECK",
+							"op": "LOG",
+							"count": 2
+						},
+						{
+							"k": "ADVANCE_SPECIALTY",
+							"specialty": "RESEARCH",
+							"amount": 1
+						},
+						{
+							"k": "DISMISS",
+							"target": {
+								"zones": [
+									{
+										"k": "DUTY_OFFICER",
+										"seat": 0
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		},
+		"special": "DILITHIUM"
+	}
+]

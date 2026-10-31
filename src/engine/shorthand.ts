@@ -947,6 +947,8 @@ export function shorthand(e: Effect): Tok[] {
 			return [word('resolve'), ...qual([word(e.from.toLowerCase().replace('_', ' '))])]
 		case 'BOT_TAKE_CONTROL':
 			return [glyph('CONTROL'), ...qual([word('most Bot tokens')])]
+		case 'BOT_REMOVE_AWAY_TEAM':
+			return [glyph('AWAY', `−${e.count}`)]
 	}
 }
 

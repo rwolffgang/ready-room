@@ -109,6 +109,7 @@ import { botDeploy } from './botDeploy'
 import { botPromote } from './botPromote'
 import { botResolve } from './botResolve'
 import { botTakeControl } from './botTakeControl'
+import { botRemoveAwayTeam } from './botRemoveAwayTeam'
 
 /** Behaviour contract for one node kind (todo/04 §2). */
 export interface Primitive<N extends Effect> {
@@ -233,6 +234,7 @@ export const PRIMITIVES: {
 	BOT_PROMOTE: botPromote,
 	BOT_RESOLVE: botResolve,
 	BOT_TAKE_CONTROL: botTakeControl,
+	BOT_REMOVE_AWAY_TEAM: botRemoveAwayTeam,
 }
 
 /** The primitive for a node, widened to the full Effect union. The mapped

@@ -484,6 +484,9 @@ export type EffectNode =
 	  }
 	// "Take control of the neutral LOCATION with most Bot tokens (minimum 1)"
 	| { k: 'BOT_TAKE_CONTROL' }
+	// "… and remove 2 AWAY TEAMs to …": the Bot's own, one at a time, each from
+	// the LOCATION where it has the fewest tokens (ruling 055)
+	| { k: 'BOT_REMOVE_AWAY_TEAM'; count: number }
 
 /** A Bot preference expression (rules/13 §13.10.1): the outer list is the
  *  ">" fallback order, each inner list a "/" set whose best card (by value)

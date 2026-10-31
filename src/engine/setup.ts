@@ -18,7 +18,7 @@
 // decks today and the real card JSON later — this file never imports
 // src/data/cards or cards/records.
 
-import type { CardDef } from '../data/schema'
+import type { BotCard, CardDef } from '../data/schema'
 import type { DeckId } from '../data/ids'
 import type { Effect } from './resolver/nodes'
 import type { GameState, MissionState, PlayerState, TrackTable } from './state'
@@ -26,6 +26,7 @@ import type { Seat, ZoneRef } from './resolver/queries'
 import { newGameState, addCard, moveCard, zoneKey, inPlayCards } from './state'
 import type { GameMode, SoloLevel } from './state'
 import { registerCards, cardDef } from './cards'
+import { registerBots } from './solo/acRegistry'
 import { shuffle, next } from './rng'
 import { effectiveHandSize } from './modifiers'
 import { toIid, type CardInstanceId } from './ids'
@@ -92,6 +93,8 @@ export interface CardCatalog {
 	defs: CardDef[]
 	stardates: StardateSpec[]
 	boards: Partial<Record<DeckId, BoardMissions>>
+	/** the solo Bots' Automated Command cards (src/data/cards/solo/bots.json) */
+	bots?: BotCard[] | undefined
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +107,7 @@ export interface CardCatalog {
  *  instance setup mints (registerCards is idempotent per id). */
 export function setup(config: SetupConfig, catalog: CardCatalog): GameState {
 	registerCards([...catalog.defs, ...catalog.stardates.map((s) => s.def)])
+	registerBots(catalog.bots ?? [])
 	const base = newGameState(config.seed, { mode: config.mode })
 	return setupGame(base, config, catalog)
 }

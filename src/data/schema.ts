@@ -956,6 +956,12 @@ export const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
 			})
 			.strict(),
 		z.object({ k: z.literal('BOT_TAKE_CONTROL') }).strict(),
+		z
+			.object({
+				k: z.literal('BOT_REMOVE_AWAY_TEAM'),
+				count: z.number().int().min(1),
+			})
+			.strict(),
 	]),
 )
 
@@ -1537,9 +1543,11 @@ export const BotCardSchema = z
 		/** the BUR Bot's Dilithium Clean-up and scoring (rules/13 §13.4,
 		 *  §13.13.3) */
 		special: z.enum(['DILITHIUM']).optional(),
+		/** the Five-Year Mission upgrades for beating / losing to this Bot */
 		campaign: z
 			.object({ win: BotRewardSchema, loss: BotRewardSchema })
-			.strict(),
+			.strict()
+			.optional(),
 	})
 	.strict()
 export type BotCard = z.infer<typeof BotCardSchema>

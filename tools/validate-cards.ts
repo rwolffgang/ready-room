@@ -114,6 +114,9 @@ async function main(): Promise<void> {
 		// Crew board JSON is not card JSON (todo/13): the boards live under
 		// cards/boards and are loaded separately by src/data/catalog.ts.
 		if (relCards.startsWith('boards/')) continue
+		// the solo Bots' Automated Command cards are not card JSON (BotArraySchema,
+		// parsed by the catalog loader)
+		if (relCards === 'solo/bots.json') continue
 		let text: string
 		try {
 			text = await readFile(file, 'utf8')

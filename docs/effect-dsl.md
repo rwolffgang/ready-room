@@ -363,6 +363,7 @@ nodes always act for the Bot and choose by its rules, never by a player's choice
 | `BOT_PROMOTE {target}` | Promotes a PERSON into the Bot's single Duty Officer slot, dismissing the previous Duty Officer. |
 | `BOT_RESOLVE {from: ROW\|DECK_TOP\|SUPPLEMENT_TOP\|DISCARD\|BOUND, filter?}` | Resolves another card through its row, then carries on. A LOCATION left in Staging joins the Control Area. |
 | `BOT_TAKE_CONTROL` | Takes control of the neutral LOCATION with the most Bot tokens (minimum 1). |
+| `BOT_REMOVE_AWAY_TEAM {count}` | The Bot removes its own Away Teams one at a time, each from where it has the fewest tokens (ruling 055). |
 
 `ADVANCE_SPECIALTY.specialty` may also be `{pick: LOWER|HIGHER, of: [...]}`: "gain 1 R / I
 (whichever is lower)". Ties go to the first listed track. Card value and every Location pick are

@@ -25,8 +25,8 @@ import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { CardCatalog } from '../engine/setup'
-import { CardArraySchema } from './schema'
-import type { CardDef } from './schema'
+import { BotArraySchema, CardArraySchema } from './schema'
+import type { BotCard, CardDef } from './schema'
 import { BoardArraySchema, addBoardSides } from './boards'
 import { stardateSpecs } from './stardate'
 
@@ -39,6 +39,8 @@ const CARDS_ROOT = resolve(
 const BOARDS_DIR = join(CARDS_ROOT, 'boards')
 /** The one Stardate deck file — parsed as CardDefs, wrapped into StardateSpecs. */
 const STARDate_FILE_SUFFIX = join('common', 'stardate.json')
+/** The solo Bots' Automated Command cards — not card JSON (BotArraySchema). */
+const BOTS_FILE_SUFFIX = join('solo', 'bots.json')
 
 /** Recursively list every `*.json` under `dir` (sorted, deterministic). */
 async function* walkJson(dir: string): AsyncGenerator<string> {
@@ -68,6 +70,7 @@ export async function loadCatalog(
 	const defs: CardDef[] = []
 	const stardates: CardCatalog['stardates'] = []
 	const boards: CardCatalog['boards'] = {}
+	const bots: BotCard[] = []
 	const errors: CatalogError[] = []
 
 	const parseCardFile = async (file: string): Promise<void> => {
@@ -128,6 +131,19 @@ export async function loadCatalog(
 				await parseStardateFile(file)
 				continue
 			}
+			if (file.endsWith(BOTS_FILE_SUFFIX)) {
+				const rel = relative(resolve(CARDS_ROOT, '..', '..'), file)
+				const parsed = BotArraySchema.safeParse(
+					JSON.parse(await readFile(file, 'utf8')),
+				)
+				if (parsed.success) bots.push(...parsed.data)
+				else
+					errors.push({
+						file: rel,
+						message: `bot schema violation: ${parsed.error.issues.length} issue(s) — ${parsed.error.issues[0]?.path.join('.') ?? ''}`,
+					})
+				continue
+			}
 			await parseCardFile(file)
 		}
 	}
@@ -164,5 +180,5 @@ export async function loadCatalog(
 			`catalog load failed (${errors.length} file(s)):\n  ${detail}`,
 		)
 	}
-	return { defs, stardates, boards }
+	return { defs, stardates, boards, bots }
 }

@@ -454,6 +454,7 @@ const samples: { [K in Effect['k']]: Effect & { k: K } } = {
 	BOT_PROMOTE: { k: 'BOT_PROMOTE', target: 'THIS' },
 	BOT_RESOLVE: { k: 'BOT_RESOLVE', from: 'DECK_TOP' },
 	BOT_TAKE_CONTROL: { k: 'BOT_TAKE_CONTROL' },
+	BOT_REMOVE_AWAY_TEAM: { k: 'BOT_REMOVE_AWAY_TEAM', count: 2 },
 } as { [K in Effect['k']]: Effect & { k: K } }
 
 vitestDescribe('describe() is total over every node kind', () => {
