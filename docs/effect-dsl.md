@@ -74,7 +74,7 @@ is a SEQ's first step, a PAY_THEN's cost (a SEQ cost: its first step) or a singl
   `pickCards`: the pick shows the may's wording, is asked even with one candidate (it is the only
   prompt), and is `optional` — the empty selection declines, even below `min` (`checkSelection`).
   Costs (COST_DISCARD "you may discard a card to …", COST_LOG, COST_PUT, …) and benefits
-  (PROMOTE, FREE_PLAY, BEAM, LOG, JUNK, …) do this.
+  (PROMOTE, FREE_PLAY, BEAM, LOG, JUNK, ENLIST_DEVELOPMENT, …) do this.
 - WARP, SEND_AWAY_TEAM and REMOVE_AWAY_TEAM ask their Location with a Skip (`SKIP_LOCATION`),
   even when only one is left; CHOOSE_ONE adds a Decline row (`DECLINE_OPTION`).
 - The prompt is marked `mayDecline`; `declineSelection(choice)` is its decline. The probe, the
