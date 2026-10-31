@@ -107,7 +107,10 @@ export function HeadBar({
 						{phaseLabel(state.phase)}
 					</span>
 					<span className="head-turn">
-						Turn {state.turnNumber} · {seatLabel(state.activeSeat)}
+						Turn {state.turnNumber} ·{' '}
+						{state.mode === 'SOLO' && state.solo?.bot === state.activeSeat
+							? 'The Bot'
+							: seatLabel(state.activeSeat)}
 					</span>
 					<ActionTray seat={state.activeSeat} size="lg" />
 					{/* Your resources and Away Teams: the one counter per pool a token

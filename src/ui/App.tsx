@@ -7,8 +7,8 @@
 // Components never read the raw state — everything renders `useProjected()`.
 
 import { useEffect, useMemo, useState } from 'react'
-import type { GameState } from '../engine/state'
-import type { SetupConfig } from '../engine/setup'
+import { SOLO_LEVELS, type GameState, type SoloLevel } from '../engine/state'
+import type { CardCatalog, SetupConfig } from '../engine/setup'
 import type { DeckId } from '../data/ids'
 import type { Seat } from '../engine/resolver/queries'
 import { availableDecks } from './browserCatalog'
@@ -43,6 +43,7 @@ import {
 	type Opponents,
 } from '../session/opponents'
 import { EndScreen } from './EndScreen'
+import { SOLO_LEVEL_LABEL } from './solo/labels'
 
 function useRuleAnchor(): [string | null, (a: string | null) => void] {
 	const [anchor, setAnchor] = useState<string | null>(null)
@@ -338,9 +339,8 @@ function SetupScreen({ catalogReady }: { catalogReady: boolean }) {
 						onController={(c) => setSeat(1, c)}
 					/>
 					<p className="muted small house-ai-hint">
-						House AI (not the official solo Bot): a computer opponent of our
-						own. The official solo Bot needs the solo rulebook and is not in
-						this app yet.
+						House AI: a computer opponent of our own. For the game’s official
+						solo Bot, see “Solo vs the Bot” below.
 					</p>
 					<label className="seed-field">
 						Seed
@@ -375,6 +375,15 @@ function SetupScreen({ catalogReady }: { catalogReady: boolean }) {
 					)}
 					{seat0 === seat1 && (
 						<p className="muted small">The two captains must differ.</p>
+					)}
+					{catalog !== null && (
+						<SoloSetup
+							catalog={catalog}
+							you={seat0}
+							side={side0}
+							seed={seed}
+							onStart={(config) => startGame(config, undefined)}
+						/>
 					)}
 					<button
 						type="button"
@@ -412,6 +421,96 @@ function SetupScreen({ catalogReady }: { catalogReady: boolean }) {
 				<span className="undo-policy-chip">{undoPolicyLabel(savedMode)}</span>
 			</p>
 		</main>
+	)
+}
+
+/** Solo against the game's official Bot (rules/13): your captain is Player 1's
+ *  pick; choose the Bot's crew, the difficulty and the Conspiring Admirals
+ *  challenge. */
+function SoloSetup({
+	catalog,
+	you,
+	side,
+	seed,
+	onStart,
+}: {
+	catalog: CardCatalog
+	you: DeckId
+	side: 'BASIC' | 'ADVANCED'
+	seed: number
+	onStart: (config: SetupConfig) => void
+}) {
+	const botCrews = useMemo<DeckId[]>(
+		() => (catalog.bots ?? []).map((b) => b.deck),
+		[catalog],
+	)
+	const [crew, setCrew] = useState<DeckId | null>(null)
+	const [level, setLevel] = useState<SoloLevel>('ENSIGN')
+	const [admirals, setAdmirals] = useState(false)
+	const choices = botCrews.filter((d) => d !== you)
+	const bot =
+		crew !== null && choices.includes(crew) ? crew : (choices[0] ?? null)
+	if (botCrews.length === 0) return null
+	return (
+		<section className="solo-setup" aria-label="Solo vs the official Bot">
+			<h2>Solo vs the Bot</h2>
+			<p className="muted small">
+				The game’s official solo opponent: it resolves its cards through its
+				crew’s Automated Command cards. You play Player 1’s captain.
+			</p>
+			<div className="deck-picker">
+				<strong>The Bot</strong>
+				<select
+					value={bot ?? ''}
+					onChange={(e) => setCrew(e.target.value as DeckId)}
+					aria-label="The Bot’s crew"
+				>
+					{choices.map((d) => (
+						<option key={d} value={d}>
+							{deckLabel(d)}
+						</option>
+					))}
+				</select>
+				<select
+					value={level}
+					onChange={(e) => setLevel(e.target.value as SoloLevel)}
+					aria-label="Difficulty"
+				>
+					{SOLO_LEVELS.map((l) => (
+						<option key={l} value={l}>
+							{SOLO_LEVEL_LABEL[l]}
+						</option>
+					))}
+				</select>
+			</div>
+			<label className="muted small">
+				<input
+					type="checkbox"
+					checked={admirals}
+					onChange={(e) => setAdmirals(e.target.checked)}
+				/>{' '}
+				Conspiring Admirals challenge (for Captain and Admiral)
+			</label>
+			<button
+				type="button"
+				className="btn btn-primary btn-lg"
+				disabled={bot === null}
+				onClick={() =>
+					bot !== null &&
+					onStart({
+						mode: 'SOLO',
+						players: [
+							{ deck: you, boardSide: side },
+							{ deck: bot, boardSide: 'BASIC' },
+						],
+						seed,
+						solo: { level, conspiringAdmirals: admirals },
+					})
+				}
+			>
+				Play solo vs the Bot
+			</button>
+		</section>
 	)
 }
 

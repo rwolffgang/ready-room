@@ -31,6 +31,7 @@ import { DeltaCounter } from './delta'
 import { HIDDEN_DEF } from './projection'
 import { deckLabel, missionTitle } from '../data/cardNames'
 import { describePredicate } from '../engine/describe'
+import { isSoloBot } from '../engine/solo/seat'
 
 // ---------------------------------------------------------------------------
 // shared helpers (hooks — call at the top of a component)
@@ -109,12 +110,17 @@ export function CentrePiles() {
 /** A seat's Draw and Discard as two decks — on your side by the hand dock,
  *  on theirs in the opponent band. The Discard is public, so both browse. */
 export function DeckPiles({ seat }: { seat: Seat }) {
+	const state = useStateGame()
 	const draw = useZones({ k: 'DRAW', seat })
 	const discard = useZones({ k: 'DISCARD', seat })
+	const supplement = useZones({ k: 'SUPPLEMENT', seat })
+	// the official solo Bot (rules/13 §13.2): its Bot deck and its Supplement
+	const bot = state !== null && isSoloBot(state, seat)
 	return (
 		<div className="deck-piles" aria-label={`${seatLabel(seat)} deck`}>
-			<CardStack label="Draw" count={draw.length} deck />
+			<CardStack label={bot ? 'Bot deck' : 'Draw'} count={draw.length} deck />
 			<CardStack label="Discard" count={discard.length} browse={discard} deck />
+			{bot && <CardStack label="Supplement" count={supplement.length} deck />}
 		</div>
 	)
 }

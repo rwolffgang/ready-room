@@ -20,6 +20,7 @@ import {
 	humanSeats,
 	opponentsLabel,
 } from '../session/opponents'
+import { soloBotLabel } from './solo/labels'
 
 export function SavedGamesPanel({ catalog }: { catalog: CardCatalog | null }) {
 	const resume = useGameStore((s) => s.resumeGame)
@@ -144,6 +145,10 @@ export function endedLine(session: Session): string {
 			: `Game over · ${a} VP`
 	if (f.winners.length !== 1) return `Game over · tie · ${a}–${b}`
 	const w = f.winners[0]!
+	const solo = session.setup.solo
+	if (session.setup.mode === 'SOLO' && solo !== undefined)
+		// seat 1 is the official solo Bot (rules/13)
+		return `Game over · ${w === 1 ? soloBotLabel(solo.level) : 'You'} won · ${a}–${b}`
 	const bot = botFor(session.opponents, w)
 	const who =
 		bot !== undefined
@@ -178,7 +183,10 @@ function SaveRow({
 			: ended
 				? `ended on turn ${m.turnNumber}`
 				: `turn ${m.turnNumber} · ${m.phase}`
-	const vs = opponentsLabel(session.opponents)
+	const vs =
+		session.setup.mode === 'SOLO' && session.setup.solo !== undefined
+			? `vs ${soloBotLabel(session.setup.solo.level)}${session.setup.solo.conspiringAdmirals === true ? ' · Conspiring Admirals' : ''}`
+			: opponentsLabel(session.opponents)
 	return (
 		<li
 			className={`save-row${ended ? ' save-ended' : ''}${drift !== null && !drift.ok ? ' save-drift' : ''}`}

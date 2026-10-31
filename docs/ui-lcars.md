@@ -130,7 +130,10 @@ What the layout follows:
   face-down cards, one back per card (face up only with the spectator's Reveal hands), their Draw and
   Discard, their pool, ~VP, the read-outs of their tracks, missions and Incidents, the House AI's
   latest move, and every card they have in play at the small size, grouped by zone. Hold Option
-  (or long-press) to read one. It replaced a side column of counts — "hand 5, fleet 2" told you
+  (or long-press) to read one. Against the official solo Bot the band shows its face-down row in
+  place of a hand, its Bot deck, Discard and Supplement, and, beside its cards, the beat it is on:
+  the card it resolves and the Automated Command row it matched, with a button for both whole
+  cards (`src/ui/solo/AutomatedCommand.tsx`). It replaced a side column of counts — "hand 5, fleet 2" told you
   nothing about what they could do.
 - **The decks are on the table.** Every deck and pile is drawn as a small stack of backs with its
   count on top: each Market suit's deck beside its banner, the Stardate pile, Incident deck and

@@ -141,9 +141,10 @@ function WarningBanner() {
 function PassDeviceBar({ state }: { state: GameState }) {
 	const viewer = useViewerSeat()
 	const setViewer = useGameStore((s) => s.setViewer)
-	// against the house AI the device never changes hands
+	// against the house AI or the official solo Bot the device never changes
+	// hands
 	const bots = useGameStore((s) => hasBots(s.session?.opponents))
-	if (state.result !== null || bots) return null
+	if (state.result !== null || bots || state.mode === 'SOLO') return null
 	const needOpponent =
 		state.pendingChoice === null && state.activeSeat !== viewer
 	if (!needOpponent) return null

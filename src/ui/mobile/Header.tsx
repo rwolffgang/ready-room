@@ -176,11 +176,13 @@ export function Header({ onMenu }: { onMenu: () => void }) {
 						</b>
 						{burn !== null && (
 							<span className="pb-sub">
-								{burn.leader === 'you'
-									? `You'd win it now: ${burn.mine} vs ${burn.theirs}`
-									: burn.leader === 'them'
-										? `${oppName} would win it: ${burn.mine} vs ${burn.theirs}`
-										: `Tied ${burn.mine} vs ${burn.theirs}: scoring decides`}
+								{state.mode === 'SOLO'
+									? 'If it comes, the Bot wins'
+									: burn.leader === 'you'
+										? `You'd win it now: ${burn.mine} vs ${burn.theirs}`
+										: burn.leader === 'them'
+											? `${oppName} would win it: ${burn.mine} vs ${burn.theirs}`
+											: `Tied ${burn.mine} vs ${burn.theirs}: scoring decides`}
 							</span>
 						)}
 					</span>

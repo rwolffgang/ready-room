@@ -61,19 +61,20 @@ move. Its rows are effect trees in `src/data/cards/solo/bots.json`, keyed to the
 - [x] Rules restated (`rules/13`, `rules/14`); open interpretations logged (`docs/card-rulings.md`
       052–060).
 - [x] `npm run fetch-cards` also fetches `data/bots.json` (vendor only, never committed).
-- [ ] Engine types: `mode: 'SOLO'`, Bot phase/beats, zones `BOT_ROW` / `SUPPLEMENT` /
+- [x] Engine types: `mode: 'SOLO'`, Bot phase/beats, zones `BOT_ROW` / `SUPPLEMENT` /
       `REINFORCEMENT`, Stardate `botActions`.
-- [ ] New DSL nodes: `TRY`, `ATTACK`, `BOT_DECK`, `BOT_ACQUIRE`, `BOT_JUNK`,
+- [x] New DSL nodes: `TRY`, `ATTACK`, `BOT_DECK`, `BOT_ACQUIRE`, `BOT_JUNK`,
       `BOT_SEND_AWAY_TEAM`, `BOT_DEPLOY`, `BOT_RESOLVE`; `ADVANCE_SPECIALTY` lower/higher of two.
-- [ ] Automated Command mechanics for the six crews (PIC SHR KOL SEL SIS BUR), crosschecked
+- [x] Automated Command mechanics for the six crews (PIC SHR KOL SEL SIS BUR), crosschecked
       against `bots.json`.
-- [ ] Bot setup, turn, choice policy, human→Bot hooks, inert Bot cards, end timing, scoring.
-- [ ] Hand-attack outcome choice (`rules/13` §13.12.2).
-- [ ] The `SURPRISE` trait becomes live; solo Directives `1DIR01/2` (Conspiracy) and `1DIR02/2`
-      (Reinforce), minted only in SOLO games. Use the latest STCC errata.
-- [ ] House AI: determinize, SOLO evaluation, `tools/arena.ts --solo`, retrained weights.
-- [ ] UI: Solo vs Bot setup, Bot area, Automated Command panel (rendered from STCC text), paced
-      Bot turn, end screen.
+- [x] Bot setup, turn, choice policy, human→Bot hooks, inert Bot cards, end timing, scoring.
+- [x] Hand-attack outcome choice (`rules/13` §13.12.2).
+- [x] The `SURPRISE` trait becomes live; solo Directive `1DIR01/2` (Conspiracy), minted only in
+      SOLO games, from the latest STCC errata. (`1DIR02/2`, Reinforce, comes with the campaign.)
+- [x] House AI: determinize, SOLO evaluation, `tools/solo-arena.ts` (no learned weights ship, so
+      no retrain).
+- [x] UI: Solo vs Bot setup, Bot area, Automated Command panel (rendered from STCC text), paced
+      Bot turn, end screen (`src/ui/solo/`).
 - [ ] Five-Year Mission campaign (`rules/14`): Reinforcement deck, boosts, challenges, campaign
       record and screens.
 - Out of scope until we have their decks: the other 10 STCC Bots (box 2/3 crews), `2DIR01`/`2DIR02`.
