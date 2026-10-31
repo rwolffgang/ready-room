@@ -40,11 +40,17 @@ the default.
 `.github/workflows/desktop.yml` runs lint and tests, then builds on `macos-latest` (universal
 `.dmg`) and `windows-latest` (NSIS `.exe` installer).
 
-- **Release:** bump `version` in `package.json` (Tauri reads it from there), commit, then
-  `git tag v0.1.0 && git push origin v0.1.0`. The workflow creates a **draft** GitHub Release with
-  the installers. Review it and publish.
+- **Release:** publish a GitHub Release: Releases → **Draft a new release** → choose a new tag
+  such as `v0.2.0` on `main` → **Publish release**, or `gh release create v0.2.0 --generate-notes`.
+  The workflow builds both installers and attaches them to that release as
+  `Ready-Room-0.2.0-macOS.dmg` and `Ready-Room-0.2.0-Windows-Setup.exe`, then adds the install
+  notes to the release text. That takes about 10 minutes, and the release has no downloads
+  until then. If the build fails, fix it and re-run the failed jobs (Actions → Desktop).
+- **Version:** the build takes the app version from the tag (`v0.2.0` → `0.2.0`), so
+  `package.json` needs no bump. Use plain `vX.Y.Z` tags; a tag that is not a version fails the
+  build.
 - **Test build:** run the workflow by hand (Actions → Desktop → Run workflow). The installers are
-  attached to the run as artifacts.
+  attached to the run as artifacts, with the version from `package.json`.
 
 The builds are **not code-signed**:
 
@@ -52,8 +58,8 @@ The builds are **not code-signed**:
   Anyway**. If macOS says the app "is damaged", run `xattr -cr "/Applications/Ready Room.app"`.
 - Windows: SmartScreen → **More info** → **Run anyway**.
 
-Signing can be added later through `tauri-action`'s signing environment variables and GitHub
-secrets.
+Signing can be added later through Tauri's signing environment variables (`APPLE_CERTIFICATE`,
+`APPLE_SIGNING_IDENTITY`, …) set from GitHub secrets on the build step.
 
 ## Local development
 
