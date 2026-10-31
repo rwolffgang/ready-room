@@ -1781,30 +1781,10 @@ ul.pb-order li {
 	}
 }
 
-/* ------------------------------------------------------------ setup and end
- * screens: the console's own screens, made usable at 390px. Prefixed with
+/* ------------------------------------------------------------ end screen:
+ * the console's own screen, made usable at 390px. Prefixed with
  * .app: ui.css loads after this file and would win a tie. */
 @media (max-width: 767.98px) {
-	.app .setup-screen {
-		margin: 0 auto;
-		padding: 16px 12px 32px;
-	}
-	.app .setup-screen h1 {
-		font-size: 26px;
-	}
-	.app .deck-picker {
-		flex-wrap: wrap;
-	}
-	.app .deck-picker select {
-		flex: 1 1 60%;
-	}
-	.app .saved-games {
-		padding: 0 4px;
-	}
-	.app .save-list li,
-	.app .save-row {
-		flex-wrap: wrap;
-	}
 	.app .end-screen {
 		margin: 12px auto;
 		padding: 0 12px 32px;

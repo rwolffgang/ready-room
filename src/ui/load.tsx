@@ -21,6 +21,7 @@ import {
 	opponentsLabel,
 } from '../session/opponents'
 import { soloBotLabel } from './solo/labels'
+import { Portrait } from './launch/parts'
 
 export function SavedGamesPanel({ catalog }: { catalog: CardCatalog | null }) {
 	const resume = useGameStore((s) => s.resumeGame)
@@ -69,15 +70,15 @@ export function SavedGamesPanel({ catalog }: { catalog: CardCatalog | null }) {
 	)
 
 	return (
-		<section className="panel saved-games" aria-label="Continue a saved game">
+		<section className="saved-games" aria-label="Continue a saved game">
 			<div className="saved-head">
 				<h3>Continue a saved game</h3>
-				<div className="error-actions">
+				<div className="saved-tools">
 					<button type="button" className="btn micro" onClick={refresh}>
 						Refresh
 					</button>
 					<label className="btn micro file-btn">
-						Import session…
+						Import…
 						<input
 							ref={fileRef}
 							type="file"
@@ -99,8 +100,8 @@ export function SavedGamesPanel({ catalog }: { catalog: CardCatalog | null }) {
 			{saves === null ? (
 				<p className="muted small">Loading saves…</p>
 			) : saves.length === 0 ? (
-				<p className="muted small">
-					No saved games yet — a game autosaves after you start it, so you can
+				<p className="saved-empty">
+					No saved games yet. A game autosaves after you start it, so you can
 					pick it up here after a refresh.
 				</p>
 			) : (
@@ -123,7 +124,7 @@ export function SavedGamesPanel({ catalog }: { catalog: CardCatalog | null }) {
 					))}
 				</ul>
 			)}
-			<p className="muted small">
+			<p className="saved-foot">
 				<strong>Save format:</strong> intent log + seed + setup (a few KB).
 				Loading replays it byte-exactly — undo, replay and export all read the
 				same log.
@@ -192,15 +193,27 @@ function SaveRow({
 		<li
 			className={`save-row${ended ? ' save-ended' : ''}${drift !== null && !drift.ok ? ' save-drift' : ''}`}
 		>
+			<span className="save-faces" aria-hidden="true">
+				{session.setup.players.map((p, i) => (
+					<Portrait
+						key={i}
+						catalog={catalog}
+						deck={p.deck}
+						className={`lr-avatar lr-seat-${i}`}
+					/>
+				))}
+			</span>
 			<div className="save-meta">
 				<strong className="save-title">
-					{m.deckNames[0]} vs {m.deckNames[1]}
+					{m.deckNames[0]} <span className="save-vs-word">vs</span>{' '}
+					{m.deckNames[1]}
 				</strong>
-				{vs !== null && <span className="muted small save-vs">{vs}</span>}
-				<span className="muted small">
-					{m.boardSides[0]} / {m.boardSides[1]} · {sitsAt} · {m.intentCount}{' '}
-					intent{m.intentCount === 1 ? '' : 's'} · updated{' '}
-					{shortUpdatedAt(m.updatedAt)}
+				{vs !== null && <span className="small save-vs">{vs}</span>}
+				<span className="save-chips">
+					<span className="save-chip">{sitsAt}</span>
+					<span className="save-chip">
+						{m.boardSides[0]} / {m.boardSides[1]}
+					</span>
 				</span>
 				{ended ? (
 					<span className="small save-result">{endedLine(session)}</span>
@@ -210,6 +223,10 @@ function SaveRow({
 						{seatLabel(m.activeSeat)}
 					</span>
 				)}
+				<span className="muted small">
+					{m.intentCount} intent{m.intentCount === 1 ? '' : 's'} · updated{' '}
+					{shortUpdatedAt(m.updatedAt)}
+				</span>
 				{drift !== null && !drift.ok && (
 					<span
 						className="save-warn-badge"
@@ -219,7 +236,7 @@ function SaveRow({
 					</span>
 				)}
 			</div>
-			<div className="error-actions">
+			<div className="save-actions">
 				<button
 					type="button"
 					className="btn micro btn-primary"

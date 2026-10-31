@@ -150,42 +150,6 @@ h3,
 	filter: brightness(1.12);
 }
 
-/* ----------------------------------------------------------------- setup */
-.setup-screen {
-	max-width: 800px;
-	margin: 6vh auto;
-	padding: 24px 16px;
-}
-.setup-screen h1 {
-	margin: 0 0 6px;
-	font-size: 34px;
-	color: var(--orange);
-	letter-spacing: 0.04em;
-}
-.setup-theme {
-	margin-top: 22px;
-}
-.setup-theme .layout-switch {
-	gap: 10px;
-	align-items: center;
-}
-.setup-form {
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-	margin-top: 18px;
-}
-.deck-picker {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 12px;
-	background: var(--panel);
-	border-radius: 4px;
-	border-left: 5px solid var(--periwinkle);
-}
-.deck-picker select,
-.seed-field input,
 .cardlist-controls input,
 .cardlist-controls select {
 	min-height: 44px;
@@ -195,18 +159,6 @@ h3,
 	border: 1px solid var(--hair);
 	border-radius: 4px;
 	font: inherit;
-}
-.side-toggle {
-	display: flex;
-	gap: var(--gap);
-}
-.seed-field {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-.seed-field input {
-	width: 120px;
 }
 .error-text {
 	color: var(--mars);
@@ -430,7 +382,6 @@ h3,
 .end-breakdown {
 	--c: var(--lilac);
 }
-.saved-games,
 .error-session,
 .replay-state {
 	--c: var(--periwinkle);
@@ -2749,21 +2700,7 @@ h3,
 	opacity: 0.8;
 }
 
-/* ----------------------------------------------------------- load screen */
-.saved-games {
-	margin: 20px auto 0;
-	max-width: 760px;
-}
-.saved-head {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	flex-wrap: wrap;
-}
-.saved-games h3 {
-	margin: 0;
-}
+/* ------------------------------------------- saved games (load.tsx) */
 .file-btn {
 	position: relative;
 	cursor: pointer;
@@ -2780,23 +2717,6 @@ h3,
 	padding: 0;
 	display: grid;
 	gap: var(--gap);
-}
-.save-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	flex-wrap: wrap;
-	padding: 10px 12px;
-	background: var(--panel-2);
-	border-radius: 4px;
-	border-left: 4px solid var(--periwinkle);
-}
-.save-ended {
-	border-left-color: var(--lilac);
-}
-.save-drift {
-	border-left-color: var(--sunflower);
 }
 .save-result {
 	color: var(--lilac);
@@ -2818,10 +2738,6 @@ h3,
 	background: #2a2110;
 	color: var(--sunflower);
 	font-size: 0.78em;
-}
-.setup-note {
-	max-width: 760px;
-	margin: 10px auto 0;
 }
 
 /* ---------------------------------------------------------- error screen */
@@ -3491,19 +3407,6 @@ h3,
 .bot-bar > .btn:last-child {
 	margin-left: auto;
 }
-.deck-picker select {
-	background: var(--panel-2);
-	color: var(--text);
-	border: 1px solid var(--hair);
-	border-radius: 4px;
-	font: inherit;
-}
-.deck-picker {
-	flex-wrap: wrap;
-}
-.house-ai-hint {
-	margin: 0;
-}
 .save-vs {
 	color: var(--periwinkle);
 }
@@ -3942,21 +3845,26 @@ h3,
 .bot-beat > .btn {
 	margin-left: auto;
 }
-.solo-setup {
-	margin-top: 10px;
-	padding: 10px 12px;
-	border-radius: 10px;
-	border: 1px solid var(--line, #3a3f4d);
-	display: grid;
-	gap: 8px;
+/* src/ui/solo/Campaign.tsx: the Five-Year Mission's logbook */
+.deck-picker {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	padding: 12px;
+	background: var(--panel);
+	border-radius: 4px;
+	border-left: 5px solid var(--periwinkle);
 }
-.solo-setup h2 {
-	margin: 0;
-	font-size: 1.05rem;
+.deck-picker select {
+	min-height: 44px;
+	padding: 4px 10px;
+	background: var(--panel-2);
+	color: var(--text);
+	border: 1px solid var(--hair);
+	border-radius: 4px;
+	font: inherit;
 }
-
-/* src/ui/solo/Campaign.tsx: the Five-Year Mission */
-.campaign-setup fieldset,
 .campaign-offers {
 	display: grid;
 	gap: 4px;
@@ -3965,7 +3873,6 @@ h3,
 	border: 1px solid var(--line, #3a3f4d);
 	border-radius: 8px;
 }
-.campaign-setup label,
 .campaign-offers label {
 	display: block;
 	line-height: 1.35;

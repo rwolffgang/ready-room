@@ -56,7 +56,9 @@ describe('a Five-Year Mission', () => {
 		act(() => root!.render(<App />))
 		await flush()
 
-		// begin with Player 1's captain
+		// open the mode on the start screen's rail, begin with Player 1's captain
+		act(() => button(host, /^03Five-Year Mission$/)!.click())
+		await flush()
 		const begin = button(host, /Begin a Five-Year Mission/)
 		expect(begin).toBeDefined()
 		act(() => begin!.click())

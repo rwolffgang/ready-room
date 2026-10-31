@@ -42,6 +42,7 @@ import { getSessionStore } from '../persistence'
 import { stccBotFor } from '../stcc'
 import { useGameStore, useProjected, useSession } from '../store'
 import { AcText } from './AutomatedCommand'
+import { Portrait, RankPips } from '../launch/parts'
 import {
 	CHALLENGE_LABEL,
 	MODE_LABEL,
@@ -114,98 +115,113 @@ export function CampaignSetupPanel({
 		openCampaign(c.id)
 	}
 	return (
-		<section
-			className="solo-setup campaign-setup"
-			aria-label="Five-Year Mission"
-		>
-			<h2>Five-Year Mission</h2>
-			<p className="muted small">
-				A campaign of solo games against the Bot with Player 1’s captain. Every
-				win promotes you; after every game you upgrade your deck. It ends at
-				Admiral or after ten games.
-			</p>
+		<section className="lr-campaign" aria-label="Five-Year Mission">
 			{saved !== null && saved.length > 0 && (
-				<ul className="campaign-list">
-					{saved.map((c) => (
-						<li key={c.id}>
-							<span>
-								<strong>{deckLabel(c.crew)}</strong> · {RANK_LABEL[rankOf(c)]} ·{' '}
-								{MODE_LABEL[c.mode].title} ·{' '}
-								{c.games.filter((g) => g.won !== undefined).length} game
-								{c.games.length === 1 ? '' : 's'}
-								{isOver(c) ? ' · over' : ''}
-							</span>
-							<button
-								type="button"
-								className="btn micro"
-								onClick={() => openCampaign(c.id)}
-							>
-								{isOver(c) ? 'Logbook' : 'Continue'}
-							</button>
-							<button
-								type="button"
-								className="btn micro"
-								onClick={() => {
-									if (confirmDelete !== c.id) return setConfirmDelete(c.id)
-									void getSessionStore()
-										.removeCampaign(c.id)
-										.then(() => {
-											setConfirmDelete(null)
-											reload()
-										})
-								}}
-								aria-label={`delete campaign ${deckLabel(c.crew)}`}
-							>
-								{confirmDelete === c.id ? 'Really delete?' : 'Delete'}
-							</button>
-						</li>
-					))}
-				</ul>
+				<div className="lr-sub">
+					<h3 className="lr-sub-head">Campaigns on this device</h3>
+					<ul className="lr-campaigns">
+						{saved.map((c) => {
+							const rank = rankOf(c)
+							const played = c.games.filter((g) => g.won !== undefined).length
+							return (
+								<li key={c.id} className={isOver(c) ? 'is-over' : undefined}>
+									<Portrait
+										catalog={catalog}
+										deck={c.crew}
+										className="lr-avatar"
+									/>
+									<span className="lr-campaign-meta">
+										<strong>{deckLabel(c.crew)}</strong>
+										<span>
+											<RankPips rank={rank} /> {RANK_LABEL[rank]} ·{' '}
+											{MODE_LABEL[c.mode].title} · {played} game
+											{played === 1 ? '' : 's'}
+											{isOver(c) ? ' · over' : ''}
+										</span>
+									</span>
+									<span className="lr-campaign-actions">
+										<button
+											type="button"
+											className="btn micro btn-primary"
+											onClick={() => openCampaign(c.id)}
+										>
+											{isOver(c) ? 'Logbook' : 'Continue'}
+										</button>
+										<button
+											type="button"
+											className="btn micro"
+											onClick={() => {
+												if (confirmDelete !== c.id)
+													return setConfirmDelete(c.id)
+												void getSessionStore()
+													.removeCampaign(c.id)
+													.then(() => {
+														setConfirmDelete(null)
+														reload()
+													})
+											}}
+											aria-label={`delete campaign ${deckLabel(c.crew)}`}
+										>
+											{confirmDelete === c.id ? 'Really delete?' : 'Delete'}
+										</button>
+									</span>
+								</li>
+							)
+						})}
+					</ul>
+				</div>
 			)}
-			<fieldset className="campaign-modes">
-				<legend className="small">Mode</legend>
-				{CAMPAIGN_MODES.map((m) => (
-					<label key={m} className="small">
-						<input
-							type="radio"
-							name="campaign-mode"
-							checked={mode === m}
-							onChange={() => setMode(m)}
-						/>{' '}
-						<strong>{MODE_LABEL[m].title}</strong> {MODE_LABEL[m].text}
-					</label>
-				))}
+			<fieldset className="lr-sub">
+				<legend className="lr-sub-head">Mode</legend>
+				<div className="lr-cards">
+					{CAMPAIGN_MODES.map((m) => (
+						<label key={m} className={`lr-card${mode === m ? ' is-on' : ''}`}>
+							<input
+								type="radio"
+								name="campaign-mode"
+								checked={mode === m}
+								onChange={() => setMode(m)}
+							/>
+							<strong>{MODE_LABEL[m].title}</strong>
+							<span>{MODE_LABEL[m].text}</span>
+						</label>
+					))}
+				</div>
 			</fieldset>
-			<fieldset className="campaign-challenges">
-				<legend className="small">Challenges (optional)</legend>
-				{CHALLENGES.map((c) => (
-					<label
-						key={c}
-						className="small"
-						title={
-							c === 'ONE_SHIP' && !shipOk
-								? 'Your crew has no starting SHIP'
-								: undefined
-						}
-					>
-						<input
-							type="checkbox"
-							checked={picked.includes(c) && (c !== 'ONE_SHIP' || shipOk)}
-							disabled={c === 'ONE_SHIP' && !shipOk}
-							onChange={() => toggle(c)}
-						/>{' '}
-						<strong>{CHALLENGE_LABEL[c].title}</strong>{' '}
-						{CHALLENGE_LABEL[c].text}
-					</label>
-				))}
+			<fieldset className="lr-sub">
+				<legend className="lr-sub-head">
+					Challenges <small>optional</small>
+				</legend>
+				<div className="lr-cards lr-cards-wide">
+					{CHALLENGES.map((c) => {
+						const off = c === 'ONE_SHIP' && !shipOk
+						const on = picked.includes(c) && !off
+						return (
+							<label
+								key={c}
+								className={`lr-card lr-card-check${on ? ' is-on' : ''}${off ? ' is-off' : ''}`}
+								title={off ? 'Your crew has no starting SHIP' : undefined}
+							>
+								<input
+									type="checkbox"
+									checked={on}
+									disabled={off}
+									onChange={() => toggle(c)}
+								/>
+								<strong>{CHALLENGE_LABEL[c].title}</strong>
+								<span>{CHALLENGE_LABEL[c].text}</span>
+							</label>
+						)
+					})}
+				</div>
 			</fieldset>
-			<button
-				type="button"
-				className="btn btn-primary btn-lg"
-				onClick={() => void begin()}
-			>
-				Begin a Five-Year Mission as {deckLabel(you)}
-			</button>
+			<div className="lr-launchbar">
+				<div className="lr-ctas">
+					<button type="button" className="lr-go" onClick={() => void begin()}>
+						Begin a Five-Year Mission as {deckLabel(you)}
+					</button>
+				</div>
+			</div>
 		</section>
 	)
 }

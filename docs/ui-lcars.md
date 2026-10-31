@@ -250,6 +250,26 @@ Printed icons on lit chrome sit in an `--ink` well, or a token would vanish into
 own hue. The opponent's band shows only the read-outs of their tracks; their full crew console is
 on the viewscreen (V).
 
+### 4.2 The start screen
+
+The one screen with the full frame (`src/ui/launch/`): an elbow at each end of a left rail,
+capped bars across the head and the foot. The table isn't on screen yet, so the frame can take
+the width.
+
+- **The rail picks the mode.** One block per way to play: the open one is lit, the others are
+  unlit versions of their hue, and the head and foot bars end in the open mode's hue. The hues
+  keep their roles: Skirmish the frame (orange), Solo vs the Bot the opponent (salmon), the
+  Five-Year Mission the time/score axis (lilac), Online contested space (periwinkle). Reference
+  blocks (Rules, Card list, decks, glyphs, Settings) sit at the rail's foot.
+- **The stage seats the captains.** A dossier per seat, in the seat colour, with the face from
+  the captain card's art (the deck code in the code-only builds), the captain's operations and
+  the seat's controls. A roster fills the seat being chosen; picking the other seat's captain
+  swaps the two, so the captains always differ.
+- **Saved games sit beside the stage** at 1280px and up, under it below that. Under 768px the
+  rail becomes a 2×2 grid of mode blocks and the start buttons stick to the foot of the screen.
+- The viewscreen behind the dossiers drifts a starfield and the frame powers up on load; both
+  stop under `prefers-reduced-motion`.
+
 ## 5. Cards
 
 The face is the printed sprite from the atlas, with the text card (name, `SUIT · traits`,

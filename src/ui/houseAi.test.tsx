@@ -426,11 +426,23 @@ describe('setup screen', () => {
 			'House AI: a computer opponent of our own',
 		)
 		expect(host.textContent).toContain('Solo vs the Bot')
-		const p2 = host.querySelector<HTMLSelectElement>(
-			'select[aria-label="Player 2 played by"]',
-		)!
-		expect(p2.value).toBe('human')
-		expect([...p2.options].map((o) => o.textContent)).toEqual([
+		const controller = (seat: string) => {
+			const group = host.querySelector(
+				`[role="group"][aria-label="${seat} played by"]`,
+			)!
+			const options = [...group.querySelectorAll('button')]
+			const pressed = options.find(
+				(b) => b.getAttribute('aria-pressed') === 'true',
+			)!
+			return {
+				options: options.map(
+					(b) => b.getAttribute('aria-label') ?? b.textContent,
+				),
+				pressed: pressed.getAttribute('aria-label') ?? pressed.textContent,
+			}
+		}
+		expect(controller('Player 2').pressed).toBe('Human')
+		expect(controller('Player 2').options).toEqual([
 			'Human',
 			'House AI — Easy',
 			'House AI — Normal',
@@ -449,10 +461,7 @@ describe('setup screen', () => {
 		)
 		act(() => store().newGame())
 		// the choice is remembered on the next visit to the setup screen
-		const again = host.querySelector<HTMLSelectElement>(
-			'select[aria-label="Player 2 played by"]',
-		)!
-		expect(again.value).toBe('normal')
+		expect(controller('Player 2').pressed).toBe('House AI — Normal')
 		act(() => root.unmount())
 		host.remove()
 	})
