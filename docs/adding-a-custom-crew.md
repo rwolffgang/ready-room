@@ -157,7 +157,7 @@ npx tsx tools/crosscheck-stcc.ts       # pack vs defs: suit, traits, VP, positio
 npm run audit:publish                  # stage first (git add -A): it checks the git index
 FUZZ_SEEDS=40 FUZZ_WORKERS=8 npx tsx tools/fuzz.ts   # every pairing, invariants on; expect 0 NEW
 npx vitest run src/engine/shorthand.test.ts -u       # golden snapshot: the diff must be additions only
-npm test && npm run lint && npx tsc -b && npm run build
+npm run test:all && npm run lint && npx tsc -b && npm run build
 ```
 
 - **Read every card back with `describe()`** next to your printed text. It
