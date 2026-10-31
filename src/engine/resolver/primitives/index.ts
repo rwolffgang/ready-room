@@ -120,6 +120,10 @@ export interface Primitive<N extends Effect> {
 	/** The cards this node would pick from (and move onto), for the CONFIRM of
 	 *  a MAY around it (may.ts); null when it has nothing to show. */
 	preview?(state: GameState, node: N, ctx: EffectCtx): ChoicePreview | null
+	/** true when this node, as the whole body of a MAY, asks before it changes
+	 *  anything and can carry the decline in that prompt — the MAY then asks no
+	 *  CONFIRM and runs it with `ctx.declinable` (may.ts). */
+	offersDecline?(state: GameState, node: N, ctx: EffectCtx): boolean
 }
 
 /**

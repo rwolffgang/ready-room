@@ -50,10 +50,7 @@ import {
 	nextRng,
 } from './resolver/runtime'
 import type { ChoiceSeed, PendingChoice } from './resolver/choices'
-
-/** Sentinel candidate for the Control Step's optional (may) take-control —
- *  included in the CHOOSE_LOCATION candidate list (rules/03 §3.4). */
-export const SKIP_CONTROL = '__SKIP__' as CardInstanceId
+import { SKIP_LOCATION } from './resolver/choices'
 
 const phaseCtx = (actor: Seat): EffectCtx => ({
 	actor,
@@ -291,7 +288,7 @@ function stepControl(state: GameState, ctx: EffectCtx): GameState {
 	const key = '$ctrl.loc'
 	if (answered(ctx, key)) {
 		const sel = answer<string>(ctx, key)
-		if (sel === SKIP_CONTROL)
+		if (sel === SKIP_LOCATION)
 			return pushStep(state, { k: 'ACTION' }, phaseCtx(seat))
 		const loc = sel as CardInstanceId
 		if (answered(ctx, '$ctrl.takeDone')) {
@@ -307,7 +304,7 @@ function stepControl(state: GameState, ctx: EffectCtx): GameState {
 	return phaseSuspend(state, seat, { k: 'CONTROL' }, ctx, key, {
 		k: 'CHOOSE_LOCATION',
 		prompt: 'Take control of one secured Location? (Skip declines)',
-		candidates: [...secured, SKIP_CONTROL],
+		candidates: [...secured, SKIP_LOCATION],
 	})
 }
 

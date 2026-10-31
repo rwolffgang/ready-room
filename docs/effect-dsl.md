@@ -62,6 +62,10 @@ steps all do nothing or whose first effective step is an unpayable PAY_THEN. The
 runs with `ctx.optional`: a PAY_THEN whose cost has become unpayable there is **skipped**
 (SKIPPED log) and the operation continues — only a mandatory PAY_THEN fails the operation
 (rules/12 §12.1). 1PIC04 Tamarians offers only the discards the hand can pay and still logs itself.
+A body that asks before it changes anything and can say no in that prompt (a primitive's
+`offersDecline`, today a single WARP) gets no CONFIRM: it runs with `ctx.declinable`, so "you may
+warp" is one dialog, the destination choice with a Skip (`SKIP_LOCATION`), or an empty ship pick
+when several ships could go.
 
 **"Up to N".**
 

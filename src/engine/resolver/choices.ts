@@ -90,6 +90,11 @@ export interface ChoicePreview {
 	onto?: CardInstanceId[] | undefined
 }
 
+/** Sentinel candidate of a CHOOSE_LOCATION that may be declined — the
+ *  Control Step's take-control (rules/03 §3.4) and a "you may warp" (warp.ts,
+ *  which asks no CONFIRM first). The UI shows it as a Skip button. */
+export const SKIP_LOCATION = '__SKIP__' as CardInstanceId
+
 export type PendingChoice =
 	| (ChoiceBase & { k: 'CONFIRM'; preview?: ChoicePreview | undefined })
 	| (ChoiceBase & { k: 'CHOOSE_OPTION'; options: ChoiceOption[] })

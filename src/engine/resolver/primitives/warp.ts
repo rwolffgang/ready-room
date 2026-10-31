@@ -14,8 +14,10 @@ import { evalAmount, resolveQuery } from '../../queries/resolveQuery'
 import { cardDef } from '../../cards'
 import { warnUnprinted } from '../../market'
 import { cannotBeWarped } from '../../modifiers'
-import { type GameState, type JsonValue } from '../../state'
+import { type EffectCtx, type GameState, type JsonValue } from '../../state'
 import type { CardInstanceId } from '../../ids'
+import { SKIP_LOCATION } from '../choices'
+import { cardToken } from '../../../data/cardNames'
 
 /** WARP (rules/06 §6.3, rules/12 §12.16, rules/08 → warp): move a deployed
  *  SHIP's token to a Location you control or one in the Neutral Zone. Staying
@@ -24,7 +26,13 @@ import type { CardInstanceId } from '../../ids'
  *  (only DEPLOY sets shipTokenAt = null). Beamed cards travel implicitly — they
  *  are attached to the card and "at" derives from shipTokenAt. There is no
  *  limit on tokens at a Location. Emits SHIP_WARPED. A query naming a
- *  card no box prints (rules/12 §12.30) resolves empty with a one-time warning. */
+ *  card no box prints (rules/12 §12.30) resolves empty with a one-time warning.
+ *
+ *  "You may warp" (a MAY around a single WARP) asks no CONFIRM: nothing moves
+ *  before the destination is picked, so the pick carries the decline
+ *  (`ctx.declinable`) — the ship choice may be left empty and the destination
+ *  choice has a Skip (SKIP_LOCATION), asked even when only one Location is
+ *  left, since it is the only prompt. */
 export const warp: Primitive<Extract<Effect, { k: 'WARP' }>> = {
 	isCost: false,
 	canResolve(state, node, ctx) {
@@ -33,6 +41,7 @@ export const warp: Primitive<Extract<Effect, { k: 'WARP' }>> = {
 			destinations(state, node, ctx, undefined).length > 0
 		)
 	},
+	offersDecline: (_state, node) => node.count === undefined,
 	execute(state, node, ctx, _frame) {
 		if (node.count !== undefined) return warpSeveral(state, node, ctx)
 		const s = warnUnprinted(state, [node.to], ctx)
@@ -40,27 +49,35 @@ export const warp: Primitive<Extract<Effect, { k: 'WARP' }>> = {
 		const toKey = 'warp.to'
 		// destination already chosen (highest-priority resume branch)
 		if (answered(ctx, toKey)) {
-			return finish(
-				s,
-				ctx,
-				node,
-				answerSingle(ctx, shipKey),
-				answer<CardInstanceId>(ctx, toKey),
-			)
+			const to = answer<CardInstanceId>(ctx, toKey)
+			if (to === SKIP_LOCATION) return declined(s, ctx)
+			return finish(s, ctx, node, answerSingle(ctx, shipKey), to)
 		}
 		// ship already chosen → choose a destination that is not where it sits now
 		if (answered(ctx, shipKey)) {
+			const picked = answer<unknown>(ctx, shipKey)
+			if (Array.isArray(picked) && picked.length === 0) return declined(s, ctx)
 			return pickDestination(s, node, ctx, answerSingle(ctx, shipKey))
 		}
 		// fresh: pick the ship first
 		const fleet = ships(s, node, ctx)
-		const r = pickSingle(s, node, ctx, shipKey, {
-			prompt: 'Warp which ship?',
-			candidates: fleet,
-			from: 'FLEET',
-		})
+		const r =
+			ctx.declinable === true && fleet.length > 1
+				? pickCards(s, node, ctx, shipKey, {
+						prompt: 'You may warp a ship — which one?',
+						candidates: fleet,
+						min: 0,
+						max: 1,
+						from: 'FLEET',
+						optional: true,
+					})
+				: pickSingle(s, node, ctx, shipKey, {
+						prompt: 'Warp which ship?',
+						candidates: fleet,
+						from: 'FLEET',
+					})
 		if (r.kind === 'suspended') return r.state
-		if (r.kind === 'none') return s
+		if (r.kind === 'none' || r.iids.length === 0) return s
 		// Auto-selected (exactly one ship): the destination choice's resume branch
 		// reads `shipKey` through the choiceId indirection, so bind the picked ship
 		// as if it had gone through the picker (rules/06 §6.3, rules/12 §12.16).
@@ -127,20 +144,34 @@ function pickDestination(
 ): GameState {
 	const remaining = destinations(state, node, ctx, ship)
 	if (remaining.length === 0) return state
-	if (remaining.length === 1)
+	const declinable = ctx.declinable === true
+	if (remaining.length === 1 && !declinable)
 		return finish(state, ctx, node, ship, remaining[0]!)
 	return suspend(
 		state,
 		node,
 		ctx,
 		'warp.to',
-		{
-			k: 'CHOOSE_LOCATION',
-			prompt: 'Warp to which Location?',
-			candidates: remaining,
-		},
+		declinable
+			? {
+					k: 'CHOOSE_LOCATION',
+					prompt: `You may warp ${cardToken(state.cards[ship]!.def)} — to which Location? (Skip declines)`,
+					candidates: [...remaining, SKIP_LOCATION],
+				}
+			: {
+					k: 'CHOOSE_LOCATION',
+					prompt: 'Warp to which Location?',
+					candidates: remaining,
+				},
 		autoShip,
 	)
+}
+
+/** The optional warp was declined: drop its choice keys, like `finish`. */
+function declined(state: GameState, ctx: EffectCtx): GameState {
+	delete ctx.bindings['warp.ship']
+	delete ctx.bindings['warp.to']
+	return state
 }
 
 function ships(

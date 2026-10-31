@@ -281,6 +281,8 @@ export interface PickOpts {
 	/** Face-down (unseen) candidates — selectable, but the UI must not reveal
 	 *  their faces yet (GAIN_CARD's "top of the deck (unknown)" option). */
 	hidden?: CardInstanceId[] | undefined
+	/** An empty selection declines (the UI offers a Decline button). */
+	optional?: boolean | undefined
 }
 
 /**
@@ -312,6 +314,7 @@ export function pickCards(
 		min,
 		max,
 		from: opts.from,
+		...(opts.optional === true ? { optional: true } : {}),
 	})
 	return { kind: 'suspended', state: next }
 }

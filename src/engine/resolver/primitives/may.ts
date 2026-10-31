@@ -21,7 +21,10 @@ import type { ChoicePreview } from '../choices'
  *  1PIC20 "may promote a PERSON from your Staging Area" with no
  *  PERSON staged, or 1PIC04' "may discard a SHIP" (a PAY_THEN) with
  *  no SHIP in hand. The accepted body runs with `ctx.optional`, so a cost
- *  that became unpayable only skips the optional part (PAY_THEN). */
+ *  that became unpayable only skips the optional part (PAY_THEN). A body
+ *  whose own prompt can say no (`offersDecline` — "you may warp": the
+ *  destination choice has a Skip) runs straight away, without the CONFIRM,
+ *  so the yes/no and the pick are one dialog. */
 export const may: Primitive<Extract<Effect, { k: 'MAY' }>> = {
 	isCost: false,
 	canResolve: () => true,
@@ -40,6 +43,15 @@ export const may: Primitive<Extract<Effect, { k: 'MAY' }>> = {
 		}
 		if (wouldDoNothing(state, node.body, ctx))
 			return skipBenefit(state, node.body, ctx, 'cannot fully resolve')
+		if (offersDecline(state, node.body, ctx)) {
+			state.stack.push({
+				k: 'EFFECT',
+				node: node.body,
+				ctx: { ...ctx, optional: true, declinable: true },
+				ip: 0,
+			})
+			return state
+		}
 		const preview = previewOf(state, node.body, ctx)
 		return suspend(state, node, ctx, key, {
 			k: 'CONFIRM',
@@ -47,6 +59,15 @@ export const may: Primitive<Extract<Effect, { k: 'MAY' }>> = {
 			...(preview !== null ? { preview } : {}),
 		})
 	},
+}
+
+function offersDecline(
+	state: GameState,
+	node: Effect,
+	ctx: EffectCtx,
+): boolean {
+	if (isControl(node)) return false
+	return primitiveOf(node).offersDecline?.(state, node, ctx) === true
 }
 
 /** What the optional effect would act on first: the node itself, the first

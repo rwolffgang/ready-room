@@ -18,6 +18,7 @@ import type {
 	ChoiceOption,
 	ChoicePreview,
 } from '../engine/resolver/choices'
+import { SKIP_LOCATION } from '../engine/resolver/choices'
 import type { OperationRef } from '../engine/state'
 import { otherSeat, zoneKey } from '../engine/state'
 import type { CardInstanceId } from '../engine/ids'
@@ -43,9 +44,6 @@ import { useDefForIid, useDefById, type CardDef } from './defs'
 import { cardName, withCardNames } from '../data/cardNames'
 import { printedOpFor, printedOps } from '../data/stcc'
 import { stccCard } from './stcc'
-
-/** The sentinel "skip" Location candidate for the Control Step (phases.ts). */
-const SKIP_CONTROL = '__SKIP__' as CardInstanceId
 
 // ---------------------------------------------------------------------------
 // shared bits
@@ -612,13 +610,13 @@ function ChooseLocationChoice({
 }) {
 	const selected = useSelected()
 	const chosen = selected[0] ?? null
-	const skip = choice.candidates.includes(SKIP_CONTROL)
+	const skip = choice.candidates.includes(SKIP_LOCATION)
 
 	return (
 		<section className="panel choice-panel">
 			<ChoiceHeader choice={choice} />
 			<LocationPicker
-				offered={choice.candidates.filter((iid) => iid !== SKIP_CONTROL)}
+				offered={choice.candidates.filter((iid) => iid !== SKIP_LOCATION)}
 				disabled={NO_REASONS}
 				selected={selected}
 			/>
@@ -635,9 +633,12 @@ function ChooseLocationChoice({
 					<button
 						type="button"
 						className="btn"
-						onClick={() => confirmChoice(SKIP_CONTROL)}
+						onClick={() => confirmChoice(SKIP_LOCATION)}
 					>
-						Skip (decline take-control)
+						{/* the Control Step's is the only phase-level one */}
+						{choice.sourceCard === null
+							? 'Skip (decline take-control)'
+							: 'Skip'}
 					</button>
 				)}
 			</div>

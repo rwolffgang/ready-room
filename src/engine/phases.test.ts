@@ -5,12 +5,8 @@
 // intents.test.ts — this file tests the phases themselves.
 
 import { describe, expect, it, beforeAll } from 'vitest'
-import {
-	beginTurnStep,
-	advancePhaseStep,
-	handOffTurn,
-	SKIP_CONTROL,
-} from './phases'
+import { beginTurnStep, advancePhaseStep, handOffTurn } from './phases'
+import { SKIP_LOCATION } from './resolver/choices'
 import type { GameState } from './state'
 import { newGameState, addCard, zoneKey, player } from './state'
 import { registerCards } from './cards'
@@ -166,7 +162,7 @@ describe('CONTROL (rules/03 §3.4)', () => {
 		const ch = halted.pendingChoice!
 		const candidates = ch.k === 'CHOOSE_LOCATION' ? ch.candidates : []
 		expect(candidates).toContain(ID('loc1'))
-		expect(candidates).toContain(SKIP_CONTROL)
+		expect(candidates).toContain(SKIP_LOCATION)
 		const resumed = run(
 			applyChoice(halted, {
 				t: 'RESOLVE_CHOICE',
@@ -196,7 +192,7 @@ describe('CONTROL (rules/03 §3.4)', () => {
 			applyChoice(halted, {
 				t: 'RESOLVE_CHOICE',
 				choiceId: ch.id,
-				selection: SKIP_CONTROL,
+				selection: SKIP_LOCATION,
 			}),
 		)
 		expect(resumed.phase.k).toBe('ACTION')

@@ -292,6 +292,9 @@ export interface EffectCtx {
 	 *  instead of failing the whole operation (rules/12 §12.1 — "may"). A
 	 *  free-played card's own operation starts without it. */
 	optional?: boolean | undefined
+	/** set on the body of a MAY that asked no CONFIRM because the body's own
+	 *  prompt carries the decline (`Primitive.offersDecline` — WARP's Skip). */
+	declinable?: boolean | undefined
 }
 
 /** Any JSON value — the state must stay serialisable, so bindings are JSON. */

@@ -11,7 +11,7 @@ import type { GameState } from '../engine/state'
 import type { Intent } from '../engine/intents'
 import { legalIntents } from '../engine/intents'
 import { checkSelection, type PendingChoice } from '../engine/resolver/choices'
-import { SKIP_CONTROL } from '../engine/phases'
+import { SKIP_LOCATION } from '../engine/resolver/choices'
 import type { CardInstanceId } from '../engine/ids'
 import type { Seat } from '../engine/resolver/queries'
 import { autoPlay, playBots } from './autoPlay'
@@ -216,7 +216,7 @@ describe('rule priors (todo/15 §4)', () => {
 				seat: 0,
 				prompt: '',
 				sourceCard: null,
-				candidates: [SKIP_CONTROL, loc],
+				candidates: [SKIP_LOCATION, loc],
 			},
 		)
 		expect(priorSelection(s, s.pendingChoice!)).toBe(loc)
@@ -224,7 +224,7 @@ describe('rule priors (todo/15 §4)', () => {
 		const skip: Intent = {
 			t: 'RESOLVE_CHOICE',
 			choiceId: 'c1',
-			selection: SKIP_CONTROL,
+			selection: SKIP_LOCATION,
 		}
 		expect(priorBonus(s, 0, take)).toBe(PRIORS.takeControl)
 		expect(priorBonus(s, 0, skip)).toBe(0)
