@@ -62,10 +62,31 @@ steps all do nothing or whose first effective step is an unpayable PAY_THEN. The
 runs with `ctx.optional`: a PAY_THEN whose cost has become unpayable there is **skipped**
 (SKIPPED log) and the operation continues — only a mandatory PAY_THEN fails the operation
 (rules/12 §12.1). 1PIC04 Tamarians offers only the discards the hand can pay and still logs itself.
-A body that asks before it changes anything and can say no in that prompt (a primitive's
-`offersDecline`, today a single WARP) gets no CONFIRM: it runs with `ctx.declinable`, so "you may
-warp" is one dialog, the destination choice with a Skip (`SKIP_LOCATION`), or an empty ship pick
-when several ships could go.
+
+**One dialog per "you may".** A body that asks before it changes anything gets no CONFIRM: its
+first prompt carries the decline. The MAY pushes the body with `ctx.declinable` (the stack depth
+it starts at and the card's "You may …" wording); declining drops every frame from that depth up
+(`declineMay`), so nothing of the body runs, and the operation goes on. The path to that prompt
+is a SEQ's first step, a PAY_THEN's cost (a SEQ cost: its first step) or a single CHOOSE_ONE;
+`withoutDecline` keeps it off every later step, the body after a cost and the chosen option.
+
+- A pick-first primitive declares `offersDecline` and passes `declinable: true` to its first
+  `pickCards`: the pick shows the may's wording, is asked even with one candidate (it is the only
+  prompt), and is `optional` — the empty selection declines, even below `min` (`checkSelection`).
+  Costs (COST_DISCARD "you may discard a card to …", COST_LOG, COST_PUT, …) and benefits
+  (PROMOTE, FREE_PLAY, BEAM, LOG, JUNK, …) do this.
+- WARP, SEND_AWAY_TEAM and REMOVE_AWAY_TEAM ask their Location with a Skip (`SKIP_LOCATION`),
+  even when only one is left; CHOOSE_ONE adds a Decline row (`DECLINE_OPTION`).
+- The prompt is marked `mayDecline`; `declineSelection(choice)` is its decline. The probe, the
+  Cadet and the first-legal script answer it, as they answered the CONFIRM with No.
+- A REPEAT UP_TO round asks the same way: its first prompt carries a decline that ends the
+  repeat ("discard up to 3 cards …": each round is its discard pick).
+
+The CONFIRM stays when its first prompt would show what the player could not see before (FIND,
+TAKE with a look, the scans: a face-down deck; a discard from the opponent's hand), when the
+attack gate would open the victim's window first (`attackGated`), when a cost would be paid in
+Glory (only the CONFIRM says so), and for bodies that ask nothing (DRAW, GAIN_RESOURCE, a plain
+resource cost).
 
 **"Up to N".**
 

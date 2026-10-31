@@ -21,6 +21,7 @@
 
 import type { GameState } from '../engine/state'
 import type { PendingChoice } from '../engine/resolver/choices'
+import { declineSelection } from '../engine/resolver/choices'
 import type { Seat } from '../engine/resolver/queries'
 import type { ResourceId } from '../data/ids'
 import type { CardFilter } from '../engine/resolver/queries'
@@ -76,6 +77,9 @@ export function opponentHandSize(): number {
  *  back to the probed first legal selection — so a naive pick can never break
  *  a game. */
 export function cadetChoice(choice: PendingChoice): unknown {
+	// a "you may" asked without a CONFIRM: its decline, like the CONFIRM's No
+	const decline = declineSelection(choice)
+	if (decline !== undefined) return decline
 	switch (choice.k) {
 		case 'CONFIRM':
 			return false

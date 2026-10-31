@@ -40,10 +40,12 @@ function candidatesOf(
 export const costLog: Primitive<Extract<Effect, { k: 'COST_LOG' }>> = {
 	isCost: true,
 	canResolve: (s, n, ctx) => costCanResolve(s, n, ctx),
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const candidates = candidatesOf(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'costLog', {
 			prompt: 'Log a card',
+			declinable: true,
 			candidates,
 			min: 1,
 			max: 1,

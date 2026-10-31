@@ -33,8 +33,17 @@ import {
 	setActions,
 } from './testUtils'
 import { run } from './stack'
-import { applyChoice, SKIP_LOCATION, type PendingChoice } from './choices'
+import {
+	applyChoice,
+	checkSelection,
+	declineSelection,
+	DECLINE_OPTION,
+	SKIP_LOCATION,
+	type PendingChoice,
+} from './choices'
 import { evalPredicate } from '../queries/resolveQuery'
+import { cadetChoice } from '../../bot/cadet'
+import { firstLegalPolicy } from '../../bot/autoPlay'
 
 const SRC = ID('src')
 /** a fresh state in the ACTION step with 3 actions (PLAY ops cost one) */
@@ -137,13 +146,12 @@ describe('optional effects with an unpayable cost', () => {
 		] as const)
 			s = place(s, d, ID(i), { k: 'DRAW', seat: 0 }, 0)
 		s = play(s, ID('tam'))
-		// "discard a PERSON?" → yes (pick one of the two)
-		expect(pending(s, 'CONFIRM').prompt).toMatch(/PERSON/)
-		s = answer(s, true)
+		// "you may discard a PERSON" is its own pick → one of the two
+		expect(pending(s, 'CHOOSE_CARDS').prompt).toMatch(/PERSON/)
 		s = answer(s, [ID('d1')])
-		// "discard a CARGO?" → no
-		expect(pending(s, 'CONFIRM').prompt).toMatch(/CARGO/)
-		s = answer(s, false)
+		// "you may discard a CARGO" → declined (the empty pick)
+		expect(pending(s, 'CHOOSE_CARDS').prompt).toMatch(/CARGO/)
+		s = answer(s, [])
 		// SHIP / ALLY / ENCOUNTER / INCIDENT are not held: not offered at all
 		expect(s.pendingChoice).toBeNull()
 		expect(res(s, 'GLO')).toBe(1)
@@ -183,7 +191,8 @@ describe('optional effects with an unpayable cost', () => {
 		s = place(s, 'cs-optional', ID('opt'), { k: 'STAGING', seat: 0 }, 0)
 		s = place(s, 'cs-person', ID('only'), { k: 'HAND', seat: 0 }, 0)
 		s = play(s, ID('opt'))
-		s = answer(s, true) // the discard empties the hand …
+		// the "you may" is the discard's own pick, which empties the hand …
+		s = answer(s, [ID('only')])
 		expect(s.pendingChoice).toBeNull()
 		expect(res(s, 'GLO')).toBe(0) // … so the optional PAY_THEN is skipped
 		expect(res(s, 'LAT')).toBe(1) // and the operation went on
@@ -256,7 +265,7 @@ describe('"if you do" — bind on success + DID', () => {
 		s = place(s, 'cs-free-inc', ID('inc'), { k: 'HAND', seat: 0 }, 0)
 		s = play(s, ID('cul'))
 		s = answer(s, false) // don't find
-		s = answer(s, true) // free play the INCIDENT
+		s = answer(s, [ID('inc')]) // free play the INCIDENT (the may's own pick)
 		expect(s.pendingChoice).toBeNull()
 		expect(res(s, 'DIL')).toBe(1) // the INCIDENT's play op ran
 		expect(res(s, 'GLO')).toBe(1)
@@ -295,7 +304,7 @@ describe('"if you do" — bind on success + DID', () => {
 			],
 		}
 		s = pushAndRun(s, node, SRC, 0)
-		s = answer(s, true)
+		s = answer(s, [ID('ally')]) // the "you may" is the free play's pick
 		expect(s.cards[ID('ally')]!.zone).toEqual({ k: 'LOG', seat: 0 })
 		expect(s.cards[SRC]!.zone).toEqual({ k: 'LOG', seat: 0 })
 	})
@@ -324,15 +333,15 @@ describe('"if you do" — bind on success + DID', () => {
 		}
 		// both → Glory
 		let s = play(base(), ID('jo'))
-		s = answer(s, true) // send
-		s = answer(s, true) // beam
+		s = answer(s, ID('loc')) // send (the may asks the Location, with a Skip)
+		s = answer(s, [ID('h')]) // beam
 		expect(s.pendingChoice).toBeNull()
 		expect(s.cards[ID('h')]!.zone).toEqual({ k: 'BEAMED', host: ID('disco') })
 		expect(res(s, 'GLO')).toBe(1)
 		// only the beam → no Glory
 		s = play(base(), ID('jo'))
-		s = answer(s, false)
-		s = answer(s, true)
+		s = answer(s, SKIP_LOCATION)
+		s = answer(s, [ID('h')])
 		expect(s.pendingChoice).toBeNull()
 		expect(res(s, 'GLO')).toBe(0)
 	})
@@ -418,10 +427,13 @@ describe('"up to N"', () => {
 		for (const i of ['a', 'b', 'c'])
 			s = place(s, 'cs-person', ID(i), { k: 'HAND', seat: 0 }, 0)
 		s = pushAndRun(s, upTo, SRC, 0)
-		s = answer(s, true)
+		// no CONFIRM: each round is asked as its discard, the empty pick stops
+		const first = pending(s, 'CHOOSE_CARDS')
+		expect(first.prompt).toMatch(/up to 3 times/)
+		expect(first.mayDecline).toBe(true)
 		s = answer(s, [ID('a')])
-		expect(pending(s, 'CONFIRM').prompt).toMatch(/again/)
-		s = answer(s, false)
+		expect(pending(s, 'CHOOSE_CARDS').prompt).toMatch(/again/)
+		s = answer(s, [])
 		expect(s.pendingChoice).toBeNull()
 		expect(res(s, 'GLO')).toBe(1)
 		expect(zonesOf(s, { k: 'HAND', seat: 0 })).toHaveLength(2)
@@ -430,13 +442,13 @@ describe('"up to N"', () => {
 	it('REPEAT UP_TO stops without asking once a round could do nothing', () => {
 		let s = place(fresh(), 'cs-person', ID('a'), { k: 'HAND', seat: 0 }, 0)
 		s = pushAndRun(s, upTo, SRC, 0)
-		s = answer(s, true) // the only card auto-pays
+		s = answer(s, [ID('a')]) // the only card, still asked: the round's prompt
 		expect(s.pendingChoice).toBeNull()
 		expect(res(s, 'GLO')).toBe(1)
 		// declining the first round is "zero times"
 		let t = place(fresh(), 'cs-person', ID('a'), { k: 'HAND', seat: 0 }, 0)
 		t = pushAndRun(t, upTo, SRC, 0)
-		t = answer(t, false)
+		t = answer(t, [])
 		expect(res(t, 'GLO')).toBe(0)
 	})
 
@@ -571,7 +583,8 @@ describe('"you may warp": the pick carries the decline (no CONFIRM)', () => {
 	it('several ships: the ship choice may be left empty', () => {
 		const s = pushAndRun(table(3, ['s1', 's2']), mayWarp, SRC, 0)
 		const pick = pending(s, 'CHOOSE_CARDS')
-		expect([pick.min, pick.max, pick.optional]).toEqual([0, 1, true])
+		// one ship, or none: `optional` admits the empty pick below `min`
+		expect([pick.min, pick.max, pick.optional]).toEqual([1, 1, true])
 		const none = answer(s, [])
 		expect(none.pendingChoice).toBeNull()
 		expect(none.cards[ID('s1')]!.shipTokenAt).toBe(ID('l0'))
@@ -876,5 +889,206 @@ describe('GAIN_CARD: from the Junk only / fixed destination', () => {
 		s = answer(s, [ID('offer')])
 		expect(s.pendingChoice).toBeNull()
 		expect(s.cards[ID('offer')]!.zone).toEqual({ k: 'DISCARD', seat: 0 })
+	})
+})
+
+// ---------------------------------------------------------------------------
+
+describe('"you may": the first prompt carries the decline (no CONFIRM)', () => {
+	const discard: Effect = { k: 'DISCARD', count: 1, from: 'HAND' }
+	const hand = (...iids: string[]): GameState => {
+		let s = fresh()
+		for (const i of iids)
+			s = place(s, 'cs-person', ID(i), { k: 'HAND', seat: 0 }, 0)
+		return s
+	}
+
+	it('a single candidate is still asked, with the card wording and a Decline', () => {
+		const s = pushAndRun(hand('a'), { k: 'MAY', body: discard }, SRC, 0)
+		const pick = pending(s, 'CHOOSE_CARDS')
+		expect(pick.candidates).toEqual([ID('a')])
+		expect([pick.min, pick.optional, pick.mayDecline]).toEqual([1, true, true])
+		expect(pick.prompt).toMatch(/^You may discard/)
+		const declined = answer(s, [])
+		expect(declined.pendingChoice).toBeNull()
+		expect(zonesOf(declined, { k: 'HAND', seat: 0 })).toEqual([ID('a')])
+		const done = answer(s, [ID('a')])
+		expect(done.cards[ID('a')]!.zone).toEqual({ k: 'DISCARD', seat: 0 })
+	})
+
+	it('declining the first step drops the rest of the body, not what follows', () => {
+		const node: Effect = {
+			k: 'SEQ',
+			steps: [
+				{
+					k: 'MAY',
+					body: {
+						k: 'SEQ',
+						steps: [discard, { k: 'GAIN_RESOURCE', res: 'LAT', amount: 2 }],
+					},
+				},
+				{ k: 'GAIN_RESOURCE', res: 'DIL', amount: 1 },
+			],
+		}
+		const s = pushAndRun(hand('a'), node, SRC, 0)
+		const declined = answer(s, [])
+		expect([res(declined, 'LAT'), res(declined, 'DIL')]).toEqual([0, 1])
+		const accepted = answer(s, [ID('a')])
+		expect([res(accepted, 'LAT'), res(accepted, 'DIL')]).toEqual([2, 1])
+	})
+
+	it('only the first prompt carries it', () => {
+		const node: Effect = {
+			k: 'MAY',
+			body: { k: 'SEQ', steps: [discard, discard] },
+		}
+		let s = pushAndRun(hand('a', 'b', 'c'), node, SRC, 0)
+		expect(pending(s, 'CHOOSE_CARDS').mayDecline).toBe(true)
+		s = answer(s, [ID('a')])
+		const second = pending(s, 'CHOOSE_CARDS')
+		expect([second.mayDecline, second.optional]).toEqual([undefined, undefined])
+		expect(checkSelection(second, []).ok).toBe(false)
+	})
+
+	it("a cost's pick declines: nothing paid, nothing gained, the operation goes on", () => {
+		const node: Effect = {
+			k: 'SEQ',
+			steps: [
+				{
+					k: 'MAY',
+					body: {
+						k: 'PAY_THEN',
+						cost: { k: 'COST_DISCARD', count: 1 },
+						body: { k: 'GAIN_RESOURCE', res: 'GLO', amount: 2 },
+					},
+				},
+				{ k: 'GAIN_RESOURCE', res: 'DIL', amount: 1 },
+			],
+		}
+		const s = pushAndRun(hand('a'), node, SRC, 0)
+		expect(pending(s, 'CHOOSE_CARDS').mayDecline).toBe(true)
+		const declined = answer(s, [])
+		expect([res(declined, 'GLO'), res(declined, 'DIL')]).toEqual([0, 1])
+		expect(zonesOf(declined, { k: 'HAND', seat: 0 })).toEqual([ID('a')])
+		const paid = answer(s, [ID('a')])
+		expect([res(paid, 'GLO'), res(paid, 'DIL')]).toEqual([2, 1])
+	})
+
+	it('a "you may choose one" gets a Decline row', () => {
+		const node: Effect = {
+			k: 'MAY',
+			body: {
+				k: 'CHOOSE_ONE',
+				options: [
+					{ label: 'lat', body: { k: 'GAIN_RESOURCE', res: 'LAT', amount: 1 } },
+					{ label: 'dil', body: { k: 'GAIN_RESOURCE', res: 'DIL', amount: 1 } },
+				],
+			},
+		}
+		const s = pushAndRun(fresh(), node, SRC, 0)
+		const opt = pending(s, 'CHOOSE_OPTION')
+		expect(opt.mayDecline).toBe(true)
+		expect(opt.options.map((o) => o.key)).toEqual(['0', '1', DECLINE_OPTION])
+		const declined = answer(s, { key: DECLINE_OPTION })
+		expect(declined.pendingChoice).toBeNull()
+		expect([res(declined, 'LAT'), res(declined, 'DIL')]).toEqual([0, 0])
+		const chose = answer(s, { key: '1' })
+		expect([res(chose, 'LAT'), res(chose, 'DIL')]).toEqual([0, 1])
+	})
+
+	it('keeps the CONFIRM when the first step would be skipped unasked', () => {
+		// an empty hand: the discard cannot resolve, the gain still could — the
+		// "you may" must still be asked before the gain
+		const node: Effect = {
+			k: 'MAY',
+			body: {
+				k: 'SEQ',
+				steps: [discard, { k: 'GAIN_RESOURCE', res: 'LAT', amount: 2 }],
+			},
+		}
+		const s = pushAndRun(fresh(), node, SRC, 0)
+		pending(s, 'CONFIRM')
+		expect(res(answer(s, false), 'LAT')).toBe(0)
+	})
+
+	it('a declined pick leaves no answer for the next one in the same SEQ', () => {
+		const may: Effect = { k: 'MAY', body: discard }
+		let s = pushAndRun(hand('a', 'b'), { k: 'SEQ', steps: [may, may] }, SRC, 0)
+		s = answer(s, [])
+		const second = pending(s, 'CHOOSE_CARDS')
+		expect(second.candidates).toEqual([ID('a'), ID('b')])
+		s = answer(s, [ID('b')])
+		expect(zonesOf(s, { k: 'HAND', seat: 0 })).toEqual([ID('a')])
+	})
+
+	it('keeps the CONFIRM when the cost would be paid in Glory', () => {
+		const node: Effect = {
+			k: 'MAY',
+			body: {
+				k: 'PAY_THEN',
+				cost: {
+					k: 'SEQ',
+					steps: [
+						{ k: 'COST_DISCARD', count: 1 },
+						{ k: 'COST_RESOURCE', res: 'LAT', amount: 1 },
+					],
+				},
+				body: { k: 'GAIN_RESOURCE', res: 'DIL', amount: 1 },
+			},
+		}
+		let s = setResources(hand('a'), 0, 'LAT', 0)
+		s = setResources(s, 0, 'GLO', 2)
+		s = pushAndRun(s, node, SRC, 0)
+		expect(pending(s, 'CONFIRM').prompt).toMatch(/Paid with 1 \{GLO\}/)
+	})
+
+	it('keeps the CONFIRM before a search of a face-down deck', () => {
+		let s = fresh()
+		s = place(s, 'cs-person', ID('d'), { k: 'DRAW', seat: 0 }, 0)
+		const node: Effect = {
+			k: 'MAY',
+			body: {
+				k: 'FIND',
+				filter: { suits: ['PERSON'] },
+				zones: [{ k: 'DRAW', seat: 0 }],
+			},
+		}
+		pending(pushAndRun(s, node, SRC, 0), 'CONFIRM')
+	})
+
+	it('declineSelection names the decline of each kind, and only when flagged', () => {
+		const s = pushAndRun(hand('a'), { k: 'MAY', body: discard }, SRC, 0)
+		const pick = pending(s, 'CHOOSE_CARDS')
+		expect(declineSelection(pick)).toEqual([])
+		expect(declineSelection({ ...pick, mayDecline: undefined })).toBeUndefined()
+		expect(
+			declineSelection({
+				...pick,
+				k: 'CHOOSE_LOCATION',
+				candidates: [SKIP_LOCATION],
+			} as PendingChoice),
+		).toBe(SKIP_LOCATION)
+	})
+
+	it('the "decline everything optional" policies decline it, like the CONFIRM', () => {
+		const s = pushAndRun(hand('a'), { k: 'MAY', body: discard }, SRC, 0)
+		const pick = pending(s, 'CHOOSE_CARDS')
+		expect(cadetChoice(pick)).toEqual([])
+		expect(firstLegalPolicy(s, pick)).toEqual([])
+	})
+
+	it('an optional pick of two accepts none or two, never one', () => {
+		const pick = pending(
+			pushAndRun(
+				hand('a', 'b', 'c'),
+				{ k: 'MAY', body: { ...discard, count: 2 } },
+				SRC,
+				0,
+			),
+			'CHOOSE_CARDS',
+		)
+		expect(checkSelection(pick, []).ok).toBe(true)
+		expect(checkSelection(pick, [ID('a')]).ok).toBe(false)
+		expect(checkSelection(pick, [ID('a'), ID('b')]).ok).toBe(true)
 	})
 })

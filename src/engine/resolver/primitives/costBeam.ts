@@ -46,6 +46,7 @@ function candidatesOf(
 export const costBeam: Primitive<Extract<Effect, { k: 'COST_BEAM' }>> = {
 	isCost: true,
 	canResolve: (s, n, ctx) => costCanResolve(s, n, ctx),
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		if (answered(ctx, 'costBeam.host')) {
 			// the picked cards ride along as a plain binding (suspend `extra`)
@@ -56,6 +57,7 @@ export const costBeam: Primitive<Extract<Effect, { k: 'COST_BEAM' }>> = {
 		const candidates = candidatesOf(state, node, ctx)
 		const r = pickCards(state, node, ctx, 'costBeam', {
 			prompt: 'Beam a card',
+			declinable: true,
 			candidates,
 			min: 1,
 			max: node.count,

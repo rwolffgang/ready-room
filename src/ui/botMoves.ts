@@ -365,7 +365,8 @@ function stepPhrase(
 				answer === 'nothing' ||
 				answer === 'none' ||
 				answer === 'No' ||
-				answer === 'Skip'
+				answer === 'Skip' ||
+				answer === 'Decline'
 			if (verb !== undefined && !empty)
 				return { phrase: `${verb} ${answer}`, headline: true }
 			return { phrase: `chose ${answer}`, headline: false }

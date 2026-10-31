@@ -782,13 +782,14 @@ describe('CAPTAIN_HAS_TRAIT / TOTAL_VP_AT_LEAST (todo/13 gap #2)', () => {
 		s = pool(s, 0, 3)
 		const halted = pushAndRun(s, node, SRC, 0)
 		const ch = halted.pendingChoice
-		if (ch === null || ch.k !== 'CONFIRM')
-			throw new Error('expected CONFIRM (MAY)')
+		// the MAY is asked as the send's destination, with a Skip
+		if (ch === null || ch.k !== 'CHOOSE_LOCATION')
+			throw new Error('expected CHOOSE_LOCATION (MAY send)')
 		const out = run(
 			applyChoice(halted, {
 				t: 'RESOLVE_CHOICE',
 				choiceId: ch.id,
-				selection: true,
+				selection: ID('loc'),
 			}),
 		)
 		expect(out.players[0]!.awayTeamsInPool).toBe(2)

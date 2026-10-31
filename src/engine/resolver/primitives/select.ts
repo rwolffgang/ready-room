@@ -11,10 +11,12 @@ export const select: Primitive<Extract<Effect, { k: 'SELECT' }>> = {
 	canResolve(state, node, ctx) {
 		return resolveQuery(state, node.target, ctx).length > 0
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const candidates = resolveQuery(state, node.target, ctx)
 		const r = pickSingle(state, node, ctx, 'select', {
 			prompt: 'Select a card',
+			declinable: true,
 			candidates,
 			from: 'SELECT',
 		})

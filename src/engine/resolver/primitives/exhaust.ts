@@ -11,12 +11,14 @@ export const exhaust: Primitive<Extract<Effect, { k: 'EXHAUST' }>> = {
 			(iid) => !state.cards[iid]!.exhausted,
 		)
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const candidates = resolveQuery(state, node.target, ctx).filter(
 			(iid) => !state.cards[iid]!.exhausted,
 		)
 		const r = pickSingle(state, node, ctx, 'exhaust', {
 			prompt: 'Exhaust a card',
+			declinable: true,
 			candidates,
 			from: 'IN_PLAY',
 		})

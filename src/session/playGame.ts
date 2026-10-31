@@ -147,15 +147,14 @@ export function playGame(
 	settle(triggers.offered)
 	const dkyrShip = findDef(s, 'HAND:0', '1SHI03-13')
 	settle([dkyrShip])
-	settle(false)
+	settle([]) // decline the "you may" (asked as the pick itself)
 	const pic24 = findDef(s, 'DUTY_OFFICER:0', '1PIC24-24')
 	dispatch({ t: 'ACTIVATE', iid: pic24, operationIndex: 3 })
 	const dkyr = findDef(s, 'HAND:0', '1SHI03-13')
 	dispatch({ t: 'PLAY_CARD', iid: dkyr, operationIndex: 0 })
 	settle(zoneIids(s, 'NEUTRAL_ZONE:2')[0]!) // WARP to the empty NZ slot 2
-	settle(true)
 	const inc05 = findDef(s, 'HAND:0', '1INC05-6')
-	settle([inc05])
+	settle([inc05]) // the "you may" is asked as this pick
 	dispatch({ t: 'END_TURN' })
 	settle([zoneIids(s, 'MARKET_OFFER:PERSON')[0]!])
 	settle([])

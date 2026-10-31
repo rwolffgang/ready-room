@@ -234,16 +234,22 @@ describe('reaction windows only offer reactions whose cost can be paid', () => {
 		expect(discard?.sourceOp).toBe(0)
 	})
 
-	// With one card and one ship the beam asks nothing more, so the "you may
-	// beam" confirm is where the player sees what would go where — even when
-	// the gained card lies on the deck top.
-	it('1PIC01 PIC: the beam confirm previews the gained card and the ships', () => {
+	// The "you may beam" is asked as the beam's own pick, even with one card
+	// and one ship, so the player sees what would go — even when the gained
+	// card lies on the deck top.
+	it('1PIC01 PIC: the "you may beam" pick shows the gained card', () => {
 		let s = pic(1)
 		s = place(s, 'pxAlly', ID('ally'), { k: 'DRAW', seat: 0 }, 0)
 		s = place(s, 'pxShip', ID('ship'), { k: 'FLEET', seat: 0 }, 0)
-		// answer the window and the discard, stop at the confirm
+		// answer the window and the discard, stop at the beam
 		let t = run(drainEvents(s).state)
-		while (t.pendingChoice !== null && t.pendingChoice.k !== 'CONFIRM') {
+		while (
+			t.pendingChoice !== null &&
+			!(
+				t.pendingChoice.mayDecline === true &&
+				/beam/i.test(t.pendingChoice.prompt)
+			)
+		) {
 			t = run(
 				applyChoice(t, {
 					t: 'RESOLVE_CHOICE',
@@ -253,11 +259,10 @@ describe('reaction windows only offer reactions whose cost can be paid', () => {
 			)
 		}
 		const choice = t.pendingChoice
-		expect(choice?.k).toBe('CONFIRM')
-		expect(choice?.k === 'CONFIRM' && choice.preview).toEqual({
-			cards: [ID('ally')],
-			onto: [ID('ship')],
-		})
+		expect(choice?.k).toBe('CHOOSE_CARDS')
+		expect(choice?.k === 'CHOOSE_CARDS' && choice.candidates).toEqual([
+			ID('ally'),
+		])
 		expect(project(t, 0).cards['ally']!.def).toBe('pxAlly')
 		expect(project(t, 1).cards['ally']!.def).toBe(HIDDEN_DEF)
 	})

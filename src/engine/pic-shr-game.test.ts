@@ -492,7 +492,7 @@ function runScriptedGame(seed: number): GameState {
 	s = D.settle([dkyrShip], 'CHOOSE_CARDS') // reaction discard: the market SHIP
 	expect(player(s, 0).resources.GLO).toBe(3)
 	expect(DISCARD0(s)).toContain('1SHI03-13')
-	s = D.settle(false, 'CONFIRM') // may-Beam: decline
+	s = D.settle([], 'CHOOSE_CARDS') // may-Beam (asked as the beam's pick): decline
 
 	// ACTIVATE 1PIC24 op3: DRAW_FROM_DISCARD — recover a SHIP from the Discard pile.
 	const pic24 = findDef(s, 'DUTY_OFFICER:0', '1PIC24-24')!
@@ -509,9 +509,8 @@ function runScriptedGame(seed: number): GameState {
 	const slot2Loc = zoneIids(s, 'NEUTRAL_ZONE:2')[0]!
 	s = D.settle(slot2Loc, 'CHOOSE_LOCATION')
 	expect(s.cards[dkyr]!.shipTokenAt).toBe(slot2Loc)
-	s = D.settle(true, 'CONFIRM') // accept the may
 	const inc05 = findDef(s, 'HAND:0', '1INC05-6')!
-	s = D.settle([inc05], 'CHOOSE_CARDS') // discard for the research
+	s = D.settle([inc05], 'CHOOSE_CARDS') // the may's own pick: discard for the research
 	expect(player(s, 0).specialties.RESEARCH).toBe(resBefore + 1)
 	expect(player(s, 0).resources.GLO).toBe(3) // D'Kyr gains research, not Glory
 	expect(zoneDefs(s, 'FLEET:0')).toEqual(['1PIC02-24', '1SHI03-13']) // deployed
@@ -628,24 +627,25 @@ describe('SET A COURSE (1PIC22/24) — REPEAT suspension pays per iteration', ()
 		const setCourse = findDef(s, 'HAND:0', '1PIC22-24')!
 		expect(canPlay(s, 0, setCourse).ok).toBe(true)
 		s = D.go({ t: 'PLAY_CARD', iid: setCourse, operationIndex: 0 })
-		expect(s.pendingChoice!.k).toBe('CONFIRM')
-		s = D.settle(true, 'CONFIRM')
 
-		// "…to the SAME LOCATION": the destination is selected once, up front.
+		// "…to the SAME LOCATION": the destination is selected once, up front —
+		// and that pick is the "you may" itself (no CONFIRM).
+		expect(D.c('CHOOSE_CARDS').mayDecline).toBe(true)
 		const slot0Loc = findDef(s, 'NEUTRAL_ZONE:0', '1LOC16-20')!
 		s = D.settle([slot0Loc], 'CHOOSE_CARDS')
 
-		// "Up to 3": every round is optional — the player confirms each one.
-		// Round 1: discard a PERSON (1PIC24) -> 1 away team to the selected Location.
-		s = D.settle(true, 'CONFIRM')
+		// "Up to 3": every round is optional — each is asked as its discard, and
+		// the empty pick would stop. Round 1: discard a PERSON (1PIC24) -> 1
+		// away team to the selected Location.
 		const pic24 = findDef(s, 'HAND:0', '1PIC24-24')!
-		expect(D.c('CHOOSE_CARDS').k).toBe('CHOOSE_CARDS')
+		expect(D.c('CHOOSE_CARDS').mayDecline).toBe(true)
 		s = D.settle([pic24], 'CHOOSE_CARDS')
 
-		// Round 2 pays its own cost (the single PERSON left, 1PIC23, auto-pays)
-		// and sends to the same Location without asking again — two discards,
-		// two away teams, all at the selected Location.
-		s = D.settle(true, 'CONFIRM')
+		// Round 2 pays its own cost (the single PERSON left, 1PIC23, still asked:
+		// it is the round's only prompt) and sends to the same Location without
+		// asking again — two discards, two away teams, all at the selected
+		// Location.
+		s = D.settle([findDef(s, 'HAND:0', '1PIC23-24')!], 'CHOOSE_CARDS')
 		expect(s.awayTeamsAt[slot0Loc]?.[0]).toBe(2)
 		expect(player(s, 0).awayTeamsInPool).toBe(3)
 

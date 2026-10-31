@@ -1,8 +1,8 @@
 import type { Effect } from '../nodes'
 import type { Primitive } from './index'
 import { evalAmount } from '../../queries/resolveQuery'
-import { suspend, answered, answer } from '../runtime'
-import { gloryNote, wouldDoNothing } from './may'
+import { suspend, answered, answer, withoutDecline } from '../runtime'
+import { gloryNote, offersDecline, wouldDoNothing } from './may'
 import { describe } from '../../describe'
 import type { EffectCtx } from '../../state'
 
@@ -33,7 +33,10 @@ const MORE_KEY = 'repeat.more'
  *   - it stops once `max` rounds ran, or as soon as a round could do nothing
  *     (the MAY test: an unresolvable leaf, an unpayable PAY_THEN, …);
  *   - otherwise it asks (CONFIRM) whether to resolve another round, so the
- *     player may stop early — 0 rounds included, "up to" is a maximum;
+ *     player may stop early — 0 rounds included, "up to" is a maximum. A
+ *     round whose first prompt can carry the decline (may.ts offersDecline:
+ *     "discard up to 3 …" — the discard pick) asks no CONFIRM: declining
+ *     that pick stops;
  *   - each round runs in its own bindings scope, marked optional (an
  *     unpayable cost ends the round, not the operation).
  * `max` is evaluated each round, so it tracks the board ("any number of
@@ -73,7 +76,7 @@ export const repeat: Primitive<Extract<Effect, { k: 'REPEAT' }>> = {
 				state.stack.push({
 					k: 'EFFECT',
 					node: node.body,
-					ctx: { ...iterationCtx(ctx), optional: true },
+					ctx: { ...iterationCtx(withoutDecline(ctx)), optional: true },
 					ip: 0,
 				})
 				return state
@@ -81,6 +84,30 @@ export const repeat: Primitive<Extract<Effect, { k: 'REPEAT' }>> = {
 			if (round >= t) return state
 			if (wouldDoNothing(state, node.body, ctx)) return state
 			const body = describe(node.body).trim().replace(/\.$/, '')
+			const glory = gloryNote(state, node.body, ctx)
+			if (glory === '' && offersDecline(state, node.body, ctx)) {
+				// No CONFIRM: the round's first prompt carries the decline
+				// (may.ts), which drops this round and the next-round frame below
+				// it, ending the REPEAT.
+				const base = state.stack.length
+				const prompt =
+					round === 0
+						? `${body} (up to ${t} times).`
+						: `${body} again (${round} of up to ${t} done).`
+				const later = withoutDecline(ctx)
+				state.stack.push({ k: 'EFFECT', node, ctx: later, ip: round + 1 })
+				state.stack.push({
+					k: 'EFFECT',
+					node: node.body,
+					ctx: {
+						...iterationCtx(later),
+						optional: true,
+						declinable: { base, prompt },
+					},
+					ip: 0,
+				})
+				return state
+			}
 			return suspend(
 				state,
 				node,
@@ -91,8 +118,7 @@ export const repeat: Primitive<Extract<Effect, { k: 'REPEAT' }>> = {
 					prompt:
 						(round === 0
 							? `${body}? (up to ${t} times)`
-							: `${body} again? (${round} of up to ${t} done)`) +
-						gloryNote(state, node.body, ctx),
+							: `${body} again? (${round} of up to ${t} done)`) + glory,
 				},
 				undefined,
 				round,

@@ -21,12 +21,14 @@ export const costReturnIncident: Primitive<
 > = {
 	isCost: true,
 	canResolve: (s, n, ctx) => costCanResolve(s, n, ctx),
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const candidates = handCandidates(state, ctx, node.filter).filter(
 			(iid) => cardDef(state.cards[iid]!.def).suit === 'INCIDENT',
 		)
 		const r = pickCards(state, node, ctx, 'costReturnIncident', {
 			prompt: 'Return an Incident',
+			declinable: true,
 			candidates,
 			min: node.count,
 			max: node.count,

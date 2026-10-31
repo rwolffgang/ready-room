@@ -60,7 +60,9 @@ export interface ChoiceCardsContext {
 	max: number
 	/** Zone serialisation shown in the choice (validation bookkeeping). */
 	from: string
-	/** True when an empty selection is meaningful ("may discard any"). */
+	/** True when an empty selection is meaningful ("may discard any", or the
+	 *  decline of a "you may" asked without a CONFIRM): it is accepted even
+	 *  below `min`. */
 	optional?: boolean | undefined
 }
 
@@ -79,6 +81,10 @@ export interface ChoiceBase {
 	 *  can say why the choice is asked and what it pays for. Absent for
 	 *  phase-level prompts and granted (ALT_PLAY) operations. */
 	sourceOp?: number | undefined
+	/** This prompt is the whole "you may …" (may.ts asked no CONFIRM): its
+	 *  `declineSelection` — the empty pick, Skip or Decline — declines the
+	 *  optional effect, and a "decline everything optional" policy answers it. */
+	mayDecline?: true | undefined
 }
 
 /** What accepting a "you may …" (a CONFIRM) would act on: the cards it picks
@@ -91,9 +97,30 @@ export interface ChoicePreview {
 }
 
 /** Sentinel candidate of a CHOOSE_LOCATION that may be declined — the
- *  Control Step's take-control (rules/03 §3.4) and a "you may warp" (warp.ts,
- *  which asks no CONFIRM first). The UI shows it as a Skip button. */
+ *  Control Step's take-control (rules/03 §3.4) and a "you may" warp, send or
+ *  remove an Away Team asked without a CONFIRM. The UI shows it as a Skip
+ *  button. */
 export const SKIP_LOCATION = '__SKIP__' as CardInstanceId
+
+/** Option key of the Decline row a "you may choose one" adds to its
+ *  CHOOSE_OPTION when it asks no CONFIRM (chooseOne.ts). */
+export const DECLINE_OPTION = '__DECLINE__'
+
+/** The selection that declines a `mayDecline` prompt, or undefined for a
+ *  choice that is not one. */
+export function declineSelection(choice: PendingChoice): JsonValue | undefined {
+	if (choice.mayDecline !== true) return undefined
+	switch (choice.k) {
+		case 'CHOOSE_CARDS':
+			return []
+		case 'CHOOSE_OPTION':
+			return { key: DECLINE_OPTION }
+		case 'CHOOSE_LOCATION':
+			return SKIP_LOCATION
+		default:
+			return undefined
+	}
+}
 
 export type PendingChoice =
 	| (ChoiceBase & { k: 'CONFIRM'; preview?: ChoicePreview | undefined })
@@ -205,7 +232,8 @@ export function checkSelection(
 			if (!Array.isArray(selection))
 				return { ok: false, reason: 'CHOOSE_CARDS: selection must be an array' }
 			const iids = selection as CardInstanceId[]
-			if (iids.length < choice.min || iids.length > choice.max) {
+			const declined = iids.length === 0 && choice.optional === true
+			if (!declined && (iids.length < choice.min || iids.length > choice.max)) {
 				return {
 					ok: false,
 					reason: `CHOOSE_CARDS: need ${choice.min}..${choice.max} cards, got ${iids.length}`,
@@ -552,75 +580,79 @@ export function applyChoice(
 /**
  * Probe mode resolves the pending choice as "does at least one valid selection
  * exist?" and picks one deterministically. CONFIRM declines (a "may" is
- * optional and never gates playability); amount choices take max; card choices
- * take the first min candidates.
+ * optional and never gates playability), and so does a "you may" asked
+ * without one (`mayDecline`); amount choices take max; card choices take the
+ * first min candidates.
  */
 export function probeFirstChoice(state: GameState): GameState {
 	const choice = state.pendingChoice
 	if (!choice) return state
 	let selection: JsonValue
-	switch (choice.k) {
-		case 'CONFIRM':
-			selection = false
-			break
-		case 'CHOOSE_OPTION': {
-			const enabled = choice.options.find((o) => o.enabled)
-			if (enabled === undefined) {
-				// no enabled option at all → there is no legal choice; the probe
-				// caller treats this as "cannot resolve".
-				throw new Error(`probe: CHOOSE_OPTION with zero enabled options`)
+	const decline = declineSelection(choice)
+	if (decline !== undefined) selection = decline
+	else
+		switch (choice.k) {
+			case 'CONFIRM':
+				selection = false
+				break
+			case 'CHOOSE_OPTION': {
+				const enabled = choice.options.find((o) => o.enabled)
+				if (enabled === undefined) {
+					// no enabled option at all → there is no legal choice; the probe
+					// caller treats this as "cannot resolve".
+					throw new Error(`probe: CHOOSE_OPTION with zero enabled options`)
+				}
+				selection = { key: enabled.key }
+				break
 			}
-			selection = { key: enabled.key }
-			break
-		}
-		case 'CHOOSE_CARDS': {
-			// Probe hard-filters disabled candidates out of the "first legal"
-			// selection — a greyed (disabled) target is deliberately not legal
-			// (todo/07 §5, rules/12 §12.12).
-			const disabled = new Set((choice.disabled ?? []).map((d) => d.iid))
-			const legal = choice.candidates.filter((iid) => !disabled.has(iid))
-			if (legal.length < choice.min) {
-				throw new Error(
-					`probe: CHOOSE_CARDS has ${legal.length} legal candidates (< min ${choice.min})`,
-				)
+			case 'CHOOSE_CARDS': {
+				// Probe hard-filters disabled candidates out of the "first legal"
+				// selection — a greyed (disabled) target is deliberately not legal
+				// (todo/07 §5, rules/12 §12.12).
+				const disabled = new Set((choice.disabled ?? []).map((d) => d.iid))
+				const legal = choice.candidates.filter((iid) => !disabled.has(iid))
+				if (legal.length < choice.min) {
+					throw new Error(
+						`probe: CHOOSE_CARDS has ${legal.length} legal candidates (< min ${choice.min})`,
+					)
+				}
+				selection = legal.slice(0, choice.min) as JsonValue
+				break
 			}
-			selection = legal.slice(0, choice.min) as JsonValue
-			break
+			case 'CHOOSE_LOCATION':
+				selection = choice.candidates[0] as string
+				break
+			case 'CHOOSE_SUIT':
+				selection = choice.suits[0] as string
+				break
+			case 'CHOOSE_TRAIT':
+				selection = choice.traits[0] as string
+				break
+			case 'CHOOSE_SPECIALTY':
+				selection = 'RESEARCH'
+				break
+			case 'CHOOSE_DESTINATION':
+				selection = choice.options[0] ?? 'DECK_TOP'
+				break
+			case 'CHOOSE_AMOUNT':
+				selection = choice.max
+				break
+			case 'ORDER_OPERATIONS':
+				selection = choice.pending as unknown as JsonValue
+				break
+			case 'OPTIONAL_TRIGGERS':
+				selection = choice.offered as unknown as JsonValue
+				break
+			case 'CHOOSE_WITNESS':
+				selection = choice.sets[0] as unknown as JsonValue
+				break
+			case 'CHOOSE_WILDCARD_AS':
+				selection = choice.traits[0] as string
+				break
+			case 'ORDER_CARDS':
+				selection = choice.cards as JsonValue
+				break
 		}
-		case 'CHOOSE_LOCATION':
-			selection = choice.candidates[0] as string
-			break
-		case 'CHOOSE_SUIT':
-			selection = choice.suits[0] as string
-			break
-		case 'CHOOSE_TRAIT':
-			selection = choice.traits[0] as string
-			break
-		case 'CHOOSE_SPECIALTY':
-			selection = 'RESEARCH'
-			break
-		case 'CHOOSE_DESTINATION':
-			selection = choice.options[0] ?? 'DECK_TOP'
-			break
-		case 'CHOOSE_AMOUNT':
-			selection = choice.max
-			break
-		case 'ORDER_OPERATIONS':
-			selection = choice.pending as unknown as JsonValue
-			break
-		case 'OPTIONAL_TRIGGERS':
-			selection = choice.offered as unknown as JsonValue
-			break
-		case 'CHOOSE_WITNESS':
-			selection = choice.sets[0] as unknown as JsonValue
-			break
-		case 'CHOOSE_WILDCARD_AS':
-			selection = choice.traits[0] as string
-			break
-		case 'ORDER_CARDS':
-			selection = choice.cards as JsonValue
-			break
-	}
 	const validated = validateSelection(choice, selection)
 	const next = storeSelection(state, choice.id, validated)
 	if (choice.k === 'CHOOSE_WILDCARD_AS') {

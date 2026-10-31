@@ -292,9 +292,20 @@ export interface EffectCtx {
 	 *  instead of failing the whole operation (rules/12 §12.1 — "may"). A
 	 *  free-played card's own operation starts without it. */
 	optional?: boolean | undefined
-	/** set on the body of a MAY that asked no CONFIRM because the body's own
-	 *  prompt carries the decline (`Primitive.offersDecline` — WARP's Skip). */
-	declinable?: boolean | undefined
+	/** An open "you may" decline (may.ts): set on the body of a MAY, or a REPEAT
+	 *  UP_TO round, that asked no CONFIRM because the body's first prompt
+	 *  carries the decline (`Primitive.offersDecline`). Only that first prompt
+	 *  reads it — SEQ, PAY_THEN and CHOOSE_ONE pass it to their first step
+	 *  alone (`withoutDecline`). */
+	declinable?: Declinable | undefined
+}
+
+/** See EffectCtx.declinable. A decline drops every frame from `base` up (the
+ *  stack depth the optional body was pushed at); `prompt` is the "you may"
+ *  wording the declinable prompt shows. */
+export interface Declinable {
+	base: number
+	prompt: string
 }
 
 /** Any JSON value — the state must stay serialisable, so bindings are JSON. */

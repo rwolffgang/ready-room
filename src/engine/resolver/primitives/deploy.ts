@@ -22,10 +22,12 @@ export const deploy: Primitive<Extract<Effect, { k: 'DEPLOY' }>> = {
 	canResolve(state, node, ctx) {
 		return deployable(state, resolveQuery(state, node.target, ctx)).length > 0
 	},
+	offersDecline: () => true,
 	execute(state, node, ctx, _frame) {
 		const candidates = deployable(state, resolveQuery(state, node.target, ctx))
 		const r = pickCards(state, node, ctx, 'deploy', {
 			prompt: 'Deploy a card',
+			declinable: true,
 			candidates,
 			min: 1,
 			max: 1,

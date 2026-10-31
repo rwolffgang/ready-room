@@ -23,7 +23,11 @@ import type { GameState } from '../engine/state'
 import type { Intent } from '../engine/intents'
 import { reduce, legalIntents, firstLegalSelection } from '../engine/intents'
 import type { PendingChoice } from '../engine/resolver/choices'
-import { checkSelection, validateChoice } from '../engine/resolver/choices'
+import {
+	checkSelection,
+	declineSelection,
+	validateChoice,
+} from '../engine/resolver/choices'
 import type { Seat } from '../engine/resolver/queries'
 import type { Bot } from './types'
 
@@ -74,6 +78,9 @@ export function firstLegalPolicy(
 	choice: PendingChoice,
 ): unknown {
 	void state
+	// a "you may" asked without a CONFIRM: its decline, like the CONFIRM's No
+	const decline = declineSelection(choice)
+	if (decline !== undefined) return decline
 	switch (choice.k) {
 		case 'CONFIRM':
 			return false
