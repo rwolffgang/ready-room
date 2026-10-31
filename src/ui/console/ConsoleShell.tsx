@@ -8,7 +8,8 @@
 //   you         your in-play area · your crew console
 //   hand dock   your Draw and Discard, your hand peeking up from the edge
 //
-// with layers that open only on request: the hand lifted (hover, tap, H), the
+// with layers that open only on request: the hand lifted (hover, tap, H — on a
+// tall screen a pinned hand docks in a row of its own instead), the
 // opponent on the viewscreen (V), a close-up of the Neutral Zone (N), the
 // Market (M) or your area (B), and the log drawer (L). Cards size themselves
 // to the height the board has (--card-w in console.css), so on a laptop or an
@@ -34,7 +35,7 @@ import { FlightLayer } from '../flight'
 import { seatLabel } from '../format'
 import { useGameStore, useSession, useViewerSeat } from '../store'
 import { useConsoleUi } from './consoleUi'
-import { HandDock } from './HandDock'
+import { HandDock, useHandDocked } from './HandDock'
 import { HeadBar } from './HeadBar'
 import { LogDrawer } from './LogDrawer'
 import { CloseupButton, CloseupLabel, Closeups } from './Closeup'
@@ -54,8 +55,11 @@ export function ConsoleShell({ state }: { state: GameState }) {
 	// red alert when the Burn is one Incident away.
 	const incidentsLeft = state.zones['INCIDENT_DECK']?.length ?? 0
 	const alert = incidentsLeft <= 1 && state.result === null
+	const handDocked = useHandDocked()
 	return (
-		<div className={`frame console${alert ? ' frame-alert' : ''}`}>
+		<div
+			className={`frame console${alert ? ' frame-alert' : ''}${handDocked ? ' hand-docked' : ''}`}
+		>
 			<HeadBar state={state} incidentsLeft={incidentsLeft} />
 			<div className="frame-body">
 				<BotBar variant="console" />

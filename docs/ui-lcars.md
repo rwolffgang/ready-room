@@ -109,7 +109,7 @@ The split is itself informational: **condensed caps = system chrome, normal-widt
 │ YOUR AREA  Captain · Fleet · Duty Officer · Location Area  Close up (B)│ CREW CONSOLE  tracks · piles ·       │
 │            Staging Area                                                 │               missions               │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [Draw][Discard] [Hand · H]  the hand, peeking up from the bottom edge                                         │
+│ [Draw][Discard] [Hand]  the hand, peeking up from the bottom edge                                  [Hold · H] │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -145,9 +145,13 @@ What the layout follows:
 - **The hand docks.** It rests along the bottom edge with only the top strip of each card showing —
   the name band, enough to see what you hold, with unplayable cards dimmed as always — and lifts
   to full size over your area when you point at it, focus it or tap it (the first tap on a lowered
-  hand only lifts it). **H** pins it up and lets it drop. It lifts straight up and never sideways,
-  so a double click lands on the same card. It used to float over the bottom-right of the board at
-  full size and covered most of your area.
+  hand only lifts it). The end cap that closes the dock on the right — or **H** — pins it up and
+  lets it drop; the pin is kept per device. On a screen tall enough (`HAND_ROOM_QUERY`, 960px) a
+  pinned hand docks at full size in a row of its own and the board's cards shrink to fit above it
+  (123px instead of 132 at 1080p), so it covers nothing and Esc leaves it; on a shorter screen it
+  lifts over your area and Esc drops it. It lifts straight up and never sideways, so a double
+  click lands on the same card. It used to float over the bottom-right of the board at full size
+  and covered most of your area.
 - **Four layers open only on request.** The hand (above), the opponent **on screen** (**V**, or a
   click on the band: their full area and crew console at your card size, framed like the main
   viewscreen), a **close-up** of one part of the table (**N** the Neutral Zone, **M** the Market,

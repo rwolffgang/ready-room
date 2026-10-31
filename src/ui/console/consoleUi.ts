@@ -2,7 +2,8 @@
 // the viewscreen or a close-up is open, the head menu is showing. Game state
 // never lives here — that is the game store (src/ui/store.ts); this only
 // remembers where the player is looking, so it resets freely (a new game, a
-// reload).
+// reload). The one exception is the hand pin: a preference for how the
+// player likes the table, kept per device.
 
 import { create } from 'zustand'
 
@@ -11,7 +12,8 @@ import { create } from 'zustand'
 export type Closeup = 'neutral-zone' | 'market' | 'area'
 
 export interface ConsoleUi {
-	/** H: the hand stays raised until H again (or Esc). */
+	/** H or the dock's end cap: the hand stays raised until toggled again
+	 *  (or Esc, where it lifts over the board). Kept per device. */
 	handPinned: boolean
 	logOpen: boolean
 	/** log entries the player had seen when they last closed the drawer */
@@ -29,18 +31,41 @@ export interface ConsoleUi {
 	setViewscreen: (b: boolean) => void
 	setCloseup: (c: Closeup | null) => void
 	setMenuOpen: (b: boolean) => void
-	/** A new game: everything closed, its `entries` log rows already seen. */
+	/** A new game: everything closed, its `entries` log rows already seen.
+	 *  The hand pin stays as the player left it. */
 	reset: (entries: number) => void
 }
 
+const HAND_PINNED_KEY = 'ready-room:hand-pinned'
+
+function loadHandPinned(): boolean {
+	try {
+		return globalThis.localStorage?.getItem(HAND_PINNED_KEY) === '1'
+	} catch {
+		return false
+	}
+}
+
+function saveHandPinned(pinned: boolean): void {
+	try {
+		if (pinned) globalThis.localStorage?.setItem(HAND_PINNED_KEY, '1')
+		else globalThis.localStorage?.removeItem(HAND_PINNED_KEY)
+	} catch {
+		// per-device convenience only
+	}
+}
+
 export const useConsoleUi = create<ConsoleUi>((set) => ({
-	handPinned: false,
+	handPinned: loadHandPinned(),
 	logOpen: false,
 	logSeen: 0,
 	viewscreen: false,
 	closeup: null,
 	menuOpen: false,
-	setHandPinned: (handPinned) => set({ handPinned }),
+	setHandPinned: (handPinned) => {
+		saveHandPinned(handPinned)
+		set({ handPinned })
+	},
 	setLogOpen: (logOpen, entries) => set({ logOpen, logSeen: entries }),
 	setViewscreen: (viewscreen) =>
 		set(viewscreen ? { viewscreen, closeup: null } : { viewscreen }),
@@ -49,7 +74,6 @@ export const useConsoleUi = create<ConsoleUi>((set) => ({
 	setMenuOpen: (menuOpen) => set({ menuOpen }),
 	reset: (entries) =>
 		set({
-			handPinned: false,
 			logOpen: false,
 			logSeen: entries,
 			viewscreen: false,

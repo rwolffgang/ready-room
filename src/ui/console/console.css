@@ -5,12 +5,13 @@
  *     table          ─ opponent band · shared row · your row (scrolls only
  *                      below the card-size floor)
  *     hand dock  72px ─ your decks + the hand peeking up from the edge
+ *                      (232px while the hand is docked up, .hand-docked)
  *
  * Card size is ONE number, --card-w, worked out from the board's height: the
  * shared row is one card high and your area two, and a card is its face at
  * the printed 1:1.397 inside a 1px frame plus 5px — 1.397W + 2.2px — so 4.19
- * card widths of height must fit beside the fixed parts: 346px measured (band
- * 104, dock 72, the shared row's suit row and standees 62, your area's
+ * card widths of height must fit beside the fixed parts: the dock, 274px
+ * measured (band 104, the shared row's suit row and standees 62, your area's
  * labels, padding and ship/beamed chips 96, gaps 12) and 7px of frames.
  * It stops shrinking at 84px (the table scrolls instead) and growing at
  * 132px. */
@@ -22,6 +23,12 @@
 	padding: var(--gap) 10px;
 	/* no double-tap zoom on iPad: a double tap is a double click here */
 	touch-action: manipulation;
+}
+/* A pinned hand on a tall screen (HAND_ROOM_QUERY in HandDock.tsx) docks at
+ * full size in a row of its own: the hand card (219px) and the dock's
+ * padding. The board, the layers and the close-ups all size from --dock-h. */
+.frame.console.hand-docked {
+	--dock-h: 232px;
 }
 
 /* --------------------------------------------------------------- head bar */
@@ -189,7 +196,7 @@
 .board {
 	--card-w: clamp(
 		84px,
-		min((100cqh - 353px) / 4.19, (100cqw - 400px) / 7),
+		min((100cqh - 281px - var(--dock-h)) / 4.19, (100cqw - 400px) / 7),
 		132px
 	);
 	container: board / size;
@@ -655,7 +662,7 @@ kbd {
 	align-items: flex-start;
 	gap: 10px;
 	height: var(--dock-h);
-	padding: 6px 8px 0 10px;
+	padding: 6px 0 0 10px;
 	background: var(--panel);
 	border-left: 5px solid var(--c);
 	border-radius: 4px;
@@ -668,29 +675,38 @@ kbd {
 	height: 42px;
 	font-size: 14px;
 }
-.dock-handle {
+/* The dock's name opens the bar on the left; the end cap closes it on the
+ * right and is the pin (H), lit while the hand is held up. */
+.dock-handle,
+.dock-cap {
 	flex: none;
 	align-self: stretch;
 	margin-bottom: 6px;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	width: 58px;
 	border: 0;
-	border-radius: var(--radius-pill) 0 0 var(--radius-pill);
 	background: var(--orange);
 	color: var(--ink);
 	font-family: 'Antonio', sans-serif;
+	font-size: 11px;
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
+}
+.dock-handle {
+	width: 58px;
+	border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+}
+.dock-cap {
+	width: 64px;
+	border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
 	cursor: pointer;
 }
-.dock-handle[aria-pressed='true'] {
-	background: var(--sunflower);
+.dock-cap:hover {
+	filter: brightness(1.12);
 }
-.dock-handle-label {
-	font-size: 11px;
+.dock-cap[aria-pressed='true'] {
+	background: var(--sunflower);
 }
 .dock-fan {
 	flex: 1;
