@@ -94,8 +94,8 @@ export const CHALLENGES = [
 export type Challenge = (typeof CHALLENGES)[number]
 
 /** An upgrade after a game (rules/14 §14.3): a Market card you owned
- *  (Option A), or one of the Bot's bonuses (Option B) — for a REINFORCE
- *  bonus, the crew card it moves. */
+ *  (Option A), or one of the Bot's bonuses (Option B) — for a bonus that
+ *  moves a crew card to the pile, the card it moves. */
 export type Upgrade =
 	| { k: 'CARD'; def: string }
 	| { k: 'BONUS'; ref: BonusRef; def?: string | undefined }
@@ -348,7 +348,7 @@ export interface UpgradeOptions {
 	game: CampaignGame
 	/** Option A: the Market cards you owned that match the Bot's list */
 	cards: string[]
-	/** Option B: each bonus, with the crew cards a REINFORCE bonus may move */
+	/** Option B: each bonus, with the crew cards a pile bonus may move */
 	bonuses: { ref: BonusRef; k: 'BOOST' | 'TO_REINFORCEMENT'; cards: string[] }[]
 	/** Option B is closed (after a win, under the Market-only challenge) */
 	marketOnly: boolean
@@ -409,7 +409,7 @@ export function upgradeOptions(
 	return { game, cards, bonuses, marketOnly }
 }
 
-/** The small card filter a REINFORCE bonus carries (suits / traits / not). */
+/** The small card filter a pile bonus carries (suits / traits / not). */
 function matchesFilter(
 	def: CardDef,
 	f: {
@@ -495,7 +495,10 @@ export function performanceReview(c: Campaign): {
 				text: 'A steady officer, not yet ready for command.',
 			}
 		case 'COMMANDER':
-			return { title: 'Commander', text: 'A capable first officer.' }
+			return {
+				title: 'Commander',
+				text: 'Ready to serve as second-in-command.',
+			}
 		case 'CAPTAIN':
 			return { title: 'Captain', text: 'A starship of your own awaits.' }
 		case 'COMMODORE':

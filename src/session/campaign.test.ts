@@ -172,7 +172,7 @@ describe('upgrades (rules/14 §14.3)', () => {
 		expect(() => applyUpgrade(c, o, { k: 'CARD', def: cargo() }, NOW)).toThrow()
 	})
 
-	it('Option B: a BOOST, or a REINFORCE that moves one of your crew cards', () => {
+	it('Option B: a BOOST, or a bonus that moves one of your crew cards to the pile', () => {
 		const won = play(campaign(), 'KOL', true, [cargo()])
 		const o = upgradeOptions(won, bot('KOL'), defs)!
 		expect(o.cards).toEqual([])
