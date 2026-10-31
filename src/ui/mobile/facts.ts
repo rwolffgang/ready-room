@@ -333,13 +333,16 @@ export function stationOf(zone: ZoneRef, viewer: Seat): Station | null {
 	}
 }
 
-/** Every card a choice asks about, in the order the engine listed them. */
+/** Every card a choice asks about, once each, in the order the engine listed
+ *  them (a greyed card may also be among the candidates). */
 export function choiceCards(choice: PendingChoice): CardInstanceId[] {
 	switch (choice.k) {
 		case 'CHOOSE_CARDS':
 			return [
-				...choice.candidates,
-				...(choice.disabled ?? []).map((d) => d.iid),
+				...new Set([
+					...choice.candidates,
+					...(choice.disabled ?? []).map((d) => d.iid),
+				]),
 			]
 		case 'CHOOSE_LOCATION':
 			return choice.candidates.filter((c) => c !== SKIP_CONTROL)

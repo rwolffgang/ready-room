@@ -45,9 +45,10 @@ export interface ChoiceDisabledCard {
 	reason: string
 }
 
-/** CHOOSE_CARDS payload. `candidates` are already filtered to legal; anything
- *  in `disabled` is deliberately NOT selectable but is surfaced so the player
- *  sees why (todo/07 §5). */
+/** CHOOSE_CARDS payload. Anything in `disabled` is deliberately NOT selectable
+ *  but is surfaced so the player sees why (todo/07 §5). A disabled card may
+ *  also be listed in `candidates` (JUNK lists every Market offer), so readers
+ *  filter `candidates` by `disabled` and show the union once. */
 export interface ChoiceCardsContext {
 	candidates: CardInstanceId[]
 	disabled?: ChoiceDisabledCard[] | undefined

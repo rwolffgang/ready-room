@@ -14,6 +14,7 @@ import { SessionAdapter } from '../../session/adapter'
 import { loadBrowserCatalog } from '../browserCatalog'
 import {
 	burnForecast,
+	choiceCards,
 	missionView,
 	orderCount,
 	orderGroups,
@@ -218,5 +219,25 @@ describe('orders and stations', () => {
 			offer,
 		])
 		expect(ringPlan(choice, s, 1).sheet.length).toBe(2)
+	})
+
+	it('rings a greyed candidate once (JUNK lists it in both lists)', () => {
+		const s = started()
+		const person = s.zones['MARKET_OFFER:PERSON']![0]!
+		const ally = s.zones['MARKET_OFFER:ALLY']![0]!
+		const choice: PendingChoice = {
+			k: 'CHOOSE_CARDS',
+			id: 'c1',
+			seat: 0,
+			prompt: 'Junk a card',
+			sourceCard: null,
+			candidates: [person, ally],
+			disabled: [{ iid: person, reason: 'bears resource tokens' }],
+			min: 1,
+			max: 1,
+			from: 'MARKET',
+		}
+		expect(choiceCards(choice)).toEqual([person, ally])
+		expect(ringPlan(choice, s, 0).sector).toEqual([person, ally])
 	})
 })

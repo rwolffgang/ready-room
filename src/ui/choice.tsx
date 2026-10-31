@@ -323,9 +323,13 @@ function ChooseCardsChoice({
 		(choice.disabled ?? []).map((d: ChoiceDisabledCard) => [d.iid, d.reason]),
 	)
 	const hidden = new Set(choice.hidden ?? [])
+	// a greyed card may already be among the candidates (JUNK lists every
+	// Market offer): draw it once
 	const candidates = [
-		...choice.candidates,
-		...(choice.disabled ?? []).map((d) => d.iid),
+		...new Set([
+			...choice.candidates,
+			...(choice.disabled ?? []).map((d) => d.iid),
+		]),
 	]
 	const canConfirm = !(selected.length < min || selected.length > max)
 	// a SELECT over Locations in play (e.g. 1SIS11-25's "a controlled
