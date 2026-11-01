@@ -128,21 +128,25 @@ with each card in the STCC record shape:
 
 Mission records go in the pack too, keyed `1<CODE>/M1`.
 
-Pitfalls hit with MAL:
+Pitfalls hit with MAL and SHP:
 
 - `RETURN_INCIDENT` has no `bind`. For "if you do", guard with `IF
 COUNT_AT_LEAST`.
 - `ONGOING` cards need a PLAY op containing `DEPLOY`.
 - Seat `0` in zone specs means _self_.
+- A PASSIVE `MODIFIER_ATTACH { id }` works only if the card also lists the id
+  under `passives` (see `1PIC07`). The validator doesn't catch a missing one.
+- The publish audit matches STCC card names in flavor text too: "Earth" is one.
 
 ## 4. Wire it into the game
 
-| File                      | Change                                                              |
-| ------------------------- | ------------------------------------------------------------------- |
-| `src/data/ids.ts`         | add `<CODE>` to `DECKS` (`boards.ts` uses `DECKS` for its enum)     |
-| `tools/validate-cards.ts` | add a `GROUPS` entry and raise `OVERALL_EXPECTED` by the card count |
-| `src/ui/deckReview.tsx`   | add `<CODE>` to `DECK_ORDER`                                        |
-| `tools/fuzz.ts`           | add `<CODE>` to `CREW`                                              |
+| File                      | Change                                                                                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/data/ids.ts`         | add `<CODE>` to `DECKS` (`boards.ts` uses `DECKS` for its enum)                                                                                |
+| `tools/validate-cards.ts` | add a `GROUPS` entry and raise `OVERALL_EXPECTED` by the card count                                                                            |
+| `src/ui/deckReview.tsx`   | add `<CODE>` to `DECK_ORDER`                                                                                                                   |
+| `tools/fuzz.ts`           | add `<CODE>` to `CREW`                                                                                                                         |
+| `src/bot/arena.ts`        | add `<CODE>` to `CREW_DECKS`; update the pairing counts in `arena.test.ts`, `tools/bot-check.ts` (games = 2 × pairings) and `tools/retrain.ts` |
 
 Nothing else is needed. Both catalog loaders glob the card folders, the setup
 screen lists every deck in the catalog, and the STCC loaders

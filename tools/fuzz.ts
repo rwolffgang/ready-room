@@ -25,7 +25,7 @@ import { availableParallelism } from 'node:os'
 
 /** Ordered crew deck pairings (a crew deck holds exactly one of each card, so
  *  a mirrored same-deck game is structurally unsupported — setup rejects it). */
-const CREW = ['PIC', 'SHR', 'KOL', 'SIS', 'SEL', 'BUR', 'MAL'] as const
+const CREW = ['PIC', 'SHR', 'KOL', 'SIS', 'SEL', 'BUR', 'MAL', 'SHP'] as const
 type Deck = (typeof CREW)[number]
 const ALL_PAIRINGS: [Deck, Deck][] = CREW.flatMap((a) =>
 	CREW.filter((b) => b !== a).map((b) => [a, b] as [Deck, Deck]),
