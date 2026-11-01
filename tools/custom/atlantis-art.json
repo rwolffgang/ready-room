@@ -74,7 +74,8 @@
 			"source": "enwiki:File:Carson Beckett (Stargate).jpg",
 			"crop": [0.1, 0.03, 0.9, 0.55],
 			"position": "50% 25%",
-			"subject": "Dr. Carson Beckett, the expedition's Scottish doctor and geneticist: short dark hair, a warm friendly smile, a tan and grey expedition jacket with a Scottish flag patch, a syringe of gene therapy in hand, the infirmary behind him"
+			"subject": "Dr. Carson Beckett, the expedition's Scottish doctor and geneticist: short dark hair, a warm, kind smile, a tan and grey expedition jacket with a Scottish flag patch over a grey shirt, a stethoscope around his neck, the softly lit Atlantis infirmary behind him",
+			"notes": "keep natural proportions: head, shoulders and any hands in scale, nothing oversized in the foreground; paint the face in the same painterly style as the rest of the card and light it with the scene's light, so it never looks like a pasted photograph"
 		},
 		"daedalus": {
 			"source": "tmdb:sB0GLo9PJmyz3BkMqUubVVnYcut.jpg",

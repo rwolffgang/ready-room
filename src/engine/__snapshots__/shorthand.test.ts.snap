@@ -1025,6 +1025,7 @@ exports[`shorthand golden > pins the whole catalogue (review this snapshot like 
   ],
   "1SHP03-25": [
     "PLAY ACT | +1 INFLUENCE +ALLY",
+    "REAC | +ALLY : +1 INFLUENCE",
     "PASS | §«You may have an additional PERSON on duty.»",
     "DEV | −2 DIL −1 LAT",
   ],
@@ -1070,7 +1071,7 @@ exports[`shorthand golden > pins the whole catalogue (review this snapshot like 
     "ACTI | {−1 DIL} › 1 SEND",
   ],
   "1SHP12-25": [
-    "PLAY ACT | −1<INCIDENT> +1 RESEARCH",
+    "PLAY ACT | +1 RESEARCH +1 FROM_DISCARD ·<PERSON>",
     "ACTI | {−2 DIL} › FIND ·<PERSON> #AUGMENT",
   ],
   "1SHP13-25": [
@@ -1079,7 +1080,7 @@ exports[`shorthand golden > pins the whole catalogue (review this snapshot like 
     "ACTI | {−1 CARD} › ( BEAM | RECALL )",
   ],
   "1SHP14-25": [
-    "PLAY ACT | DEPLOY +2 DIL",
+    "PLAY ACT | DEPLOY",
     "RESU | +1 DIL +1 GLO",
   ],
   "1SHP15-25": [
@@ -1117,7 +1118,7 @@ exports[`shorthand golden > pins the whole catalogue (review this snapshot like 
   ],
   "1SHP23-25": [
     "PLAY ACT | +1 INFLUENCE (−1<INCIDENT>)?",
-    "ACTI | {−3 LAT} › SCAN2 <ALLY> +1 GLO",
+    "ACTI | {−2 LAT} › SCAN2 <ALLY> +1 GLO",
   ],
   "1SHP24-25": [
     "PLAY ACT | 1 SEND +1 MILITARY",

@@ -165,37 +165,37 @@ Power the City mission. The big moments **dismiss** it (Atlantis's shield,
 Carter's overload, driving off the Hive Ship), and the Daedalus, Zelenka and
 Asuras bring it back. The risk is the Wraith: power plays cost INCIDENTs (Ford's
 enzyme, the raid on Asuras, the deal with Todd, recruiting allies) and the Burn
-is the loss. Unlike MAL, no card rewards taking an INCIDENT; Teyla, Beckett,
-Keller and Todd clean them up. Atlantis is the flagship SHIP, modelled on Deep
+is the loss. Unlike MAL, no card rewards taking an INCIDENT; Teyla, Keller and
+Todd clean them up. Atlantis is the flagship SHIP, modelled on Deep
 Space 9 (`1SIS03`): it has no warp of its own.
 
-| #   | Card                | Suit      | Start       | Role                                                       |
-| --- | ------------------- | --------- | ----------- | ---------------------------------------------------------- |
-| 01  | John Sheppard       | CAPTAIN   | —           | your SHIP warps → send an Away Team; endgame VP per SHIP   |
-| 02  | Atlantis            | SHIP      | Deployed    | flagship, no warp; dismiss the ZPM to ignore an attack     |
-| 03  | Elizabeth Weir      | PERSON    | Development | Influence + an ALLY; an extra Duty Officer                 |
-| 04  | Jennifer Keller     | PERSON    | Development | returns up to 2 INCIDENTs; Research per return             |
-| 05  | Samantha Carter     | PERSON    | Development | Research; dismiss the ZPM for 2 more and 2 cards           |
-| 06  | Todd                | ALLY      | Development | attack: return your INCIDENT, opponent takes one (3 VP)    |
-| 07  | Ancient Warship     | SHIP      | Development | attack: deploy and warp; opponent ship there → discard 2   |
-| 08  | Control Chair       | CARGO     | Development | ongoing weapon; Military with the ZPM in play              |
-| 09  | Asuras              | LOCATION  | Development | control: take an INCIDENT to find the ZPM, play it free    |
-| 10  | Janus's Lab         | LOCATION  | Development | 2 Research; endgame VP per SCIENTIST                       |
-| 11  | Ronon Dex           | PERSON    | Reserve     | attack: removes Away Teams; Away Team for 1 {DIL}          |
-| 12  | Carson Beckett      | PERSON    | Reserve     | returns an INCIDENT; finds an AUGMENT (gene therapy)       |
-| 13  | Daedalus            | SHIP      | Reserve     | finds the ZPM; beam or recall                              |
-| 14  | ZPM                 | CARGO     | Reserve     | ongoing: 2 {DIL}; Resupply 1 {DIL} and 1 {GLO}             |
-| 15  | Hive Ship           | INCIDENT  | Reserve     | return with the ZPM or 3 {DIL}                             |
-| 16  | Naquadah Generators | DIRECTIVE | Available   | the deck's Utilize                                         |
-| 17  | New Arrivals        | DIRECTIVE | Available   | the deck's Recruit                                         |
-| 18  | Ancient Database    | DIRECTIVE | Available   | the deck's Analyze                                         |
-| 19  | Culling             | INCIDENT  | Available   | the deck's Red Alert: lose an Away Team or top-deck a card |
-| 20  | The Mainland        | LOCATION  | Available   | 2 {LAT}; Away Team draw                                    |
-| 21  | Puddle Jumper       | SHIP      | Available   | warps free with an AUGMENT aboard                          |
-| 22  | Rodney McKay        | PERSON    | Available   | draw/filter; {DIL} → Research, more with the ZPM           |
-| 23  | Teyla Emmagan       | PERSON    | Available   | Influence, returns an INCIDENT; trade for ALLYs and {GLO}  |
-| 24  | Aiden Ford          | PERSON    | Available   | Away Team + Military; take an INCIDENT for 2 Military      |
-| 25  | Radek Zelenka       | PERSON    | Available   | Research; draws the ZPM back from the Discard pile         |
+| #   | Card                | Suit      | Start       | Role                                                         |
+| --- | ------------------- | --------- | ----------- | ------------------------------------------------------------ |
+| 01  | John Sheppard       | CAPTAIN   | —           | your SHIP warps → send an Away Team; endgame VP per SHIP     |
+| 02  | Atlantis            | SHIP      | Deployed    | flagship, no warp; dismiss the ZPM to ignore an attack       |
+| 03  | Elizabeth Weir      | PERSON    | Development | Influence + an ALLY; on duty: Influence per ALLY, extra slot |
+| 04  | Jennifer Keller     | PERSON    | Development | returns up to 2 INCIDENTs; Research per return               |
+| 05  | Samantha Carter     | PERSON    | Development | Research; dismiss the ZPM for 2 more and 2 cards             |
+| 06  | Todd                | ALLY      | Development | attack: return your INCIDENT, opponent takes one (3 VP)      |
+| 07  | Ancient Warship     | SHIP      | Development | attack: deploy and warp; opponent ship there → discard 2     |
+| 08  | Control Chair       | CARGO     | Development | ongoing weapon; Military with the ZPM in play                |
+| 09  | Asuras              | LOCATION  | Development | control: take an INCIDENT to find the ZPM, play it free      |
+| 10  | Janus's Lab         | LOCATION  | Development | 2 Research; endgame VP per SCIENTIST                         |
+| 11  | Ronon Dex           | PERSON    | Reserve     | attack: removes Away Teams; Away Team for 1 {DIL}            |
+| 12  | Carson Beckett      | PERSON    | Reserve     | Research; draws a PERSON back; finds an AUGMENT              |
+| 13  | Daedalus            | SHIP      | Reserve     | finds the ZPM; beam or recall                                |
+| 14  | ZPM                 | CARGO     | Reserve     | ongoing; Resupply 1 {DIL} and 1 {GLO}                        |
+| 15  | Hive Ship           | INCIDENT  | Reserve     | return with the ZPM or 3 {DIL}                               |
+| 16  | Naquadah Generators | DIRECTIVE | Available   | the deck's Utilize                                           |
+| 17  | New Arrivals        | DIRECTIVE | Available   | the deck's Recruit                                           |
+| 18  | Ancient Database    | DIRECTIVE | Available   | the deck's Analyze                                           |
+| 19  | Culling             | INCIDENT  | Available   | the deck's Red Alert: lose an Away Team or top-deck a card   |
+| 20  | The Mainland        | LOCATION  | Available   | 2 {LAT}; Away Team draw                                      |
+| 21  | Puddle Jumper       | SHIP      | Available   | warps free with an AUGMENT aboard                            |
+| 22  | Rodney McKay        | PERSON    | Available   | draw/filter; {DIL} → Research, more with the ZPM             |
+| 23  | Teyla Emmagan       | PERSON    | Available   | Influence, returns an INCIDENT; trade for ALLYs and {GLO}    |
+| 24  | Aiden Ford          | PERSON    | Available   | Away Team + Military; take an INCIDENT for 2 Military        |
+| 25  | Radek Zelenka       | PERSON    | Available   | Research; draws the ZPM back from the Discard pile           |
 
 Missions (Advanced side; Basic uses the first, 0 VP): **The Gate Team** (a
 SCIENTIST, a TELEPATH and a SECURITY beamed to one SHIP, and Research 4, 4 VP),
@@ -212,18 +212,36 @@ and MAL in both seat orders, seeds 1 and 7, 600 independent games per row.
 | First version                              | 40.1 %       | 36.2 – 44.1 | −2.7      |
 | ZPM Resupply also gains 1 {GLO}            | 45.8 %       | 41.9 – 49.8 | −1.1      |
 | Teyla's trade also gains 1 {GLO} (2 {LAT}) | 54.3 %       | 50.3 – 58.3 | +1.1      |
-| Teyla's trade costs 3 {LAT} (kept)         | **47.2 %**   | 43.2 – 51.2 | −1.0      |
+| Teyla's trade costs 3 {LAT}                | 47.2 %       | 43.2 – 51.2 | −1.0      |
+| ZPM's Play no longer gains 2 {DIL}         | 40.8 %       | 37.0 – 44.8 | −2.5      |
+| Teyla's trade back to 2 {LAT}              | 49.4 %       | 45.4 – 53.4 | −0.3      |
+| Beckett draws a PERSON back (no INCIDENT)  | 47.5 %       | 43.5 – 51.5 | −0.7      |
+| Weir's ALLY Reaction (kept)                | **47.5 %**   | 43.5 – 51.5 | −0.7      |
 
 The first version raised Research well (4.3 against its opponents' 1.7) but
 lost on Glory (6.8 against 10.2). The House AI completes few missions, so
 focus icons rarely score and Research alone wins little. The changes add Glory
-where the theme puts it: the city at full power, and Teyla's trading. At 2
-{LAT} Teyla's trade was worth more than intended; at 3 SHP sits next to MAL.
-Per opponent (final version): SHR 67.9 %, SIS 55.1 %, MAL 48.2 %, PIC 44.3 %,
-SEL 43.8 %, KOL 38.7 %, BUR 32.1 %. No game ended in the Burn, and the House
-AI had no fallbacks and no stalled games.
+where the theme puts it: the city at full power, and Teyla's trading.
+
+The ZPM then looked too strong on paper: free to enlist, its Play refunded its
+action with 2 {DIL}, and its stream has no drawback. In these short games (about
+nine turns a side) it fed only 2.4 Resupplies on average, in 57 % of games.
+Without the 2 {DIL} the AI deployed it in 24 % of games, so SHP fell to 40.8 %;
+Teyla's trade at 2 {LAT} (as MAL's Inara trades) brought it back.
+
+Beckett's Play (from MAL's Book: return an INCIDENT, gain 1) repeated Teyla's
+and was a small Keller; he now gains 1 Research and draws a PERSON back. Weir's
+Reaction gives her extra Duty Officer slot a use. The arena can't measure it:
+SHP's Development cards are played in under 1 % of these games (Weir about six
+times in 600), and the games came out identical. Both changes are for longer,
+human games.
+
+Per opponent (final version): SHR 66.7 %, SIS 56.2 %, PIC 52.3 %, MAL 45.2 %,
+SEL 40.9 %, BUR 38.1 %, KOL 32.7 %. No game ended in the Burn, and the House AI
+had no fallbacks and no stalled games.
 
 Tests: `src/engine/shp-deck.test.ts` covers setup, the ZPM (deploy, Resupply,
 the shield, the Hive Ship, Zelenka, Asuras, McKay's bonus), the Jumper's gene
-gate, Sheppard's reaction and endgame, Culling, Todd and Weir's extra Duty
-Officer. `tools/fuzz.ts` includes SHP in every pairing.
+gate, Sheppard's reaction and endgame, Culling, Todd, Beckett's draw, and Weir's
+extra Duty Officer and ALLY Reaction. `tools/fuzz.ts` includes SHP in every
+pairing.

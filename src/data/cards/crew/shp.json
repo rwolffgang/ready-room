@@ -185,6 +185,23 @@
 				}
 			},
 			{
+				"type": "REACTION",
+				"costsAction": false,
+				"isAttack": false,
+				"trigger": {
+					"on": "CARD_GAINED",
+					"seat": "SELF",
+					"filter": {
+						"suits": ["ALLY"]
+					}
+				},
+				"effect": {
+					"k": "ADVANCE_SPECIALTY",
+					"specialty": "INFLUENCE",
+					"amount": 1
+				}
+			},
+			{
 				"type": "PASSIVE",
 				"costsAction": false,
 				"isAttack": false,
@@ -995,27 +1012,16 @@
 					"k": "SEQ",
 					"steps": [
 						{
-							"k": "RETURN_INCIDENT",
-							"target": {
-								"zones": [
-									{
-										"k": "HAND",
-										"seat": 0
-									},
-									{
-										"k": "DISCARD",
-										"seat": 0
-									}
-								],
-								"filter": {
-									"suits": ["INCIDENT"]
-								}
-							}
-						},
-						{
 							"k": "ADVANCE_SPECIALTY",
 							"specialty": "RESEARCH",
 							"amount": 1
+						},
+						{
+							"k": "DRAW_FROM_DISCARD",
+							"filter": {
+								"suits": ["PERSON"]
+							},
+							"count": 1
 						}
 					]
 				}
@@ -1221,26 +1227,16 @@
 				"costsAction": true,
 				"isAttack": false,
 				"effect": {
-					"k": "SEQ",
-					"steps": [
-						{
-							"k": "DEPLOY",
-							"target": {
-								"zones": [
-									{
-										"k": "STAGING",
-										"seat": 0
-									}
-								],
-								"thisCard": true
+					"k": "DEPLOY",
+					"target": {
+						"zones": [
+							{
+								"k": "STAGING",
+								"seat": 0
 							}
-						},
-						{
-							"k": "GAIN_RESOURCE",
-							"res": "DIL",
-							"amount": 2
-						}
-					]
+						],
+						"thisCard": true
+					}
 				}
 			},
 			{
@@ -1946,7 +1942,7 @@
 					"cost": {
 						"k": "COST_RESOURCE",
 						"res": "LAT",
-						"amount": 3
+						"amount": 2
 					},
 					"body": {
 						"k": "SEQ",

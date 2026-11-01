@@ -43,6 +43,13 @@ register([
 	makeDef({ id: 'sxPerson', suit: 'PERSON', operations: [] }),
 	makeDef({ id: 'sxIncident', suit: 'INCIDENT', vp: -2, operations: [] }),
 	makeDef({ id: 'sxLoc', suit: 'LOCATION', operations: [] }),
+	makeDef({ id: 'sxAlly', suit: 'ALLY', operations: [] }),
+	// "Gain an ALLY."
+	makeDef({
+		id: 'sxGainAlly',
+		suit: 'CARGO',
+		operations: [op('PLAY', { k: 'GAIN_CARD', suits: ['ALLY'] })],
+	}),
 	// an ATTACK: "Force your opponent to discard 2 cards."
 	makeDef({
 		id: 'sxAttackDiscard',
@@ -68,6 +75,8 @@ const auto: Answer = (c) => {
 			return c.candidates.slice(0, Math.max(c.min, 1))
 		case 'CHOOSE_LOCATION':
 			return c.candidates[0]
+		case 'CHOOSE_DESTINATION':
+			return 'DISCARD'
 		case 'OPTIONAL_TRIGGERS':
 			return c.offered
 		default:
@@ -158,16 +167,16 @@ describe('SHP setup', () => {
 })
 
 describe('the ZPM', () => {
-	it('deploys for 2 {DIL} and feeds 1 {DIL} and 1 {GLO} at Resupply', () => {
+	it('deploys and feeds 1 {DIL} and 1 {GLO} at Resupply', () => {
 		let s = place(fresh(), real(14), ID('zpm'), { k: 'STAGING', seat: 0 }, 0)
 		s = setResources(s, 0, 'DIL', 0)
 		s = setResources(s, 0, 'GLO', 0)
 		s = setActions(s, 0, 3)
 		s = resolveOp(s, ID('zpm'), 0)
 		expect(s.cards['zpm']!.zone).toEqual({ k: 'FLEET', seat: 0 })
-		expect(s.players[0].resources.DIL).toBe(2)
+		expect(s.players[0].resources.DIL).toBe(0)
 		s = resolveOp(s, ID('zpm'), 1)
-		expect(s.players[0].resources.DIL).toBe(3)
+		expect(s.players[0].resources.DIL).toBe(1)
 		expect(s.players[0].resources.GLO).toBe(1)
 	})
 
@@ -254,10 +263,8 @@ describe('the ZPM', () => {
 		)
 		s = place(s, real(14), ID('zpm'), { k: 'RESERVE', seat: 0 }, 0)
 		s = withIncidentDeck(s)
-		s = setResources(s, 0, 'DIL', 0)
 		s = resolveOp(s, ID('asuras'), 1)
 		expect(s.cards['zpm']!.zone).toEqual({ k: 'FLEET', seat: 0 })
-		expect(s.players[0].resources.DIL).toBe(2)
 		expect(
 			['deck1', 'deck2'].filter((i) => s.cards[i]!.owner === 0),
 		).toHaveLength(1)
@@ -372,6 +379,25 @@ describe('the Wraith', () => {
 	})
 })
 
+describe('Beckett', () => {
+	it('gains 1 RESEARCH and draws a PERSON back from the Discard pile', () => {
+		let s = place(
+			fresh(),
+			real(12),
+			ID('beckett'),
+			{ k: 'STAGING', seat: 0 },
+			0,
+		)
+		s = place(s, 'sxPerson', ID('crew'), { k: 'DISCARD', seat: 0 }, 0)
+		s = place(s, 'sxIncident', ID('inc'), { k: 'DISCARD', seat: 0 }, 0)
+		s = setActions(s, 0, 3)
+		s = resolveOp(s, ID('beckett'), 0)
+		expect(s.players[0].specialties.RESEARCH).toBe(1)
+		expect(s.cards['crew']!.zone).toEqual({ k: 'HAND', seat: 0 })
+		expect(s.cards['inc']!.zone).toEqual({ k: 'DISCARD', seat: 0 })
+	})
+})
+
 describe('Weir', () => {
 	it('adds a Duty Officer slot while she is on duty', () => {
 		const base = dutyOfficerSlots(fresh(), 0).length
@@ -383,5 +409,43 @@ describe('Weir', () => {
 			0,
 		)
 		expect(dutyOfficerSlots(s, 0)).toHaveLength(base + 1)
+	})
+
+	/** An ALLY on offer in the market, with a few more to refill it. */
+	const allyMarket = (s: GameState): GameState => {
+		for (let i = 0; i < 3; i++)
+			s = place(s, 'sxAlly', ID(`adeck${i}`), {
+				k: 'MARKET_DECK',
+				suit: 'ALLY',
+			})
+		return place(s, 'sxAlly', ID('offer'), { k: 'MARKET_OFFER', suit: 'ALLY' })
+	}
+
+	it('on duty, gains 1 INFLUENCE after you gain an ALLY', () => {
+		let s = place(
+			allyMarket(fresh()),
+			real(3),
+			ID('weir'),
+			{ k: 'DUTY_OFFICER', seat: 0 },
+			0,
+		)
+		s = place(s, 'sxGainAlly', ID('gain'), { k: 'STAGING', seat: 0 }, 0)
+		s = resolveOp(s, ID('gain'), 0)
+		expect(s.cards['offer']!.owner).toBe(0)
+		expect(s.players[0].specialties.INFLUENCE).toBe(1)
+	})
+
+	it('her own Play gains its 1 INFLUENCE only (the Reaction runs on duty)', () => {
+		let s = place(
+			allyMarket(fresh()),
+			real(3),
+			ID('weir'),
+			{ k: 'STAGING', seat: 0 },
+			0,
+		)
+		s = setActions(s, 0, 3)
+		s = resolveOp(s, ID('weir'), 0)
+		expect(s.cards['offer']!.owner).toBe(0)
+		expect(s.players[0].specialties.INFLUENCE).toBe(1)
 	})
 })

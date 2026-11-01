@@ -85,7 +85,7 @@
 			"text": {
 				"cost": "[[dilithium]] x2, [[latinum]] x1",
 				"hand": "[[action]] Play: Gain 1 [[influence]] and gain an [[ally]].",
-				"table": "Passive: You may have an additional [[person]] on duty.",
+				"table": "Reaction: After gaining an [[ally]], gain 1 [[influence]]. Passive: You may have an additional [[person]] on duty.",
 				"goal": "",
 				"reward": ""
 			},
@@ -347,7 +347,7 @@
 			],
 			"text": {
 				"cost": "",
-				"hand": "[[action]] Play: Return an [[incident]] from your hand or Discard pile. Gain 1 [[research]].",
+				"hand": "[[action]] Play: Gain 1 [[research]]. Draw a [[person]] from your Discard pile.",
 				"table": "Activation: Spend 2 [[dilithium]] to find a [[person]] with [[augment]].",
 				"goal": "",
 				"reward": ""
@@ -403,7 +403,7 @@
 			],
 			"text": {
 				"cost": "",
-				"hand": "[[action]] Play: Deploy this card. Gain 2 [[dilithium]].",
+				"hand": "[[action]] Play: Deploy this card.",
 				"table": "Resupply: Gain 1 [[dilithium]] and 1 [[glory]].",
 				"goal": "",
 				"reward": ""
@@ -626,7 +626,7 @@
 			"text": {
 				"cost": "",
 				"hand": "[[action]] Play: Gain 1 [[influence]]. You may return an [[incident]] from your hand or Discard pile.",
-				"table": "Activation: Spend 3 [[latinum]] to scan 2 of [[ally]] and gain 1 [[glory]].",
+				"table": "Activation: Spend 2 [[latinum]] to scan 2 of [[ally]] and gain 1 [[glory]].",
 				"goal": "",
 				"reward": ""
 			},

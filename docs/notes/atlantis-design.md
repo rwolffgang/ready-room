@@ -19,11 +19,11 @@ several cards stronger, and the deck's big moments **dismiss** it (the shield ho
 overload, the hive ship driven off). The Daedalus, Zelenka and Asuras bring it back. The
 risk is the Wraith: power plays and fast growth cost INCIDENTs (Ford's enzyme, the raid on
 Asuras, the deal with Todd, recruiting allies), two Wraith INCIDENTs live in the deck, and
-the Burn ends the game against whoever holds more. Teyla, Beckett, Keller and Todd clean up.
+the Burn ends the game against whoever holds more. Teyla, Keller and Todd clean up.
 
 **How it differs from MAL:** MAL _profits_ from taking INCIDENTs (Reynolds, Miranda). Here
-no card rewards taking one. INCIDENTs are only costs, and the cleanup is spread across the
-starting deck (Teyla), the Reserve (Beckett) and Development (Keller, Todd). The engine is
+no card rewards taking one. INCIDENTs are only costs, and the cleanup sits in the starting
+deck (Teyla) and in Development (Keller, Todd). The engine is
 the ZPM (deploy, feed, dismiss, recover), which no deck has.
 
 ## Choices that differ from the brief
@@ -76,9 +76,12 @@ Columns: suit; traits; skill (S) and focus (F) icons; printed VP; Development co
 | 09  | Asuras          | LOCATION · `SYNTHETIC`                        | S Research                | 2   | 3 {DIL}                   |
 | 10  | Janus's Lab     | LOCATION · `TIME_TRAVEL`                      | S Research ×2             | 1   | 3 {DIL}, 1 {LAT}          |
 
-- **03 Weir.** [action] Play: Gain 1 Influence and gain an ALLY. Passive: You may have an
-  additional PERSON on duty. _(`1PIC16` gain an ALLY; `1PIC07` extra Duty Officer: the
-  card reuses the `1PIC07_DUTY` modifier and lists it under `passives`.)_
+- **03 Weir.** [action] Play: Gain 1 Influence and gain an ALLY. Reaction: After gaining an
+  ALLY, gain 1 Influence _(she runs the expedition's diplomacy; only on duty, so the extra
+  slot lets her sit beside your Duty Officer)_. Passive: You may have an additional PERSON on
+  duty. _(`1PIC16` gain an ALLY; `1PIC01` the gain-an-ALLY reaction; `1BUR06` a PERSON with a
+  reaction and a slot; `1PIC07` extra Duty Officer: the card reuses the `1PIC07_DUTY`
+  modifier and lists it under `passives`.)_
 - **04 Keller.** [action] Play: Return up to 2 INCIDENTs from your hand or Discard pile.
   Reaction: After you return an INCIDENT, gain 1 Research. _(`1MAL05` return and
   `INCIDENT_RETURNED`; `REPEAT` up to 2.)_
@@ -117,15 +120,18 @@ Columns: suit; traits; skill (S) and focus (F) icons; printed VP; Development co
 - **11 Ronon.** [action] Attack Play: Discard a card to remove an opponent's Away Team from a
   LOCATION. If you do, gain 1 Military and 1 {GLO}. Activation: Spend 1 {DIL} to send an Away
   Team to a LOCATION where you have a SHIP. _(`1MAL03` River's attack; `1MAL22`.)_
-- **12 Beckett.** [action] Play: Return an INCIDENT from your hand or Discard pile. Gain 1
-  Research. Activation: Spend 2 {DIL} to find an AUGMENT _(the gene therapy)_. _(`1MAL05`;
-  `1SIS08` Bashir finds an AUGMENT.)_
+- **12 Beckett.** [action] Play: Gain 1 Research. Draw a PERSON from your Discard pile _(the
+  infirmary puts the crew back on their feet; missions dismiss the crew they use)_.
+  Activation: Spend 2 {DIL} to find an AUGMENT _(the gene therapy)_. _(`1SIS13` draws from the
+  Discard pile; `1SIS08` finds an AUGMENT. His first Play, `1MAL05`'s "return an INCIDENT,
+  gain 1", repeated Teyla's and was a small Keller.)_
 - **13 Daedalus.** [action] Play: Deploy this ship. You may find a ZPM _(it brought the
   ZPM in "The Siege Part 3")_. Activation: Spend 1 {DIL} to warp this ship. Activation:
   Discard a card to beam a card here or recall a card beamed to a SHIP _(Asgard beaming)_.
   _(`1SHR05` "you may find"; `1SIS03` beam or recall.)_
-- **14 ZPM.** [action] Play: Deploy this card. Gain 2 {DIL}. Resupply: Gain 1 {DIL} and 1
-  {GLO} _(the 1 {GLO} was added in balancing, see `docs/custom-decks.md`)_.
+- **14 ZPM.** [action] Play: Deploy this card. Resupply: Gain 1 {DIL} and 1 {GLO} _(balancing
+  added the {GLO} and later dropped the 2 {DIL} its Play first gave; see
+  `docs/custom-decks.md`)_.
   _(`1SIS06` deployed CARGO with a Resupply op.)_
 - **15 Hive Ship.** [action] Play: Either dismiss a ZPM or spend 3 {DIL} to return this card.
   _(`1MAL15` Reavers.)_
@@ -161,8 +167,9 @@ Columns: suit; traits; skill (S) and focus (F) icons; printed VP; Development co
   Activation: Spend 2 {DIL} to gain 1 Research; if you have a ZPM in play, gain 1 more.
   _(`1MAL03` play; `1MAL11` activation shape.)_
 - **23 Teyla.** [action] Play: Gain 1 Influence. You may return an INCIDENT from your hand or
-  Discard pile. Activation: Spend 3 {LAT} to scan 2 ALLYs and gain 1 {GLO} _(she knows
-  every trading partner; the {GLO} and the third {LAT} came from balancing)_. _(`1MAL04` play; `1MAL13` scan.)_
+  Discard pile. Activation: Spend 2 {LAT} to scan 2 ALLYs and gain 1 {GLO} _(she knows
+  every trading partner; balancing added the {GLO}, raised the cost to 3 {LAT} and set it back
+  to 2 when the ZPM lost its 2 {DIL})_. _(`1MAL04` play; `1MAL13` scan.)_
 - **24 Ford.** [action] Play: Send an Away Team to a LOCATION where you have a SHIP. Gain 1
   Military. Activation: Take an INCIDENT to gain 2 Military _(the Wraith enzyme)_.
   _(`1MAL22`; `1SIS12` "take an INCIDENT to advance".)_
