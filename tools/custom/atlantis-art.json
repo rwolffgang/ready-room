@@ -124,10 +124,11 @@
 			"subject": "the Athosian settlement on the mainland: hide tents and cooking fires on a green coastal plain, fields and a trading cart, the faint spires of Atlantis on the sea horizon at dusk"
 		},
 		"jumper": {
-			"source": "tmdb:9SR1daxR4L533gvK1hTla7dCgZx.jpg",
+			"source": "tmdb:cAxAyrZ45wJK61ppDPYGmGwqVWa.jpg",
+			"crop": [0.0, 0.06, 0.5, 0.8],
 			"position": "50% 50%",
-			"subject": "a Puddle Jumper, the Ancients' small gate ship: a compact blunt grey craft with a wide front window and two side drive pods, flying out of a Stargate in space",
-			"notes": "show the whole ship from a three-quarter front view"
+			"subject": "a Puddle Jumper, the Ancients' small gate ship, flying in space just out of a Stargate whose blue event horizon glows behind it: a compact, stubby hull like a small rounded box, slab sides and a flat underside, a wide wraparound front windscreen with a centre frame, grey-green metal plating with angular panel lines, and two short cylindrical drive pods swung out on struts from the upper and lower rear flanks, glowing softly blue-white",
+			"notes": "match the ship in likeness.jpg: boxy and stubby like a small bus, about twice as long as it is wide; the drive pods are short cylinders on swing-arms at the rear. No wings, no fins, no ring-shaped engines, no sleek fighter shape. Show the whole ship from a three-quarter front view"
 		},
 		"mckay": {
 			"source": "enwiki:File:RodneyMcKaypic.jpg",
