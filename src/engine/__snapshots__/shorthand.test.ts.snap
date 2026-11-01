@@ -1013,6 +1013,120 @@ exports[`shorthand golden > pins the whole catalogue (review this snapshot like 
     "ACTI | {−1 CARD} › BEAM",
     "RESU | +1 CARD / 2 #ANOMALY max4",
   ],
+  "1SHP01-25": [
+    "REAC | WARP : (1 SEND)?",
+    "ENDG | 1 VP / <SHIP>",
+  ],
+  "1SHP02-25": [
+    "PLAY ACT | DEPLOY",
+    "ACTI | {−1 CARD} › BEAM",
+    "ACTI | PROMOTE ·<PERSON>",
+    "REAC | OPP[ATTACK] : {DISMISS ·"1SHP14/25"} › SHIELD",
+  ],
+  "1SHP03-25": [
+    "PLAY ACT | +1 INFLUENCE +ALLY",
+    "PASS | §«You may have an additional PERSON on duty.»",
+    "DEV | −2 DIL −1 LAT",
+  ],
+  "1SHP04-25": [
+    "PLAY ACT | ≤2×(−1<INCIDENT>)",
+    "REAC | −<INCIDENT> : +1 RESEARCH",
+    "DEV | −2 DIL",
+  ],
+  "1SHP05-25": [
+    "PLAY ACT | +1 RESEARCH ({DISMISS ·"1SHP14/25"} › +2 RESEARCH +2 CARD)?",
+    "DEV | −3 DIL",
+  ],
+  "1SHP06-25": [
+    "PLAY ACT ATTACK | −1<INCIDENT> OPP[+1<INCIDENT>] LOG",
+    "DEV | −2 DIL +1<INCIDENT>",
+  ],
+  "1SHP07-25": [
+    "PLAY ACT ATTACK | DEPLOY WARP IF ≥1 <LOCATION> ⇒ OPP[−2 CARD]",
+    "ACTI | {−1 DIL} › WARP",
+    "ACTI | {−1 CARD} › BEAM",
+    "DEV | −5 DIL",
+  ],
+  "1SHP08-25": [
+    "PLAY ACT | DEPLOY +1 MILITARY",
+    "ACTI ATTACK | {−1 CARD} › OPP[−1 AWAY] ✓⇒ +1 GLO IF ≥1 "1SHP14/25" ⇒ +1 MILITARY",
+    "DEV | −2 DIL −1 LAT",
+  ],
+  "1SHP09-25": [
+    "PLAY ACT | CONTROL",
+    "CONT | ({+1<INCIDENT>} › FIND ·"1SHP14/25" (FREE_PLAY)?)?",
+    "ACTI | IF AWAY ≥1 ⇒ +1 CARD IF AWAY ≥3 ⇒ +1 CARD",
+    "DEV | −3 DIL",
+  ],
+  "1SHP10-25": [
+    "PLAY ACT | CONTROL",
+    "CONT | +2 RESEARCH",
+    "ACTI | +1 CARD",
+    "ENDG | 1 VP / #SCIENTIST",
+    "DEV | −3 DIL −1 LAT",
+  ],
+  "1SHP11-25": [
+    "PLAY ACT ATTACK | {−1 CARD} › OPP[−1 AWAY] ✓⇒ +1 MILITARY +1 GLO",
+    "ACTI | {−1 DIL} › 1 SEND",
+  ],
+  "1SHP12-25": [
+    "PLAY ACT | −1<INCIDENT> +1 RESEARCH",
+    "ACTI | {−2 DIL} › FIND ·<PERSON> #AUGMENT",
+  ],
+  "1SHP13-25": [
+    "PLAY ACT | DEPLOY (FIND ·"1SHP14/25")?",
+    "ACTI | {−1 DIL} › WARP",
+    "ACTI | {−1 CARD} › ( BEAM | RECALL )",
+  ],
+  "1SHP14-25": [
+    "PLAY ACT | DEPLOY +2 DIL",
+    "RESU | +1 DIL +1 GLO",
+  ],
+  "1SHP15-25": [
+    "PLAY ACT | ( {DISMISS ·"1SHP14/25"} › −1<INCIDENT> | {−3 DIL} › −1<INCIDENT> )",
+  ],
+  "1SHP16-25": [
+    "PLAY ACT | +1 DIL +2 DIL / <LOCATION>",
+    "PLAY ACT | +1 ANY_SPECIALTY / skill:ANY",
+  ],
+  "1SHP17-25": [
+    "PLAY ACT | {TOP_DECK} › +PERSON",
+    "PLAY ACT | {+1<INCIDENT>} › +ALLY",
+  ],
+  "1SHP18-25": [
+    "PLAY ACT | {+1<INCIDENT>} › +SHIP",
+    "PLAY ACT | {−2 CARD} › +CARGO",
+    "PLAY | +2 DIL",
+  ],
+  "1SHP19-25": [
+    "PLAY ACT | ( {−1 AWAY} › −1<INCIDENT> | {TOP_DECK} › −1<INCIDENT> )",
+  ],
+  "1SHP20-25": [
+    "PLAY ACT | CONTROL",
+    "CONT | +2 LAT",
+    "ACTI | IF AWAY ≥1 ⇒ +1 CARD IF AWAY ≥3 ⇒ +1 CARD",
+  ],
+  "1SHP21-25": [
+    "PLAY ACT | DEPLOY (WARP)?",
+    "ACTI | IF ≥1 #AUGMENT ⇒ WARP ELSE {−1 DIL} › WARP",
+    "ACTI | {−1 CARD} › BEAM",
+  ],
+  "1SHP22-25": [
+    "PLAY ACT | +2 CARD −1 CARD +1 RESEARCH",
+    "ACTI | {−2 DIL} › +1 RESEARCH IF ≥1 "1SHP14/25" ⇒ +1 RESEARCH",
+  ],
+  "1SHP23-25": [
+    "PLAY ACT | +1 INFLUENCE (−1<INCIDENT>)?",
+    "ACTI | {−3 LAT} › SCAN2 <ALLY> +1 GLO",
+  ],
+  "1SHP24-25": [
+    "PLAY ACT | 1 SEND +1 MILITARY",
+    "ACTI | {+1<INCIDENT>} › +2 MILITARY",
+  ],
+  "1SHP25-25": [
+    "PLAY ACT | +1 RESEARCH (REFRESH ·<SHIP>)?",
+    "ACTI | {−1 DIL} › +1 FROM_DISCARD ·"1SHP14/25"",
+  ],
   "1SHR01-24": [
     "RESU | +1 DIL / <CARGO>",
     "ACTI ACT | {−1 CARD ·<CARGO>} › 1 SEND",

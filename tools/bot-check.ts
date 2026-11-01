@@ -2,7 +2,7 @@
 // Quick house-AI regression (`npm run bot:check`, about 1–2 min): run it after
 // any card, expansion or rule change (docs/bot.md "Maintaining the house AI").
 //
-//   1. normal vs easy and normal vs normal over ALL 42 pairings with seat swaps
+//   1. normal vs easy and normal vs normal over ALL 56 pairings with seat swaps
 //   2. a few low-iteration ISMCTS games (hand-tuned leaf, and the learned leaf
 //      when the bundled weights are compatible)
 //   3. the bundled learned value's compatibility (featureHash, cardDataHash)
@@ -77,8 +77,8 @@ async function main(): Promise<void> {
 
 	const runs: { a: string; b: string; games: number; house: ('A' | 'B')[] }[] =
 		[
-			{ a: 'normal', b: 'easy', games: 84, house: ['A', 'B'] },
-			{ a: 'normal', b: 'normal', games: 84, house: ['A', 'B'] },
+			{ a: 'normal', b: 'easy', games: 112, house: ['A', 'B'] },
+			{ a: 'normal', b: 'normal', games: 112, house: ['A', 'B'] },
 			{
 				a: 'ismcts:iters=16',
 				b: 'normal',
@@ -124,7 +124,9 @@ async function main(): Promise<void> {
 	const levels = summarizeSolo(solo)
 		.map((l) => `${l.level} ${l.wins}/${l.games}`)
 		.join(', ')
-	console.log(`solo vs the official Bot (normal as you): ${solo.length} games — ${levels}`)
+	console.log(
+		`solo vs the official Bot (normal as you): ${solo.length} games — ${levels}`,
+	)
 	for (const r of solo) {
 		if (r.stopped !== 'GAME_OVER')
 			failures.push(

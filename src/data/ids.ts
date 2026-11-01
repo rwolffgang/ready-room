@@ -119,6 +119,7 @@ export const DECKS = [
 	// fan-made custom crew decks (not part of the published game; names, text
 	// and art come from a custom pack, src/data/custom/)
 	'MAL',
+	'SHP',
 	// the solo Directives (rules/13 §13.14, rules/14 §14.4): no crew of their
 	// own, set up only in a solo game
 	'SOLO',

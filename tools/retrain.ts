@@ -8,7 +8,7 @@
 //      with the candidate as its leaf value → <data>/it1, then retrain on
 //      it0 + it1
 //   4. gate: ismcts:iters=N,value=<candidate> vs ismcts:iters=N,value=<baseline>
-//      at equal iterations, --gate-games games over all 42 pairings with seat
+//      at equal iterations, --gate-games games over all 56 pairings with seat
 //      swaps, on --gate-seed (never a training seed)
 //   5. the gate passes at a win rate ≥ 55 % with the 95 % Wilson interval's
 //      lower bound above 50 %. Then, and only then, the candidate (with

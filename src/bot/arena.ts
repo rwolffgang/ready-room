@@ -37,6 +37,7 @@ export const CREW_DECKS = [
 	'SEL',
 	'BUR',
 	'MAL',
+	'SHP',
 ] as const
 
 export type BoardSide = 'BASIC' | 'ADVANCED'
@@ -54,7 +55,7 @@ export function pairingKey(p: Pairing): string {
 }
 
 /** Every ordered pairing of two different crew decks, Advanced sides (the
- *  fuzz grid: 42 pairings; a crew deck cannot play itself). */
+ *  fuzz grid: 56 pairings; a crew deck cannot play itself). */
 export function allPairings(): Pairing[] {
 	const out: Pairing[] = []
 	for (const a of CREW_DECKS)

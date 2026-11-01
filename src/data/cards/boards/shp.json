@@ -1,0 +1,340 @@
+[
+	{
+		"deck": "SHP",
+		"side": "BASIC",
+		"tracks": [
+			{
+				"specialty": "RESEARCH",
+				"multipliers": [
+					{
+						"step": 0,
+						"value": 1
+					},
+					{
+						"step": 2,
+						"value": 2
+					},
+					{
+						"step": 7,
+						"value": 3
+					},
+					{
+						"step": 10,
+						"value": 4
+					},
+					{
+						"step": 13,
+						"value": 5
+					},
+					{
+						"step": 15,
+						"value": 6
+					}
+				]
+			},
+			{
+				"specialty": "INFLUENCE",
+				"multipliers": [
+					{
+						"step": 0,
+						"value": 1
+					},
+					{
+						"step": 3,
+						"value": 2
+					},
+					{
+						"step": 8,
+						"value": 3
+					},
+					{
+						"step": 11,
+						"value": 5
+					},
+					{
+						"step": 15,
+						"value": 7
+					}
+				]
+			},
+			{
+				"specialty": "MILITARY",
+				"multipliers": [
+					{
+						"step": 0,
+						"value": 1
+					},
+					{
+						"step": 5,
+						"value": 3
+					},
+					{
+						"step": 10,
+						"value": 4
+					},
+					{
+						"step": 14,
+						"value": 5
+					}
+				]
+			}
+		],
+		"missions": [
+			{
+				"index": 0,
+				"cardId": "1SHP/M1",
+				"goal": {
+					"k": "AND",
+					"terms": [
+						{
+							"k": "SAME_SHIP",
+							"requirements": [
+								{
+									"filter": {
+										"traits": ["SCIENTIST"]
+									}
+								},
+								{
+									"filter": {
+										"traits": ["TELEPATH"]
+									}
+								},
+								{
+									"filter": {
+										"traits": ["SECURITY"]
+									}
+								}
+							]
+						},
+						{
+							"k": "SPECIALTY_AT_LEAST",
+							"specialty": "RESEARCH",
+							"value": 4
+						}
+					]
+				},
+				"reward": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "DIL",
+							"amount": 2
+						},
+						{
+							"k": "DRAW",
+							"count": 2
+						}
+					]
+				},
+				"vp": 0
+			}
+		]
+	},
+	{
+		"deck": "SHP",
+		"side": "ADVANCED",
+		"tracks": [
+			{
+				"specialty": "RESEARCH",
+				"multipliers": [
+					{
+						"step": 2,
+						"value": 1
+					},
+					{
+						"step": 7,
+						"value": 2
+					},
+					{
+						"step": 10,
+						"value": 3
+					},
+					{
+						"step": 13,
+						"value": 4
+					},
+					{
+						"step": 15,
+						"value": 5
+					}
+				]
+			},
+			{
+				"specialty": "INFLUENCE",
+				"multipliers": [
+					{
+						"step": 3,
+						"value": 1
+					},
+					{
+						"step": 8,
+						"value": 2
+					},
+					{
+						"step": 11,
+						"value": 4
+					},
+					{
+						"step": 15,
+						"value": 5
+					}
+				]
+			},
+			{
+				"specialty": "MILITARY",
+				"multipliers": [
+					{
+						"step": 5,
+						"value": 2
+					},
+					{
+						"step": 10,
+						"value": 3
+					},
+					{
+						"step": 14,
+						"value": 4
+					}
+				]
+			}
+		],
+		"missions": [
+			{
+				"index": 0,
+				"cardId": "1SHP/M1",
+				"goal": {
+					"k": "AND",
+					"terms": [
+						{
+							"k": "SAME_SHIP",
+							"requirements": [
+								{
+									"filter": {
+										"traits": ["SCIENTIST"]
+									}
+								},
+								{
+									"filter": {
+										"traits": ["TELEPATH"]
+									}
+								},
+								{
+									"filter": {
+										"traits": ["SECURITY"]
+									}
+								}
+							]
+						},
+						{
+							"k": "SPECIALTY_AT_LEAST",
+							"specialty": "RESEARCH",
+							"value": 4
+						}
+					]
+				},
+				"reward": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "DIL",
+							"amount": 2
+						},
+						{
+							"k": "DRAW",
+							"count": 2
+						}
+					]
+				},
+				"vp": 4
+			},
+			{
+				"index": 1,
+				"cardId": "1SHP/M2",
+				"goal": {
+					"k": "AND",
+					"terms": [
+						{
+							"k": "COUNT_AT_LEAST",
+							"query": {
+								"zones": ["IN_PLAY"],
+								"seat": "SELF",
+								"filter": {
+									"ids": ["1SHP14-25"]
+								}
+							},
+							"value": 1
+						},
+						{
+							"k": "SPECIALTY_AT_LEAST",
+							"specialty": "RESEARCH",
+							"value": 8
+						}
+					]
+				},
+				"reward": {
+					"k": "ENLIST_DEVELOPMENT"
+				},
+				"vp": 3
+			},
+			{
+				"index": 2,
+				"cardId": "1SHP/M3",
+				"goal": {
+					"k": "AND",
+					"terms": [
+						{
+							"k": "COUNT_AT_LEAST",
+							"query": {
+								"zones": ["IN_PLAY"],
+								"seat": "SELF",
+								"filter": {
+									"suits": ["ALLY"]
+								}
+							},
+							"value": 2
+						},
+						{
+							"k": "SPECIALTY_AT_LEAST",
+							"specialty": "INFLUENCE",
+							"value": 6
+						}
+					]
+				},
+				"reward": {
+					"k": "SEQ",
+					"steps": [
+						{
+							"k": "GAIN_RESOURCE",
+							"res": "GLO",
+							"amount": 2
+						},
+						{
+							"k": "MAY",
+							"body": {
+								"k": "RETURN_INCIDENT",
+								"target": {
+									"zones": [
+										{
+											"k": "HAND",
+											"seat": 0
+										},
+										{
+											"k": "DISCARD",
+											"seat": 0
+										}
+									],
+									"filter": {
+										"suits": ["INCIDENT"]
+									}
+								}
+							}
+						}
+					]
+				},
+				"vp": 3
+			}
+		]
+	}
+]

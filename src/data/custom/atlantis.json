@@ -1,0 +1,732 @@
+{
+	"pack": "atlantis",
+	"deck": "SHP",
+	"title": "Stargate Atlantis (fan-made crew deck)",
+	"cards": [
+		{
+			"id": "atlantis-john-sheppard",
+			"name": "John Sheppard",
+			"suit": "Captain",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP01/25",
+			"glory": null,
+			"position_indicator": "Captain",
+			"species_traits": ["Human"],
+			"regular_traits": ["Pilot", "Augment"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Focus",
+					"specialty": "Military"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "",
+				"table": "Reaction: After one of your [[ship]] warps, you may send an [[away team]] to a [[location]] where you have a [[ship]].",
+				"goal": "Endgame: Score [[1vp]] for each [[ship]] you have in play.",
+				"reward": ""
+			},
+			"away_team": "5",
+			"flavor": "He'll fly anything. Usually he has to.",
+			"art": "sheppard"
+		},
+		{
+			"id": "atlantis-atlantis",
+			"name": "Atlantis",
+			"suit": "Ship",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP02/25",
+			"glory": null,
+			"position_indicator": "Deployed",
+			"species_traits": [],
+			"regular_traits": ["Starbase"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Any"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Deploy this ship.",
+				"table": "Activation: Discard a card to beam a card here. Activation: Promote a [[person]] from your hand to Duty Officer. Reaction: When you would be attacked, you may dismiss a ZPM to ignore the negative effect.",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "A city built to fly, asleep under an ocean for ten thousand years.",
+			"art": "atlantis"
+		},
+		{
+			"id": "atlantis-elizabeth-weir",
+			"name": "Elizabeth Weir",
+			"suit": "Person",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP03/25",
+			"glory": 2,
+			"position_indicator": "Development",
+			"species_traits": ["Human"],
+			"regular_traits": ["Ambassador", "Communication"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Influence"
+				},
+				{
+					"type": "Focus",
+					"specialty": "Influence"
+				}
+			],
+			"text": {
+				"cost": "[[dilithium]] x2, [[latinum]] x1",
+				"hand": "[[action]] Play: Gain 1 [[influence]] and gain an [[ally]].",
+				"table": "Passive: You may have an additional [[person]] on duty.",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "She came to Pegasus to talk. Pegasus kept making that hard.",
+			"art": "weir"
+		},
+		{
+			"id": "atlantis-jennifer-keller",
+			"name": "Jennifer Keller",
+			"suit": "Person",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP04/25",
+			"glory": 2,
+			"position_indicator": "Development",
+			"species_traits": ["Human"],
+			"regular_traits": ["Doctor", "Scientist"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Research"
+				},
+				{
+					"type": "Focus",
+					"specialty": "Research"
+				}
+			],
+			"text": {
+				"cost": "[[dilithium]] x2",
+				"hand": "[[action]] Play: Return up to 2 [[incident]] from your hand or Discard pile.",
+				"table": "Reaction: After returning an [[incident]], gain 1 [[research]].",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "She never wanted the job. She kept everyone alive anyway.",
+			"art": "keller"
+		},
+		{
+			"id": "atlantis-samantha-carter",
+			"name": "Samantha Carter",
+			"suit": "Person",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP05/25",
+			"glory": 2,
+			"position_indicator": "Development",
+			"species_traits": ["Human"],
+			"regular_traits": ["Scientist"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Research"
+				},
+				{
+					"type": "Skill",
+					"specialty": "Research"
+				},
+				{
+					"type": "Focus",
+					"specialty": "Research"
+				}
+			],
+			"text": {
+				"cost": "[[dilithium]] x3",
+				"hand": "[[action]] Play: Gain 1 [[research]]. You may dismiss a ZPM to gain 2 [[research]] and draw 2 cards.",
+				"table": "",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Hand her a power source and a deadline.",
+			"art": "carter"
+		},
+		{
+			"id": "atlantis-todd",
+			"name": "Todd",
+			"suit": "Ally",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP06/25",
+			"glory": 3,
+			"position_indicator": "Development",
+			"species_traits": ["Alien"],
+			"regular_traits": ["Telepath", "Shady"],
+			"other_traits": ["Attack"],
+			"icons": [],
+			"text": {
+				"cost": "[[dilithium]] x2, and take an [[incident]].",
+				"hand": "[[action]] Attack Play: Return an [[incident]] from your hand or Discard pile. Your opponent takes an [[incident]]. Log this card.",
+				"table": "",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "An ally, right up until he is hungry.",
+			"art": "todd"
+		},
+		{
+			"id": "atlantis-ancient-warship",
+			"name": "Ancient Warship",
+			"suit": "Ship",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP07/25",
+			"glory": 3,
+			"position_indicator": "Development",
+			"species_traits": [],
+			"regular_traits": [],
+			"other_traits": ["Attack"],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Military"
+				}
+			],
+			"text": {
+				"cost": "[[dilithium]] x5",
+				"hand": "[[action]] Attack Play: Deploy this ship and warp it. If your opponent has a [[ship]] there, they discard 2 cards.",
+				"table": "Activation: Spend 1 [[dilithium]] to warp this ship. Activation: Discard a card to beam a card here.",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Built for the war against the Wraith, and still built for it.",
+			"art": "warship"
+		},
+		{
+			"id": "atlantis-control-chair",
+			"name": "Control Chair",
+			"suit": "Cargo",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP08/25",
+			"glory": null,
+			"position_indicator": "Development",
+			"species_traits": [],
+			"regular_traits": ["Weapon"],
+			"other_traits": ["Attack", "Ongoing"],
+			"icons": [
+				{
+					"type": "Focus",
+					"specialty": "Military"
+				}
+			],
+			"text": {
+				"cost": "[[dilithium]] x2, [[latinum]] x1",
+				"hand": "[[action]] Play: Deploy this card. Gain 1 [[military]].",
+				"table": "Attack Activation: Discard a card to remove an opponent [[away team]] from a [[location]] where you have an [[away team]]. If you do, gain 1 [[glory]], and 1 [[military]] if you have a ZPM in play.",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Think about where the drones should go. Think about nothing else.",
+			"art": "chair"
+		},
+		{
+			"id": "atlantis-asuras",
+			"name": "Asuras",
+			"suit": "Location",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP09/25",
+			"glory": 2,
+			"position_indicator": "Development",
+			"species_traits": [],
+			"regular_traits": ["Synthetic"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Research"
+				}
+			],
+			"text": {
+				"cost": "[[dilithium]] x3",
+				"hand": "[[action]] Play: Take control of this location. Control: You may take an [[incident]] to find a ZPM. You may play it for free.",
+				"table": "Activation: If you have an [[away team]] here, draw a card. If you have 3+ total [[away team]] on 1 or more controlled [[location]], draw a card.",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "The Ancients' weapon against the Wraith, abandoned and still resentful.",
+			"art": "asuras"
+		},
+		{
+			"id": "atlantis-janus-s-lab",
+			"name": "Janus's Lab",
+			"suit": "Location",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP10/25",
+			"glory": 1,
+			"position_indicator": "Development",
+			"species_traits": [],
+			"regular_traits": ["Time Travel"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Research"
+				},
+				{
+					"type": "Skill",
+					"specialty": "Research"
+				}
+			],
+			"text": {
+				"cost": "[[dilithium]] x3, [[latinum]] x1",
+				"hand": "[[action]] Play: Take control of this location. Control: Gain 2 [[research]].",
+				"table": "Activation: Draw a card.",
+				"goal": "Endgame: Score [[1vp]] for each [[scientist]] you own.",
+				"reward": ""
+			},
+			"flavor": "Hidden rooms, unfinished experiments, and things nobody was meant to find.",
+			"art": "janus-lab"
+		},
+		{
+			"id": "atlantis-ronon-dex",
+			"name": "Ronon Dex",
+			"suit": "Person",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP11/25",
+			"glory": null,
+			"position_indicator": "Reserve",
+			"species_traits": ["Human"],
+			"regular_traits": ["Security"],
+			"other_traits": ["Attack"],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Military"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Attack Play: Discard a card to remove an opponent [[away team]] from a [[location]]. If you do, gain 1 [[military]] and 1 [[glory]].",
+				"table": "Activation: Spend 1 [[dilithium]] to send an [[away team]] to a [[location]] where you have a [[ship]].",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Seven years as the prey. Now he does the hunting.",
+			"art": "ronon"
+		},
+		{
+			"id": "atlantis-carson-beckett",
+			"name": "Carson Beckett",
+			"suit": "Person",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP12/25",
+			"glory": null,
+			"position_indicator": "Reserve",
+			"species_traits": ["Human"],
+			"regular_traits": ["Doctor", "Augment"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Research"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Return an [[incident]] from your hand or Discard pile. Gain 1 [[research]].",
+				"table": "Activation: Spend 2 [[dilithium]] to find a [[person]] with [[augment]].",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "A doctor with the gene, a needle, and no wish at all to fly.",
+			"art": "beckett"
+		},
+		{
+			"id": "atlantis-daedalus",
+			"name": "Daedalus",
+			"suit": "Ship",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP13/25",
+			"glory": null,
+			"position_indicator": "Reserve",
+			"species_traits": [],
+			"regular_traits": [],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Military"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Deploy this ship. You may find a ZPM.",
+				"table": "Activation: Spend 1 [[dilithium]] to warp this ship. Activation: Discard a card to beam a card here OR recall a card beamed to a [[ship]].",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "The long road home, one jump at a time.",
+			"art": "daedalus"
+		},
+		{
+			"id": "atlantis-zpm",
+			"name": "ZPM",
+			"suit": "Cargo",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP14/25",
+			"glory": null,
+			"position_indicator": "Reserve",
+			"species_traits": [],
+			"regular_traits": [],
+			"other_traits": ["Ongoing"],
+			"icons": [
+				{
+					"type": "Focus",
+					"specialty": "Research"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Deploy this card. Gain 2 [[dilithium]].",
+				"table": "Resupply: Gain 1 [[dilithium]] and 1 [[glory]].",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Enough power to change everything, once.",
+			"art": "zpm"
+		},
+		{
+			"id": "atlantis-hive-ship",
+			"name": "Hive Ship",
+			"suit": "Incident",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP15/25",
+			"glory": -2,
+			"position_indicator": "Reserve",
+			"species_traits": [],
+			"regular_traits": [],
+			"other_traits": [],
+			"icons": [],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Dismiss a ZPM OR spend 3 [[dilithium]] to return this card.",
+				"table": "",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "The Wraith are awake, and they are hungry.",
+			"art": "hive-ship"
+		},
+		{
+			"id": "atlantis-naquadah-generators",
+			"name": "Naquadah Generators",
+			"suit": "Directive",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP16/25",
+			"glory": null,
+			"position_indicator": "Available",
+			"species_traits": [],
+			"regular_traits": [],
+			"other_traits": [],
+			"icons": [],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Gain 1 [[dilithium]], and 2 [[dilithium]] for each controlled [[location]] you have in play. [[action]] Play: Gain on one Specialty track ([[research]]/[[influence]]/[[military]]) for each matching Skill icon you have in play (excluding beamed cards).",
+				"table": "",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Not a ZPM, but enough to keep the lights on.",
+			"art": "naquadah"
+		},
+		{
+			"id": "atlantis-new-arrivals",
+			"name": "New Arrivals",
+			"suit": "Directive",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP17/25",
+			"glory": null,
+			"position_indicator": "Available",
+			"species_traits": [],
+			"regular_traits": [],
+			"other_traits": [],
+			"icons": [],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Put a card on the top of your deck to gain a [[person]]. [[action]] Play: Take an [[incident]] to gain an [[ally]].",
+				"table": "",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Every supply run brings new faces and new problems.",
+			"art": "new-arrivals"
+		},
+		{
+			"id": "atlantis-ancient-database",
+			"name": "Ancient Database",
+			"suit": "Directive",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP18/25",
+			"glory": null,
+			"position_indicator": "Available",
+			"species_traits": [],
+			"regular_traits": [],
+			"other_traits": [],
+			"icons": [],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Take an [[incident]] to gain a [[ship]]. [[action]] Play: Discard 2 cards to gain a [[cargo]]. Play: Gain 2 [[dilithium]].",
+				"table": "",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "The answer is in there. So are ten thousand others.",
+			"art": "database"
+		},
+		{
+			"id": "atlantis-culling",
+			"name": "Culling",
+			"suit": "Incident",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP19/25",
+			"glory": -2,
+			"position_indicator": "Available",
+			"species_traits": [],
+			"regular_traits": [],
+			"other_traits": [],
+			"icons": [],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Remove one of your [[away team]] OR put a card on the top of your deck to return this card.",
+				"table": "",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "The darts come in low, and the beam takes whoever it touches.",
+			"art": "culling"
+		},
+		{
+			"id": "atlantis-the-mainland",
+			"name": "The Mainland",
+			"suit": "Location",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP20/25",
+			"glory": null,
+			"position_indicator": "Available",
+			"species_traits": [],
+			"regular_traits": ["Business"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Influence"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Take control of this location. Control: Gain 2 [[latinum]].",
+				"table": "Activation: If you have an [[away team]] here, draw a card. If you have 3+ total [[away team]] on 1 or more controlled [[location]], draw a card.",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Fields to farm, partners to trade with, and a long way from the gate.",
+			"art": "mainland"
+		},
+		{
+			"id": "atlantis-puddle-jumper",
+			"name": "Puddle Jumper",
+			"suit": "Ship",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP21/25",
+			"glory": null,
+			"position_indicator": "Available",
+			"species_traits": [],
+			"regular_traits": ["Cloak"],
+			"other_traits": [],
+			"icons": [],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Deploy this ship. You may warp it.",
+				"table": "Activation: Warp this ship. Unless an [[augment]] is beamed here, spend 1 [[dilithium]] first. Activation: Discard a card to beam a card here.",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Ford wanted a grander name. He was outvoted.",
+			"art": "jumper"
+		},
+		{
+			"id": "atlantis-rodney-mckay",
+			"name": "Rodney McKay",
+			"suit": "Person",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP22/25",
+			"glory": null,
+			"position_indicator": "Available",
+			"species_traits": ["Human"],
+			"regular_traits": ["Scientist", "Engineer", "Augment"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Research"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Draw 2 cards and discard one of them. Gain 1 [[research]].",
+				"table": "Activation: Spend 2 [[dilithium]] to gain 1 [[research]], and 1 more if you have a ZPM in play.",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Genius, hypochondriac, and annoyingly often right.",
+			"art": "mckay"
+		},
+		{
+			"id": "atlantis-teyla-emmagan",
+			"name": "Teyla Emmagan",
+			"suit": "Person",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP23/25",
+			"glory": null,
+			"position_indicator": "Available",
+			"species_traits": ["Human"],
+			"regular_traits": ["Telepath", "Ambassador"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Influence"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Gain 1 [[influence]]. You may return an [[incident]] from your hand or Discard pile.",
+				"table": "Activation: Spend 3 [[latinum]] to scan 2 of [[ally]] and gain 1 [[glory]].",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "She knows every trading partner in Pegasus, and she feels the Wraith coming.",
+			"art": "teyla"
+		},
+		{
+			"id": "atlantis-aiden-ford",
+			"name": "Aiden Ford",
+			"suit": "Person",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP24/25",
+			"glory": null,
+			"position_indicator": "Available",
+			"species_traits": ["Human"],
+			"regular_traits": ["Security"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Military"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Send an [[away team]] to a [[location]] where you have a [[ship]]. Gain 1 [[military]].",
+				"table": "Activation: Take an [[incident]] to gain 2 [[military]].",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Loyal, young, and changed by the enzyme.",
+			"art": "ford"
+		},
+		{
+			"id": "atlantis-radek-zelenka",
+			"name": "Radek Zelenka",
+			"suit": "Person",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP25/25",
+			"glory": null,
+			"position_indicator": "Available",
+			"species_traits": ["Human"],
+			"regular_traits": ["Engineer", "Scientist"],
+			"other_traits": [],
+			"icons": [
+				{
+					"type": "Skill",
+					"specialty": "Research"
+				}
+			],
+			"text": {
+				"cost": "",
+				"hand": "[[action]] Play: Gain 1 [[research]]. You may refresh a [[ship]].",
+				"table": "Activation: Spend 1 [[dilithium]] to draw a ZPM from your Discard pile.",
+				"goal": "",
+				"reward": ""
+			},
+			"flavor": "Second only to McKay, and quick to deliver the bad news.",
+			"art": "zelenka"
+		},
+		{
+			"id": "atlantis-mission-1",
+			"name": "The Gate Team",
+			"suit": "Mission",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP/M1",
+			"vp": 4,
+			"text": {
+				"goal": "Goal: A [[scientist]], a [[telepath]] and a [[security]] beamed to the same [[ship]], and [[res4]].",
+				"reward": "Reward: Gain 2 [[dilithium]]. Draw 2 cards."
+			}
+		},
+		{
+			"id": "atlantis-mission-2",
+			"name": "Power the City",
+			"suit": "Mission",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP/M2",
+			"vp": 3,
+			"text": {
+				"goal": "Goal: A ZPM in play, and [[res8]].",
+				"reward": "Reward: Enlist a Development."
+			}
+		},
+		{
+			"id": "atlantis-mission-3",
+			"name": "Pegasus Alliance",
+			"suit": "Mission",
+			"source": "Sheppard",
+			"game_box": "Stargate Atlantis (fan-made)",
+			"card_number": "1SHP/M3",
+			"vp": 3,
+			"text": {
+				"goal": "Goal: 2+ [[ally]] in play, and [[inf6]].",
+				"reward": "Reward: Gain 2 [[glory]]. You may return an [[incident]] from your hand or Discard pile."
+			}
+		}
+	]
+}
