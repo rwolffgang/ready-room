@@ -1,0 +1,157 @@
+{
+	"$comment": "Card art for the Stargate Atlantis custom pack (src/data/custom/atlantis.json): one source per `art` key. `enwiki:` files are the non-free stills each character's Wikipedia article uses; `tmdb:` ids are series stills and promotional images from TMDB (show 2290). Sheppard's still is the TMDB copy of the season 4 cast photo that Wikipedia captions left to right, cropped to the third figure. Everything is local use only: `npx tsx tools/custom/render-cards.ts atlantis` fetches into vendor/custom/ and renders into public/custom/. Cards with `likeness: false` are painted from their description. Drop your own image as vendor/custom/atlantis/override/<key>.<jpg|png|webp> to replace one.",
+	"universe": "the Stargate Atlantis series",
+	"palette": "Atlantis's look — ocean blues and the teal glow of Ancient technology, warm amber stained glass in the gate room, cold grey-green organic Wraith ships; no Star Trek purple",
+	"art": {
+		"sheppard": {
+			"source": "tmdb:k4pSuabMUysFOU6Oq5Z3JH31Dt.jpg",
+			"crop": [0.45, 0.04, 0.58, 0.4],
+			"position": "50% 25%",
+			"subject": "Lt. Col. John Sheppard, the expedition's military commander: messy dark hair, a lopsided confident half-smile, a black uniform shirt with the Atlantis expedition patch on the shoulder, a P90 on a sling, the glowing Stargate behind him",
+			"notes": "Sheppard faces the viewer, his face large, well lit and in sharp focus"
+		},
+		"atlantis": {
+			"source": "enwiki:File:An Ancient City Ship.jpg",
+			"position": "50% 50%",
+			"subject": "the Ancient city-ship Atlantis floating on a blue ocean: a snowflake of piers around tall elegant spires, the central tower lit from within, a faint shimmering shield dome rising over it"
+		},
+		"weir": {
+			"source": "enwiki:File:Elizabethweirstargate.jpg",
+			"crop": [0.08, 0.0, 0.92, 0.6],
+			"position": "50% 25%",
+			"subject": "Dr. Elizabeth Weir, the expedition's civilian leader and a diplomat: short dark hair, a burgundy wrap top, a calm and resolute expression, the stained-glass windows of the Atlantis control room behind her"
+		},
+		"keller": {
+			"source": "enwiki:File:Jenniferkeller 2.jpg",
+			"crop": [0.05, 0.03, 0.95, 0.6],
+			"position": "50% 25%",
+			"subject": "Dr. Jennifer Keller, Atlantis's young chief medical officer: long light-brown hair, a dark expedition jacket with a medical patch, a kind but determined look, the infirmary's soft blue light behind her"
+		},
+		"carter": {
+			"source": "enwiki:File:Colsamcarter.jpg",
+			"crop": [0.28, 0.08, 0.72, 0.48],
+			"position": "50% 25%",
+			"subject": "Col. Samantha Carter, astrophysicist and commander of Atlantis in its fourth year: short blond hair, a black leather jacket over a dark uniform, a sharp, focused expression, the glowing Stargate behind her",
+			"notes": "Carter faces the viewer, her face large, well lit and in sharp focus (the still is small: keep the likeness, add detail)"
+		},
+		"todd": {
+			"source": "enwiki:File:TheSiegeSGA.jpg",
+			"likeness": false,
+			"position": "50% 40%",
+			"subject": "a Wraith commander and uneasy ally: pale grey-green skin, long white hair, slitted yellow-green eyes, a dark star-shaped tattoo spreading around his left eye, a short goatee, a long black leather coat, one clawed hand raised to show the feeding slit in his palm, the dim ribbed organic corridor of a hive ship behind him"
+		},
+		"warship": {
+			"source": "tmdb:xAlnq3c8cPhzH0Kd0FTVptJtPtP.jpg",
+			"likeness": false,
+			"position": "50% 50%",
+			"subject": "an Ancient warship: a long, slender grey hull like a stretched arrowhead with blue-lit seams and two forward prongs, launching a swarm of glowing yellow drone weapons toward an organic Wraith hive ship in deep space"
+		},
+		"chair": {
+			"source": "tmdb:xgbC2GgFp2hU3INfgfkNN8OCTQ3.jpg",
+			"position": "50% 50%",
+			"subject": "the Ancient control chair: a reclining throne-like seat on a round dais, its armrests and base glowing pale blue as it comes alive, a swarm of golden drone weapons spiralling up out of the dark chamber around it",
+			"notes": "the chair is empty; it is the subject, not a person"
+		},
+		"asuras": {
+			"source": "tmdb:8r279Pby1AiTMH7GcnmOOI4SGaw.jpg",
+			"likeness": false,
+			"position": "50% 50%",
+			"subject": "Asuras, the Asurans' homeworld: a gleaming, sterile copy of an Ancient city of spires under a cold silver sky, every surface too perfect, a faint sheen of nanites in the air"
+		},
+		"janus-lab": {
+			"source": "tmdb:7Lmf7nO4Qwx2g9IqdpRefaL1y93.jpg",
+			"likeness": false,
+			"position": "50% 50%",
+			"subject": "a hidden Ancient laboratory: a dim stone-and-metal room full of glowing teal consoles and holographic displays, half-finished experiments on the benches, and in the middle a small gate ship fitted with a strange time-travel device"
+		},
+		"ronon": {
+			"source": "enwiki:File:Ronondex.jpg",
+			"crop": [0.1, 0.0, 0.9, 0.55],
+			"position": "50% 25%",
+			"subject": "Ronon Dex, a Satedan warrior and former Runner: long dreadlocks, a sleeveless brown leather vest, arms crossed, a stern watchful look, his heavy energy pistol on his hip, the gate room behind him"
+		},
+		"beckett": {
+			"source": "enwiki:File:Carson Beckett (Stargate).jpg",
+			"crop": [0.1, 0.03, 0.9, 0.55],
+			"position": "50% 25%",
+			"subject": "Dr. Carson Beckett, the expedition's Scottish doctor and geneticist: short dark hair, a warm friendly smile, a tan and grey expedition jacket with a Scottish flag patch, a syringe of gene therapy in hand, the infirmary behind him"
+		},
+		"daedalus": {
+			"source": "tmdb:sB0GLo9PJmyz3BkMqUubVVnYcut.jpg",
+			"position": "50% 45%",
+			"subject": "the Daedalus, a BC-304 battlecruiser from home: a long, boxy grey hull with two forward flight-deck pods and a tall rear tower, its engines glowing as it descends toward the lit spires of Atlantis at night"
+		},
+		"zpm": {
+			"source": "tmdb:z3aATa6Kz1tDVk6pGJnzO2Mp2n8.jpg",
+			"crop": [0.35, 0.25, 0.7, 1.0],
+			"position": "50% 50%",
+			"subject": "a ZPM, an Ancient zero point module: a tall faceted crystal cylinder glowing warm amber-orange from within, seated in a metal pedestal, light spilling across a dark ruin",
+			"notes": "the ZPM alone is the subject; leave out the people around it"
+		},
+		"hive-ship": {
+			"source": "tmdb:qi0JxWKtnlY6AumdwJYeaOxa81l.jpg",
+			"position": "50% 45%",
+			"subject": "a Wraith hive ship: a vast dark organic vessel shaped like a ribbed manta, its hull like grown bone and bark, darts swarming from it, looming over a blue planet"
+		},
+		"naquadah": {
+			"source": "tmdb:c8j8Ifw0bFsOj6On8MMQsE4KgPa.jpg",
+			"likeness": false,
+			"position": "50% 50%",
+			"subject": "a naquadah generator: a compact, rugged metal power unit with a glowing core visible through a vent, cables running from it, set up on a workbench in an Atlantis lab with the city's lights behind"
+		},
+		"new-arrivals": {
+			"source": "tmdb:tFDZyvEvECCzQItSnW7HR6DEQzq.jpg",
+			"position": "50% 50%",
+			"subject": "new members of the expedition stepping out of the Stargate's shimmering blue event horizon into the Atlantis gate room and walking toward the viewer with packs and supply cases, the city's tall angled pillars and windows around the gate, the event horizon rippling behind them",
+			"notes": "they come out of the gate toward the viewer, small figures with no recognisable faces; this is the gate room of Atlantis in the Pegasus galaxy, not the gate room back home"
+		},
+		"database": {
+			"source": "tmdb:eMWyzlL5W1SZUkcdkxoGaw07djz.jpg",
+			"likeness": false,
+			"position": "50% 50%",
+			"subject": "the Ancient database: a vast holographic display of glowing symbols, star maps and gate addresses filling a dark room in Atlantis, a single console lit in teal at its centre"
+		},
+		"culling": {
+			"source": "tmdb:rtXRRNoMTTfIeRdJ5qoa8EQX6Am.jpg",
+			"position": "50% 45%",
+			"subject": "a Wraith culling: a sleek purple-grey Wraith dart sweeping low over a green meadow, its bright beam sweeping the ground and dissolving the people caught in it",
+			"notes": "the people are small, distant figures"
+		},
+		"mainland": {
+			"source": "tmdb:8XTWPCOxobbHTuYoZ2MgnDbfJ1R.jpg",
+			"likeness": false,
+			"position": "50% 50%",
+			"subject": "the Athosian settlement on the mainland: hide tents and cooking fires on a green coastal plain, fields and a trading cart, the faint spires of Atlantis on the sea horizon at dusk"
+		},
+		"jumper": {
+			"source": "tmdb:9SR1daxR4L533gvK1hTla7dCgZx.jpg",
+			"position": "50% 50%",
+			"subject": "a Puddle Jumper, the Ancients' small gate ship: a compact blunt grey craft with a wide front window and two side drive pods, flying out of a Stargate in space",
+			"notes": "show the whole ship from a three-quarter front view"
+		},
+		"mckay": {
+			"source": "enwiki:File:RodneyMcKaypic.jpg",
+			"crop": [0.15, 0.03, 0.85, 0.6],
+			"position": "50% 25%",
+			"subject": "Dr. Rodney McKay, the expedition's brilliant and abrasive chief scientist: short thinning hair, a black leather jacket over a dark shirt with a Canadian flag patch, an impatient, know-it-all expression, an Ancient tablet glowing in his hand, a lab behind him"
+		},
+		"teyla": {
+			"source": "enwiki:File:Teyla Emmagan (Stargate).jpg",
+			"crop": [0.12, 0.03, 0.88, 0.6],
+			"position": "50% 25%",
+			"subject": "Teyla Emmagan, leader of the Athosians and a member of the gate team: long brown hair, a dark sleeveless top, bantos fighting sticks in her hands, a calm, perceptive expression, the gate room's amber stained glass behind her"
+		},
+		"ford": {
+			"source": "enwiki:File:Aiden Ford.JPG",
+			"crop": [0.0, 0.0, 0.85, 0.6],
+			"position": "50% 25%",
+			"subject": "Lt. Aiden Ford, a young Marine on the gate team: close-cropped hair, a black cap, a grey expedition jacket with the Atlantis patch, an eager, loyal look, a P90 at the ready"
+		},
+		"zelenka": {
+			"source": "tmdb:eMWyzlL5W1SZUkcdkxoGaw07djz.jpg",
+			"likeness": false,
+			"position": "50% 30%",
+			"subject": "Dr. Radek Zelenka, a Czech engineer in his forties: round wire-rimmed glasses, unruly brown hair, stubble, a grey-blue expedition jacket with a Czech flag patch, a tablet in his hands, an anxious, clever expression, glowing Ancient consoles behind him"
+		}
+	}
+}

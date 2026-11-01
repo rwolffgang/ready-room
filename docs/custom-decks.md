@@ -9,7 +9,7 @@ There are two:
 - **MAL**, a Firefly crew captained by Malcolm Reynolds (pack `firefly`).
 - **SHP**, the Stargate Atlantis expedition captained by John Sheppard (pack
   `atlantis`). Its research brief and design notes are in `docs/notes/`
-  (`atlantis-research.md`, `atlantis-design.md`). It has no card art yet.
+  (`atlantis-research.md`, `atlantis-design.md`).
 
 To add another crew, follow `docs/adding-a-custom-crew.md`: the whole flow
 from research to painted art, with the lessons from MAL and SHP.
@@ -46,6 +46,21 @@ npm run custom-cards:kit    # build the ChatGPT prompt kit from the rendered fac
 tools/custom/codex-art.sh 01 02 03   # paint those cards' art with Codex (your ChatGPT login)
 npm run custom-cards        # re-render with the painted art
 ```
+
+The npm scripts run the Firefly pack; for another pack pass its name:
+`npx tsx tools/custom/render-cards.ts atlantis`,
+`npx tsx tools/custom/build-prompt-kit.ts atlantis` and
+`PACK=atlantis tools/custom/codex-art.sh …`.
+
+The template lays each face out like the printed cards, checked against the
+scans: the name and suit bars in the suit's colour, skill icons below them, trait
+tags hanging from the top right (shortest name first; on a tie gameplay, then
+regular, then species traits), one rules strip per operation family in the
+print's colours and order (Play/Support/Control, Resupply, Clean-up,
+Activation/Reaction/Passive, Special, Endgame, Goal, Reward, then the dark
+DEV. COST bar), and the footer with the number and position pills, the focus
+corner and the VP badge. The renderer passes each trait's group from
+`src/data/ids.ts` for the tag and chip colours.
 
 The renderer needs the fetched STCC icons (`npm run fetch-cards`) and Chrome or
 Chromium (`CHROME_PATH` to override). Art sources in the manifest:

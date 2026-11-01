@@ -222,6 +222,17 @@ Where images came from, and what worked:
 Saved files go in `vendor/custom/<pack>/likeness/` and are referenced as
 `file:likeness/<key>.jpg`.
 
+**Character likenesses need a label.** TMDB stills carry no captions, so don't
+pick a character out of one by their face. Use stills that name who they show:
+the non-free image on the character's Wikipedia article (list a page's files
+with `generator=images`; keep the `local` ones, the Commons ones are usually
+convention photos), or a captioned group photo ("from left to right: …"). A
+higher-resolution copy of the same photograph (same poses and composition) keeps
+the caption's positions; SHP's Sheppard comes from the TMDB copy of the
+captioned season 4 cast photo. With no labeled still, paint the character from a
+description (`likeness: false`), as SHP did for Zelenka and Todd. Unlabeled TMDB
+stills are fine for ships, places and props.
+
 ```bash
 npx tsx tools/custom/render-cards.ts <pack>   # fetch art, render faces + template-blank.jpg
 ```

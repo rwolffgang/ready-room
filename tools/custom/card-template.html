@@ -1,37 +1,38 @@
 <!doctype html>
 <!--
   Card face template for fan-made custom crew decks (tools/custom/render-cards.ts).
-  Our own layout: it follows the information order of a printed card (name, suit,
-  skills, traits, play / table / goal text, development cost, footer) but none of
-  its artwork. Icons are the original game icons from the fetched STCC data.
+  It lays a card out like the printed Captain's Chair cards: a name bar and a suit
+  bar in the suit's colour, skill icons below them, trait tags hanging from the
+  top right, one rules strip per operation family (Play/Support/Control,
+  Activation/Reaction/Passive, Resupply, Clean-up, Special, Endgame, Goal, Reward,
+  and the dark development-cost bar), and the footer with the card number, the
+  position, the focus corner and the VP badge. The code and drawings are our own;
+  the icons are the original game icons from the fetched STCC data.
 
-  The renderer injects `window.CARD` (one card) before the script runs; opened
-  without it, the page draws the empty template.
+  The renderer injects `window.CARD` (one card), `window.ICON_BASE` and
+  `window.TRAIT_GROUP` (trait → species | other | variable) before the script
+  runs; opened without them, the page draws the empty template.
 -->
 <html>
 	<head>
 		<meta charset="utf-8" />
 		<link
 			rel="stylesheet"
-			href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,700;1,500&family=Roboto+Slab:wght@800&display=block"
+			href="https://fonts.googleapis.com/css2?family=Antonio:wght@600;700&family=Barlow+Condensed:ital,wght@0,500;0,600;1,500&display=block"
 		/>
 		<style>
 			:root {
 				--w: 585px;
 				--h: 818px;
-				--frame: #17120e;
-				--ink: #1f1710;
-				--parchment: #efe5cf;
-				--steel: #34505f;
-				--steel-ink: #eef3f4;
-				--slate: #26221f;
-				--brass: #c99a4b;
-				--suit: #c99a4b;
-				--title: 'Rockwell', 'Roboto Slab', Georgia, serif;
-				--cond: 'DIN Condensed', 'Barlow Condensed', 'Arial Narrow', sans-serif;
+				--frame: #0b0d12;
+				--ink: #14161c;
+				--light-ink: #f2f6ff;
+				--bar: #556;
+				--label: 'Antonio', 'DIN Condensed', 'Arial Narrow', sans-serif;
 				--text:
-					'Avenir Next Condensed', 'Barlow Condensed', 'Arial Narrow',
+					'Barlow Condensed', 'Avenir Next Condensed', 'Arial Narrow',
 					sans-serif;
+				--pill: #14171f;
 			}
 			* {
 				box-sizing: border-box;
@@ -56,10 +57,35 @@
 			.art {
 				position: absolute;
 				inset: 0 0 auto 0;
-				height: 590px;
-				background-color: #2a2420;
+				height: 600px;
+				background-color: #1b1f28;
 				background-size: cover;
 				background-position: 50% 30%;
+			}
+			.art.full {
+				height: 100%;
+			}
+			.art::before {
+				/* darkens the photo stand-ins toward the rules text */
+				content: '';
+				position: absolute;
+				inset: 0;
+				background: linear-gradient(
+					180deg,
+					rgba(11, 13, 18, 0.35) 0%,
+					rgba(11, 13, 18, 0) 18%,
+					rgba(11, 13, 18, 0) 60%,
+					var(--frame) 100%
+				);
+			}
+			.art.full::before {
+				background: linear-gradient(
+					180deg,
+					rgba(11, 13, 18, 0.25) 0%,
+					rgba(11, 13, 18, 0) 14%,
+					rgba(11, 13, 18, 0) 82%,
+					rgba(11, 13, 18, 0.55) 100%
+				);
 			}
 			.art.empty {
 				background-image:
@@ -68,409 +94,479 @@
 						rgba(255, 255, 255, 0.04) 0 14px,
 						transparent 14px 28px
 					),
-					radial-gradient(circle at 50% 40%, #3b332c, #1d1814);
+					radial-gradient(circle at 50% 40%, #2c3240, #141820);
 			}
 			.art.empty::after {
 				content: 'ART';
 				position: absolute;
 				left: 50%;
-				top: 42%;
+				top: 38%;
 				transform: translate(-50%, -50%);
-				font: 700 64px var(--cond);
+				font: 700 64px var(--label);
 				letter-spacing: 12px;
 				color: rgba(255, 255, 255, 0.12);
 			}
-			.art::before {
-				/* a warm grade so photos from different sources sit together */
-				content: '';
-				position: absolute;
-				inset: 0;
-				background:
-					linear-gradient(
-						180deg,
-						rgba(23, 18, 14, 0.55) 0%,
-						rgba(23, 18, 14, 0) 22%,
-						rgba(23, 18, 14, 0) 62%,
-						var(--frame) 100%
-					),
-					linear-gradient(
-						0deg,
-						rgba(120, 72, 28, 0.18),
-						rgba(120, 72, 28, 0.18)
-					);
-				mix-blend-mode: normal;
-			}
 
-			/* ---- header plates ------------------------------------------ */
-			.plates {
+			/* ---- name, suit, skills, away teams (top left) -------------- */
+			.head {
 				position: absolute;
-				top: 22px;
+				top: 26px;
 				left: 0;
 				display: flex;
 				flex-direction: column;
-				gap: 6px;
 				align-items: flex-start;
-				max-width: 380px;
 			}
-			.plate {
-				background: linear-gradient(
-					180deg,
-					color-mix(in srgb, var(--suit) 82%, white),
-					var(--suit)
-				);
-				border-radius: 0 28px 28px 0;
-				padding: 6px 22px 4px 18px;
-				box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
-				color: var(--ink);
-			}
-			.name {
-				font: 800 29px/1.05 var(--title);
+			.nb,
+			.sb {
+				display: flex;
+				align-items: center;
+				background: var(--bar);
+				color: #fff;
+				font-family: var(--label);
+				font-weight: 700;
 				text-transform: uppercase;
-				letter-spacing: 0.5px;
+				letter-spacing: 0.02em;
+				border-radius: 0 999px 999px 0;
+				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
 				white-space: nowrap;
 			}
-			.name.empty,
-			.suitline.empty {
-				min-width: 230px;
-				color: rgba(0, 0, 0, 0.25);
+			.nb {
+				font-size: 29px;
+				line-height: 1.12;
+				padding: 3px 28px 2px 18px;
+				margin-bottom: 8px;
 			}
-			.suitline {
-				display: flex;
-				align-items: center;
-				gap: 8px;
-				font: 700 25px/1 var(--cond);
-				text-transform: uppercase;
-				padding-top: 7px;
+			.sb {
+				gap: 9px;
+				height: 40px;
+				font-size: 25px;
+				padding: 2px 26px 0 14px;
+				margin-bottom: 12px;
 			}
-			.suitline img {
-				height: 21px;
-				filter: brightness(0.15);
+			.sb img {
+				height: 22px;
+				filter: brightness(0) invert(1);
 			}
-			.icons {
+			.card.dark-bar .nb,
+			.card.dark-bar .sb {
+				color: var(--ink);
+			}
+			.card.dark-bar .sb img {
+				filter: brightness(0);
+			}
+			.nb.empty,
+			.sb.empty {
+				min-width: 240px;
+				color: rgba(255, 255, 255, 0.35);
+			}
+			.skills {
 				display: flex;
 				flex-direction: column;
-				gap: 2px;
-				margin-top: 6px;
+				gap: 7px;
 			}
-			.icons img.skill {
-				width: 78px;
+			.skills img {
+				height: 62px;
 				display: block;
-				filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+				filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
 			}
-			.icons .focus {
-				width: 52px;
-				height: 52px;
-				margin: 6px 0 0 12px;
-				border-radius: 50%;
-				background: #f3ead7;
-				display: grid;
-				place-items: center;
-				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-			}
-			.icons .focus img {
-				width: 38px;
-			}
-
-			/* ---- traits (top right) ------------------------------------- */
-			.traits {
-				position: absolute;
-				top: 18px;
-				right: 14px;
-				display: flex;
-				gap: 4px;
-			}
-			.trait {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				width: 58px;
-			}
-			.trait img {
-				width: 58px;
-				height: 58px;
-				position: relative;
-				z-index: 1;
-				filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
-			}
-			.trait span {
-				margin-top: -10px;
-				padding: 16px 0 10px;
-				width: 38px;
-				border-radius: 0 0 19px 19px;
-				writing-mode: vertical-rl;
-				font: 700 24px/38px var(--cond);
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-				text-align: left;
-				color: #fff;
-				background: #3f8f99;
-				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-			}
-			.trait.species span {
-				background: #d8892f;
-			}
-			.trait.gameplay span {
-				background: #b93a32;
-			}
-
-			/* empty-template placeholders */
 			.slot-skill {
-				width: 78px;
-				height: 52px;
-				border-radius: 0 26px 26px 0;
+				width: 92px;
+				height: 56px;
+				border-radius: 0 28px 28px 0;
 				border: 2px dashed rgba(255, 255, 255, 0.25);
 				border-left: 0;
 			}
-			.slot-focus {
-				width: 52px;
-				height: 52px;
-				margin: 8px 0 0 12px;
-				border-radius: 50%;
-				border: 2px dashed rgba(255, 255, 255, 0.25);
+			/* the captain's Away Teams: the token in a square, the count below */
+			.away {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 3px;
+				margin: 6px 0 0 12px;
+				filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
 			}
-			.trait.slot i {
+			.away span {
+				display: grid;
+				place-items: center;
+				width: 50px;
+				background: #1d3150;
+				border: 2.5px solid #e8ecf5;
+				border-radius: 8px;
+			}
+			.away .token {
+				height: 50px;
+			}
+			.away .token img {
+				height: 34px;
+				filter: brightness(0) invert(1);
+			}
+			.away .count {
+				height: 40px;
+				font: 700 32px/1 var(--label);
+				color: #fff;
+			}
+
+			/* ---- trait tags (top right) --------------------------------- */
+			.traits {
+				position: absolute;
+				top: 20px;
+				right: 16px;
+				display: flex;
+				align-items: flex-start;
+			}
+			.vt {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				position: relative;
+				margin-left: -8px;
+			}
+			.vt:first-child {
+				margin-left: 0;
+			}
+			.vt img {
+				width: 62px;
+				height: 62px;
+				position: relative;
+				z-index: 2;
+				filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+			}
+			.vt .tag {
+				writing-mode: vertical-rl;
+				text-orientation: sideways;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 44px;
+				margin-top: -12px;
+				padding: 24px 0 18px;
+				font: 700 27px/1 var(--label);
+				letter-spacing: 0.02em;
+				text-transform: uppercase;
+				color: #fff;
+				border-radius: 0 0 999px 999px;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+			}
+			.vt .spacer + .tag {
+				margin-top: 0;
+				border-radius: 999px;
+				padding-top: 14px;
+			}
+			.vt .spacer {
+				width: 62px;
+				height: 10px;
+			}
+			.tag.regular {
+				background: #79b3c7;
+			}
+			.tag.species {
+				background: #e2a04a;
+			}
+			.tag.other {
+				background: #c85340;
+			}
+			.tag.variable {
+				background: #f6c9bd;
+				color: var(--ink);
+			}
+			.vt.slot i {
 				display: block;
-				width: 58px;
-				height: 58px;
+				width: 62px;
+				height: 62px;
 				border-radius: 50%;
 				border: 2px dashed rgba(255, 255, 255, 0.3);
-				background: rgba(0, 0, 0, 0.25);
 				position: relative;
-				z-index: 1;
+				z-index: 2;
 			}
-			.trait.slot span {
+			.vt.slot .tag {
 				background: rgba(255, 255, 255, 0.12);
 				color: rgba(255, 255, 255, 0.35);
 			}
-			.card::after {
-				/* a thin brass keyline inside the edge */
-				content: '';
-				position: absolute;
-				inset: 5px;
-				border-radius: 20px;
-				border: 1.5px solid rgba(201, 154, 75, 0.35);
-				pointer-events: none;
-			}
 
-			/* ---- flavor -------------------------------------------------- */
+			/* ---- flavor ------------------------------------------------- */
 			.flavor {
 				position: absolute;
-				left: 24px;
-				right: 24px;
-				font: italic 500 17px/1.2 var(--text);
-				color: #f4ead6;
+				left: 26px;
+				right: 26px;
+				font: italic 500 18px/1.2 var(--text);
+				color: #eef2f8;
 				text-shadow:
 					0 1px 3px #000,
 					0 0 8px #000;
 				text-align: right;
 			}
 
-			/* ---- rules text ---------------------------------------------- */
-			.panel {
+			/* ---- rules strips ------------------------------------------- */
+			.strips {
 				position: absolute;
-				left: 12px;
-				right: 12px;
-				bottom: 54px;
+				left: 0;
+				right: 20px;
+				bottom: 66px;
 				display: flex;
 				flex-direction: column;
-				gap: 0;
-				font-size: 22px;
-				line-height: 1.2;
+				gap: 5px;
+				font-size: 29px;
 			}
-			.box {
-				padding: 9px 14px 9px;
-				border-radius: 14px;
-				box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+			.strip {
+				display: flex;
+				border-radius: 0 14px 14px 0;
+				overflow: hidden;
+				box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 			}
-			.box + .box {
-				margin-top: -6px;
-				border-top-left-radius: 0;
-				border-top-right-radius: 0;
+			.strip .bar {
+				flex: none;
+				width: 12px;
 			}
-			.box.hand {
-				background: linear-gradient(180deg, #f6eedc, var(--parchment));
+			.strip .body {
+				flex: 1;
+				min-width: 0;
+				padding: 7px 16px 8px 13px;
+				font-weight: 500;
+				font-size: 1em;
+				line-height: 1.24;
 			}
-			.box.table {
-				background: linear-gradient(180deg, #3e5d6d, var(--steel));
-				color: var(--steel-ink);
+			.strip em {
+				font-style: italic;
 			}
-			.box.goal {
-				background: linear-gradient(180deg, #4a3b2c, #382c21);
-				color: #f3e6cc;
+			.strip .line + .line {
+				margin-top: 3px;
 			}
-			.box.cost {
-				background: var(--slate);
-				color: #f1e9db;
-				font-size: 0.95em;
-			}
-			.box.empty {
-				min-height: 74px;
-			}
-			.box.cost.empty {
-				min-height: 42px;
-			}
-			.op + .op {
-				margin-top: 5px;
-			}
-			.head {
-				font: 700 1.12em/1 var(--cond);
+			.kw {
+				font-family: var(--label);
+				font-weight: 600;
+				letter-spacing: 0.02em;
 				text-transform: uppercase;
-				letter-spacing: 0.3px;
-				margin-right: 4px;
-				vertical-align: -1px;
+				text-shadow:
+					0 0 2px #fff,
+					0 0 5px rgba(255, 255, 255, 0.85);
 			}
-			.box.hand .head {
-				color: #3a2817;
+			.strip.on-dark .kw {
+				text-shadow: 0 0 2px rgba(10, 20, 40, 0.9);
 			}
-			.box.table .head {
-				color: #bfe3ee;
+			.kw .attack {
+				color: #e05a5a;
 			}
-			.box.goal .head,
-			.box.cost .head {
-				color: var(--brass);
+			.strip.on-dark .kw .attack {
+				text-shadow:
+					0 0 2px #fff,
+					0 0 6px #fff,
+					0 0 10px rgba(255, 255, 255, 0.9);
 			}
+			.strip.inbar .kwblock {
+				flex: none;
+				display: flex;
+				align-items: center;
+				padding: 6px 12px 7px 14px;
+				font-family: var(--label);
+				font-weight: 600;
+				letter-spacing: 0.02em;
+			}
+			.strip.inbar .body {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+			}
+			.strip.empty .body {
+				min-height: 64px;
+			}
+			.strip.inbar.empty .body {
+				min-height: 40px;
+			}
+
+			/* inline icons and chips */
 			.ic {
-				height: 1.15em;
-				vertical-align: -0.24em;
-				margin: 0 1px;
+				height: 1.35em;
+				width: auto;
+				vertical-align: -0.32em;
+				margin: 0 0.08em;
 			}
-			.ic.action {
-				height: 1.25em;
-			}
-			.box.table .ic.res,
-			.box.goal .ic.res,
-			.box.cost .ic.res {
-				filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.7));
+			.ic.cost {
+				margin: 0 0.22em 0 0;
 			}
 			.chip {
 				display: inline-flex;
 				align-items: center;
-				gap: 3px;
-				padding: 0 7px 0 3px;
+				gap: 0.18em;
+				height: 1.2em;
+				padding: 0 0.38em 0 0.12em;
 				border-radius: 999px;
-				font: 700 0.86em/1.35 var(--cond);
+				font: 600 0.85em/1 var(--label);
+				letter-spacing: 0.03em;
 				text-transform: uppercase;
-				vertical-align: 0.05em;
 				color: #fff;
-				background: #3f8f99;
+				vertical-align: -0.18em;
 				white-space: nowrap;
 			}
 			.chip img {
-				height: 1.05em;
+				height: 1em;
+				width: auto;
+			}
+			.chip.plain {
+				padding-left: 0.38em;
 			}
 			.chip.suit img {
-				filter: brightness(10);
+				filter: brightness(0) invert(1);
 			}
-			.chip.species {
-				background: #d8892f;
-			}
-			.chip.gameplay {
-				background: #b93a32;
-			}
-			.chip.req {
-				background: #5e5146;
-			}
-			.chip.vpc {
-				background: var(--brass);
+			.chip.dark {
 				color: var(--ink);
-				padding: 0 7px;
+			}
+			.spec {
+				display: inline-flex;
+				align-items: center;
+				height: 1.35em;
+				border-radius: 999px;
+				overflow: hidden;
+				vertical-align: -0.32em;
+				margin: 0 0.08em;
+			}
+			.spec img {
+				height: 1.35em;
+				width: auto;
+				display: block;
+			}
+			.vpc {
+				position: relative;
+				display: inline-flex;
+				vertical-align: -0.32em;
+				margin: 0 0.08em;
+			}
+			.vpc img {
+				height: 1.35em;
+				width: auto;
+			}
+			.vpc b {
+				position: absolute;
+				inset: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font: 600 0.8em/1 var(--label);
+				color: var(--ink);
+			}
+			/* a specialty restriction: a dark tag with the icon in a diamond */
+			.req {
+				--h: 0.95em;
+				display: inline-flex;
+				align-items: center;
+				height: var(--h);
+				margin: 0 0.16em;
+				padding: 0 0.32em 0 calc(var(--h) * 1.95);
+				position: relative;
+				vertical-align: -0.28em;
+				border-radius: 0.1em;
+				background: #232122;
+				color: #fff;
+				font: 700 1.15em/1 var(--label);
+				white-space: nowrap;
+			}
+			.req i {
+				position: absolute;
+				left: calc(var(--h) * 0.4);
+				top: 50%;
+				width: calc(var(--h) * 1.25);
+				height: calc(var(--h) * 1.25);
+				transform: translateY(-50%) rotate(45deg);
+				background: #232122;
+				border-radius: 0.1em;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.req i span {
+				width: calc(var(--h) * 1.15);
+				height: calc(var(--h) * 1.15);
+				border-radius: 50%;
+				overflow: hidden;
+				transform: rotate(-45deg);
+				display: flex;
+				justify-content: center;
+			}
+			.req i img {
+				height: 100%;
+				width: auto;
+				max-width: none;
 			}
 			b.or {
+				font-weight: 700;
 				font-style: italic;
-				font-weight: 800;
 			}
 
-			/* ---- footer -------------------------------------------------- */
-			.footer {
+			/* ---- footer ------------------------------------------------- */
+			.foot {
 				position: absolute;
 				left: 0;
 				right: 0;
-				bottom: 0;
-				height: 48px;
+				bottom: 24px;
+				height: 30px;
 				display: flex;
 				align-items: center;
-				padding: 0 14px;
-				background:
-					repeating-linear-gradient(
-						90deg,
-						rgba(255, 255, 255, 0.035) 0 2px,
-						transparent 2px 9px
-					),
-					linear-gradient(180deg, #2b231c, #120e0b);
-				color: #e8dcc6;
+			}
+			.foot::before {
+				content: '';
+				position: absolute;
+				left: 0;
+				right: 0;
+				top: 50%;
+				height: 2px;
+				background: rgba(200, 212, 235, 0.3);
+			}
+			.number,
+			.position {
+				position: relative;
+				z-index: 1;
+				background: var(--pill);
+				color: #e8ecf5;
+				font: 600 16px/1 var(--label);
+				letter-spacing: 0.07em;
+				text-transform: uppercase;
+				padding: 5px 16px 4px;
+				box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.22);
 			}
 			.number {
-				font: 700 17px var(--cond);
-				letter-spacing: 0.5px;
-				padding: 4px 10px 2px;
-				border-radius: 999px;
-				background: rgba(0, 0, 0, 0.45);
-				min-width: 92px;
-				text-align: center;
+				border-radius: 0 999px 999px 0;
+				padding-left: 18px;
+				min-width: 128px;
 			}
 			.position {
 				position: absolute;
 				left: 50%;
-				transform: translateX(-50%);
-				font: 700 21px var(--cond);
-				letter-spacing: 1px;
-				text-transform: uppercase;
-				padding: 5px 26px 2px;
+				top: 50%;
+				transform: translate(-50%, -50%);
 				border-radius: 999px;
-				background: #0c0907;
-				border: 2px solid #5b4632;
-				min-width: 170px;
-				text-align: center;
+				padding: 5px 22px 4px;
 			}
-			.vp {
-				margin-left: auto;
-				width: 46px;
-				height: 46px;
-				margin-bottom: 26px;
-				display: grid;
-				place-items: center;
-				font: 800 26px var(--title);
-				color: var(--ink);
-				background: radial-gradient(
-					circle at 35% 30%,
-					#f5d58c,
-					var(--brass) 60%,
-					#8a6328
-				);
-				clip-path: polygon(50% 0, 100% 22%, 100% 70%, 50% 100%, 0 70%, 0 22%);
+			.focus-corner {
+				position: absolute;
+				right: -4px;
+				bottom: -4px;
+				height: 92px;
+				width: auto;
+				z-index: 2;
 			}
-			.vp.neg {
-				background: radial-gradient(
-					circle at 35% 30%,
-					#f08a7e,
-					#b93a32 60%,
-					#6e1f1a
-				);
-				color: #fff;
-				font-size: 22px;
+			.vp-badge {
+				position: absolute;
+				right: 12px;
+				bottom: 10px;
+				width: 70px;
+				height: 64px;
+				z-index: 3;
+				filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
 			}
-			.away {
-				margin-left: auto;
-				display: flex;
-				align-items: center;
-				gap: 6px;
-				font: 700 22px var(--cond);
-			}
-			.away img {
-				height: 30px;
-				filter: brightness(10);
+			.card.has-focus .vp-badge {
+				right: 92px;
 			}
 			.credit {
 				position: absolute;
-				right: 3px;
-				bottom: 64px;
+				right: 4px;
+				bottom: 120px;
 				writing-mode: vertical-rl;
 				transform: rotate(180deg);
 				font: 500 9.5px var(--text);
 				color: rgba(255, 255, 255, 0.55);
-				max-height: 360px;
+				max-height: 340px;
 				overflow: hidden;
 				white-space: nowrap;
+				z-index: 4;
 			}
 		</style>
 	</head>
@@ -479,18 +575,36 @@
 		<script>
 			const C = window.CARD ?? null
 			const ICONS = window.ICON_BASE ?? '../../public/stcc/icons'
-			const SUIT_COLORS = {
-				person: '#d6a54e',
-				ship: '#9aa5ad',
-				cargo: '#5fae9f',
-				ally: '#86b35f',
-				location: '#6a94c4',
-				directive: '#d0753f',
-				incident: '#d24d43',
-				captain: '#b994d6',
-				mission: '#d8c27a',
+			const TRAIT_GROUP = window.TRAIT_GROUP ?? {}
+
+			/** The name and suit bars, by suit (the Captain's is light, with dark text). */
+			const BAR = {
+				person: '#c9ab35',
+				ally: '#9b6ecf',
+				ship: '#7a8aaa',
+				cargo: '#3a6aaa',
+				location: '#4ac48a',
+				encounter: '#d4699f',
+				incident: '#e05a5a',
+				captain: '#d7dce6',
+				directive: '#a09363',
+				mission: '#000000',
 			}
-			const SUITS = Object.keys(SUIT_COLORS)
+			/** Suit chips in the text (the Captain chip is gold). */
+			const CHIP = { ...BAR, captain: '#c8a84b' }
+			const SUITS = Object.keys(BAR)
+			const TRAIT_COLOR = {
+				regular: '#79b3c7',
+				species: '#e2a04a',
+				other: '#c85340',
+				variable: '#f6c9bd',
+			}
+			const SPEC_COLOR = {
+				research: '#015c80',
+				influence: '#c0b422',
+				military: '#ab2242',
+				any: '#5a6678',
+			}
 			const SPEC = {
 				res: 'research',
 				inf: 'influence',
@@ -502,15 +616,35 @@
 				latinum: 'token/latinum.svg',
 				glory: 'token/glory-token.svg',
 			}
-			const SPECIES = new Set([
-				'human',
-				'alien',
-				'andorian',
-				'vulcan',
-				'klingon',
-				'romulan',
-			])
-			const GAMEPLAY = new Set(['attack', 'ongoing', 'wildcard', 'surprise'])
+
+			/** Strip colours by operation family: left bar, body, label, ink. */
+			const FAMILY = {
+				play: ['#d6d6d5', '#e9e8e2', '#14161c', 'dark'],
+				activation: ['#096abd', '#7ea3cc', '#ffffff', 'light'],
+				resupply: ['#62db5a', '#dff0da', '#2bbe65', 'dark'],
+				cleanup: ['#77dc6b', '#e9e8e2', '#43c271', 'dark'],
+				special: ['#bea7b5', '#c0b2b7', '#91388a', 'dark'],
+				endgame: ['#e03511', '#eecac7', '#e03511', 'dark'],
+				goal: ['#0a375d', '#fefefe', '#0a375d', 'dark'],
+				reward: ['#62db5a', '#dff0da', '#2bbe65', 'dark'],
+				banner: ['#bdbcb5', '#e9e8e2', '#c24b36', 'dark'],
+				cost: ['#202128', '#44454d', '#ffffff', 'light'],
+			}
+			const FAMILY_OF = {
+				play: 'play',
+				support: 'play',
+				control: 'play',
+				activation: 'activation',
+				reaction: 'activation',
+				passive: 'activation',
+				resupply: 'resupply',
+				'clean-up': 'cleanup',
+				cleanup: 'cleanup',
+				special: 'special',
+				endgame: 'endgame',
+				goal: 'goal',
+				reward: 'reward',
+			}
 
 			const el = (tag, cls, html) => {
 				const e = document.createElement(tag)
@@ -518,74 +652,154 @@
 				if (html !== undefined) e.innerHTML = html
 				return e
 			}
-			const img = (src, cls) =>
-				`<img class="${cls ?? 'ic'}" src="${ICONS}/${src}">`
+			const icon = (src, cls) =>
+				`<img class="${cls ?? 'ic'}" src="${ICONS}/${src}" alt="">`
 			const esc = (s) =>
-				s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+				String(s)
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;')
+			const traitGroup = (name) => TRAIT_GROUP[name] ?? 'regular'
+			const traitFile = (name) => name.replace(/['’]/g, '').replace(/\s+/g, '-')
 
-			/** One `[[token]]` → inline HTML (the same vocabulary as the STCC text). */
-			function token(name) {
-				name = name.trim().toLowerCase()
-				if (RES[name]) return img(RES[name], 'ic res')
-				if (name === 'action') return img('token/action.svg', 'ic action')
-				if (name === 'away team')
-					return `<span class="chip req">${img('token/away-team.svg', '')}AWAY TEAM</span>`
+			const specPill = (spec) =>
+				`<span class="spec" style="background:${SPEC_COLOR[spec]}">${icon(`skillChip/${spec}.png`, '')}</span>`
+
+			/** One `[[token]]` → inline HTML (the STCC text's vocabulary). */
+			function token(raw) {
+				const name = raw.trim().toLowerCase()
+				if (RES[name]) return icon(RES[name])
+				if (name === 'action') return icon('token/action.svg')
+				if (name === 'away team') return icon('token/away-team.svg')
 				if (['research', 'influence', 'military'].includes(name))
-					return img(`skill/${name}.png`, 'ic')
+					return specPill(name)
 				if (SUITS.includes(name))
-					return `<span class="chip suit" style="background:${SUIT_COLORS[name]}">${img(`suit/${name}.svg`, '')}${name}</span>`
-				let m = /^(\d+)vp$/.exec(name)
-				if (m) return `<span class="chip vpc">${m[1]} VP</span>`
+					return `<span class="chip suit" style="background:${CHIP[name]}">${icon(`suit/${name}.svg`, '')}${esc(name)}</span>`
+				let m = /^(-?\d+)vp$/.exec(name)
+				if (m)
+					return `<span class="vpc">${icon('token/vp.svg', '')}<b>${m[1]}</b></span>`
 				m = /^(res|inf|mil|wild)-(skill|focus)$/.exec(name)
 				if (m)
 					return m[2] === 'skill'
-						? img(`skill/${SPEC[m[1]]}.png`, 'ic')
-						: img(`focus/${SPEC[m[1]]}.svg`, 'ic')
+						? specPill(SPEC[m[1]])
+						: icon(`focus/${SPEC[m[1]]}.svg`)
 				m = /^(res|inf|mil)(\d+)$/.exec(name)
 				if (m)
-					return `<span class="chip req">${img(`skillChip/${SPEC[m[1]]}.png`, '')}${m[2]}+</span>`
-				const key = name.replace(/\s+/g, '-')
-				const cls = SPECIES.has(name)
-					? 'species'
-					: GAMEPLAY.has(name)
-						? 'gameplay'
-						: ''
-				return `<span class="chip ${cls}">${img(`traitChip/${key}.png`, '')}${esc(name)}</span>`
+					return `<span class="req"><i><span style="background:${SPEC_COLOR[SPEC[m[1]]]}">${icon(`skillChip/${SPEC[m[1]]}.png`, '')}</span></i>${m[2]}</span>`
+				const group = traitGroup(name)
+				return `<span class="chip${group === 'variable' ? ' dark' : ''}" style="background:${TRAIT_COLOR[group]}">${icon(`traitChip/${traitFile(name)}.png`, '')}${esc(name)}</span>`
 			}
 
 			function rich(text) {
 				return esc(text)
 					.replace(/\[\[([^\]]+)\]\]/g, (_, t) => token(t))
+					.replace(/\b_([^_]+)_\b/g, '<em>$1</em>')
 					.replace(/\bOR\b/g, '<b class="or">OR</b>')
 			}
 
-			const OP_HEAD =
-				/(\[\[action\]\]\s*)?(Attack\s+)?\b(Play|Activation|Passive|Reaction|Resupply|Clean-up|Cleanup|Control|Endgame|Special|Goal|Reward)(\s*\[\[[a-z]+\d\]\])?\s*:\s*/gi
+			/** The print's strip order: Play first, then Resupply and Clean-up, the
+			 *  blue Activation/Reaction/Passive strip, Special, Endgame, Goal, Reward. */
+			const FAMILY_RANK = {
+				banner: 0,
+				play: 1,
+				resupply: 2,
+				cleanup: 3,
+				activation: 4,
+				special: 5,
+				endgame: 6,
+				goal: 7,
+				reward: 8,
+			}
+			/** The print's trait order: shortest name first; on a tie, gameplay
+			 *  traits, then regular ones, then species. */
+			const GROUP_RANK = { other: 0, variable: 0, regular: 1, species: 2 }
+			function sortTraits(list) {
+				const len = (t) => t.replace(/\s+/g, '').length
+				return list
+					.map((t, i) => ({ t, i }))
+					.sort(
+						(a, b) =>
+							len(a.t) - len(b.t) ||
+							GROUP_RANK[traitGroup(a.t.toLowerCase())] -
+								GROUP_RANK[traitGroup(b.t.toLowerCase())] ||
+							a.i - b.i,
+					)
+					.map(({ t }) => t)
+			}
 
-			/** A text section → one block per operation, the header in caps. */
-			function ops(section) {
+			const OP_HEAD =
+				/(\[\[action\]\]\s*)?(Attack\s+)?\b(Play|Support|Control|Activation|Passive|Reaction|Resupply|Clean-up|Cleanup|Special|Endgame|Goal|Reward)(\s*\[\[(?:res|inf|mil)\d+\]\])?\s*:\s*/gi
+
+			/** A text section → its operations: { family, label, body }. */
+			function operations(section) {
 				const heads = [...section.matchAll(OP_HEAD)].filter(
+					// not inside a quoted operation ("…, Play: …")
 					(m) => (section.slice(0, m.index).match(/"/g) ?? []).length % 2 === 0,
 				)
-				if (heads.length === 0) return `<div class="op">${rich(section)}</div>`
-				let html = ''
-				const lead = section.slice(0, heads[0].index).trim()
-				if (lead) html += `<div class="op">${rich(lead)}</div>`
+				const out = []
+				const lead = section.slice(0, heads[0]?.index ?? section.length).trim()
+				if (lead) out.push({ family: 'banner', label: '', body: rich(lead) })
 				heads.forEach((m, i) => {
-					const start = m.index + m[0].length
+					const word = m[3].toLowerCase()
 					const end = heads[i + 1]?.index ?? section.length
-					const head =
-						(m[1] ? token('action') + ' ' : '') +
-						`<span class="head">${m[2] ? 'Attack ' : ''}${m[3]}${m[4] ? ' ' + token(m[4].trim().slice(2, -2)) : ''}:</span>`
-					html += `<div class="op">${head}${rich(section.slice(start, end).trim())}</div>`
+					const label =
+						(m[1] ? icon('token/action.svg', 'ic cost') : '') +
+						`<span class="kw">${m[2] ? '<span class="attack">Attack</span> ' : ''}${esc(m[3])}${m[4] ? ' ' + token(m[4].trim().slice(2, -2)) : ''}:</span> `
+					out.push({
+						family: FAMILY_OF[word] ?? 'play',
+						label,
+						body: rich(section.slice(m.index + m[0].length, end).trim()),
+					})
 				})
-				return html
+				return out
+			}
+
+			/** Consecutive operations of one family share a strip, like the print. */
+			function strips(text) {
+				const ops = []
+				for (const col of ['hand', 'table', 'goal', 'reward'])
+					if (text[col]) ops.push(...operations(text[col]))
+				ops.sort((a, b) => FAMILY_RANK[a.family] - FAMILY_RANK[b.family])
+				const groups = []
+				for (const op of ops) {
+					const last = groups[groups.length - 1]
+					if (last && last.family === op.family) last.ops.push(op)
+					else groups.push({ family: op.family, ops: [op] })
+				}
+				const html = groups.map(({ family, ops }) => {
+					const [bar, body, label, ink] = FAMILY[family]
+					return `<div class="strip${ink === 'light' ? ' on-dark' : ''}"><div class="bar" style="background:${bar}"></div><div class="body" style="background:${body};color:${ink === 'light' ? 'var(--light-ink)' : 'var(--ink)'}">${ops
+						.map(
+							(op) =>
+								`<div class="line">${op.label.replace('<span class="kw">', `<span class="kw" style="color:${label}">`)}${op.body}</div>`,
+						)
+						.join('')}</div></div>`
+				})
+				if (text.cost) {
+					const [bar, body] = FAMILY.cost
+					html.push(
+						`<div class="strip inbar on-dark"><div class="kwblock" style="background:${bar};color:#fff">DEV. COST:</div><div class="body" style="background:${body};color:var(--light-ink)">${rich(text.cost)}</div></div>`,
+					)
+				}
+				return html.join('')
+			}
+
+			/** The VP badge: a white oval with a pale arrowhead and the number. */
+			function vpBadge(vp) {
+				const arrow = vp < 0 ? '#f0a893' : '#c3cfdd'
+				return `<svg class="vp-badge" viewBox="0 0 40 36"><ellipse cx="20" cy="18" rx="19" ry="13.5" fill="#fff"/><path d="M20 5.5 C23 11 26.5 19 29 27 C26 25 23 24 20 24 C17 24 14 25 11 27 C13.5 19 17 11 20 5.5 Z" fill="${arrow}"/><text x="20" y="26.5" text-anchor="middle" font-family="Antonio, sans-serif" font-weight="700" font-size="${String(vp).length > 1 ? 20 : 23}" fill="#10161f">${esc(vp)}</text></svg>`
+			}
+
+			/** The captain's Away Teams: the token, and the count below it. */
+			function awayBadge(n) {
+				return `<div class="away"><span class="token">${icon('token/away-team.svg', '')}</span><span class="count">${esc(n)}</span></div>`
 			}
 
 			function build() {
 				const card = document.getElementById('card')
 				const suit = C?.suit?.toLowerCase() ?? 'person'
-				card.style.setProperty('--suit', C ? SUIT_COLORS[suit] : '#7d6a55')
+				card.style.setProperty('--bar', C ? BAR[suit] : '#3a4152')
+				if (C && suit === 'captain') card.classList.add('dark-bar')
 
 				const art = el('div', 'art' + (C?.art ? '' : ' empty'))
 				if (C?.art && C.backdrop) {
@@ -596,119 +810,91 @@
 					art.style.backgroundRepeat = 'no-repeat'
 				} else if (C?.art) {
 					// painted art made for the card (override/): full bleed, like the print
-					if (C.artFull) art.style.height = '100%'
+					if (C.artFull) art.classList.add('full')
 					art.style.backgroundImage = `url("${C.art}")`
 					if (C.artPosition) art.style.backgroundPosition = C.artPosition
 					if (C.artSize) art.style.backgroundSize = C.artSize
 				}
 				card.append(art)
 
-				// header plates + skill / focus icons
-				const plates = el('div', 'plates')
-				plates.append(
+				// name, suit, skills, away teams
+				const head = el('div', 'head')
+				head.append(
+					el('div', 'nb' + (C ? '' : ' empty'), C ? esc(C.name) : 'Card name'),
+				)
+				head.append(
 					el(
 						'div',
-						'plate name' + (C ? '' : ' empty'),
-						C ? esc(C.name) : 'Card name',
+						'sb' + (C ? '' : ' empty'),
+						C ? `${icon(`suit/${suit}.svg`, '')}${esc(suit)}` : 'Suit',
 					),
 				)
-				plates.append(
-					el(
-						'div',
-						'plate suitline' + (C ? '' : ' empty'),
-						C ? `${img(`suit/${suit}.svg`, '')}${esc(suit)}` : 'Suit',
-					),
-				)
-				const icons = el('div', 'icons')
-				if (!C)
-					icons.innerHTML +=
-						'<div class="slot-skill"></div><div class="slot-focus"></div>'
+				const skills = el('div', 'skills')
+				if (!C) skills.append(el('div', 'slot-skill'))
 				for (const s of C?.skills ?? [])
-					icons.innerHTML += img(`skill/${s}.png`, 'skill')
-				if (C?.focus)
-					icons.innerHTML += `<div class="focus">${img(`focus/${C.focus}.svg`, '')}</div>`
-				plates.append(icons)
-				card.append(plates)
+					skills.innerHTML += icon(`skill/${s}.png`, '')
+				head.append(skills)
+				if (C?.awayTeams)
+					head.insertAdjacentHTML('beforeend', awayBadge(C.awayTeams))
+				card.append(head)
 
-				// traits, right to left like the print
+				// trait tags, hanging from the top right
 				const traits = el('div', 'traits')
 				if (!C)
 					for (let i = 0; i < 3; i++)
-						traits.append(el('div', 'trait slot', '<i></i><span>Trait</span>'))
-				for (const t of C?.traits ?? []) {
-					const k = t.toLowerCase()
-					const cls = SPECIES.has(k)
-						? 'species'
-						: GAMEPLAY.has(k)
-							? 'gameplay'
-							: ''
-					traits.append(
-						el(
-							'div',
-							`trait ${cls}`,
-							`${img(`trait/${k.replace(/\s+/g, '-')}.png`, '')}<span>${esc(t)}</span>`,
-						),
-					)
-				}
-				card.append(traits)
-
-				// rules text
-				const panel = el('div', 'panel')
-				const t = C?.text ?? {}
-				if (!C) {
-					panel.append(
-						el('div', 'box hand empty', '<span class="head">Play:</span>'),
-					)
-					panel.append(
-						el(
-							'div',
-							'box table empty',
-							'<span class="head">Activation:</span>',
-						),
-					)
-					panel.append(
-						el('div', 'box cost empty', '<span class="head">Dev. cost:</span>'),
-					)
-				} else {
-					if (t.hand) panel.append(el('div', 'box hand', ops(t.hand)))
-					if (t.table) panel.append(el('div', 'box table', ops(t.table)))
-					if (t.reward && !t.goal.startsWith('Goal'))
-						panel.append(el('div', 'box table', ops(t.reward)))
-					if (t.goal) panel.append(el('div', 'box goal', ops(t.goal)))
-					if (t.goal.startsWith('Goal') && t.reward)
-						panel.append(el('div', 'box hand', ops(t.reward)))
-					if (t.cost)
-						panel.append(
+						traits.append(
 							el(
 								'div',
-								'box cost',
-								`<span class="head">Dev. cost:</span>${rich(t.cost)}`,
+								'vt slot',
+								'<i></i><span class="tag regular">Trait</span>',
 							),
 						)
-				}
+				const list = sortTraits(C?.traits ?? [])
+				list.forEach((t, i) => {
+					const k = t.toLowerCase()
+					const vt = el(
+						'div',
+						'vt',
+						`${icon(`trait/${traitFile(k)}.png`, '')}<span class="tag ${traitGroup(k)}">${esc(t)}</span>`,
+					)
+					vt.style.zIndex = String(list.length - i)
+					vt.querySelector('img').addEventListener('error', (e) =>
+						e.target.replaceWith(el('span', 'spacer')),
+					)
+					traits.append(vt)
+				})
+				card.append(traits)
+
+				// rules strips
+				const panel = el('div', 'strips')
+				if (C) panel.innerHTML = strips(C.text ?? {})
+				else
+					panel.innerHTML =
+						['play', 'activation']
+							.map(
+								(f) =>
+									`<div class="strip empty${FAMILY[f][3] === 'light' ? ' on-dark' : ''}"><div class="bar" style="background:${FAMILY[f][0]}"></div><div class="body" style="background:${FAMILY[f][1]}"><span class="kw" style="color:${FAMILY[f][2]}">${f}:</span></div></div>`,
+							)
+							.join('') +
+						`<div class="strip inbar on-dark empty"><div class="kwblock" style="background:${FAMILY.cost[0]};color:#fff">DEV. COST:</div><div class="body" style="background:${FAMILY.cost[1]}"></div></div>`
 				card.append(panel)
 
-				// footer
-				const footer = el('div', 'footer')
-				footer.append(el('div', 'number', C ? esc(C.number) : '1XXX00/00'))
-				footer.append(el('div', 'position', C ? esc(C.position) : 'Position'))
-				if (C?.awayTeams)
-					footer.append(
-						el(
-							'div',
-							'away',
-							`${img('token/away-team.svg', '')}× ${C.awayTeams}`,
-						),
+				// footer: number, position, focus corner, VP
+				const foot = el('div', 'foot')
+				foot.append(el('div', 'number', C ? esc(C.number) : '1XXX00/00'))
+				foot.append(el('div', 'position', C ? esc(C.position) : 'Position'))
+				card.append(foot)
+				if (C?.focus) {
+					card.classList.add('has-focus')
+					card.insertAdjacentHTML(
+						'beforeend',
+						icon(`focus/${C.focus}.svg`, 'focus-corner'),
 					)
-				else if (C?.vp)
-					footer.append(
-						el('div', 'vp' + (C.vp < 0 ? ' neg' : ''), String(C.vp)),
-					)
-				else if (!C) footer.append(el('div', 'vp', '0'))
-				card.append(footer)
+				}
+				if (C?.vp) card.insertAdjacentHTML('beforeend', vpBadge(C.vp))
+				else if (!C) card.insertAdjacentHTML('beforeend', vpBadge(0))
 
 				if (C?.credit) card.append(el('div', 'credit', esc(C.credit)))
-
 				return panel
 			}
 
@@ -717,21 +903,24 @@
 				if (C?.flavor) {
 					const fl = el('div', 'flavor', esc(C.flavor))
 					document.getElementById('card').append(fl)
-					fl.style.bottom = `${panel.offsetHeight + 54 + 10}px`
+					fl.style.bottom = `${panel.offsetHeight + 66 + 10}px`
 				}
 			}
 
-			/** Shrink the rules text until the panel leaves the top of the art free. */
+			/** Shrink the rules text until the strips leave the top of the art free,
+			 *  and the name until its bar clears the trait tags. */
 			function fit(panel) {
-				const max = 390
-				let size = 22
+				const max = 420
+				let size = 29
 				while (panel.offsetHeight > max && size > 12) {
 					size -= 0.5
 					panel.style.fontSize = `${size}px`
 				}
-				const name = document.querySelector('.name')
+				const name = document.querySelector('.nb')
+				const traits = document.querySelector('.traits')
+				const room = traits.offsetLeft - 14
 				let ns = 29
-				while (name.offsetWidth > 390 && ns > 16) {
+				while (name.offsetWidth > room && ns > 16) {
 					ns -= 1
 					name.style.fontSize = `${ns}px`
 				}

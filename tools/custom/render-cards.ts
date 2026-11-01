@@ -26,6 +26,7 @@ import {
 } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { GAMEPLAY_TRAITS, SPECIES_TRAITS } from '../../src/data/ids'
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..', '..')
 const PACK = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'firefly'
@@ -245,6 +246,9 @@ async function override(key: string): Promise<string | null> {
 	}
 }
 
+/** `TIME_TRAVEL` → `time travel`, the spelling of the text's `[[tokens]]`. */
+const traitKey = (id: string): string => id.toLowerCase().replace(/_/g, ' ')
+
 const SPEC: Record<string, string> = {
 	Research: 'research',
 	Influence: 'influence',
@@ -322,9 +326,15 @@ async function main(): Promise<void> {
 			>)
 		: {}
 
+	// the trait groups colour the trait tags and the trait chips in the text
+	const traitGroup: Record<string, string> = {}
+	for (const t of SPECIES_TRAITS) traitGroup[traitKey(t)] = 'species'
+	for (const t of GAMEPLAY_TRAITS)
+		traitGroup[traitKey(t)] = t === 'WILDCARD' ? 'variable' : 'other'
+
 	const template = await readFile(TEMPLATE, 'utf8')
 	const render = async (data: unknown, name: string): Promise<string> => {
-		const inject = `<script>window.ICON_BASE=${JSON.stringify(pathToFileURL(ICONS).href)};window.CARD=${JSON.stringify(data)}</script>`
+		const inject = `<script>window.ICON_BASE=${JSON.stringify(pathToFileURL(ICONS).href)};window.TRAIT_GROUP=${JSON.stringify(traitGroup)};window.CARD=${JSON.stringify(data)}</script>`
 		const html = join(HTML_DIR, `${name}.html`)
 		await writeFile(html, template.replace('<body>', `<body>${inject}`))
 		const png = join(OUT_DIR, `${name}.png`)
