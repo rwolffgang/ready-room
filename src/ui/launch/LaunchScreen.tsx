@@ -139,7 +139,7 @@ export function LaunchScreen({ catalogReady }: { catalogReady: boolean }) {
 	const [sides, setSides] = useState<[Side, Side]>(['BASIC', 'BASIC'])
 	const [seats, setSeatsState] =
 		useState<[SeatController, SeatController]>(loadSeats)
-	const [seed, setSeed] = useState(12345)
+	const [seed, setSeed] = useState(randomSeed)
 	const [active, setActive] = useState<Seat>(0)
 	const [botCrew, setBotCrew] = useState<DeckId | null>(null)
 	const [level, setLevel] = useState<SoloLevel>('ENSIGN')
