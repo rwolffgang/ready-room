@@ -152,6 +152,42 @@ function isCommand(node: Effect): boolean {
 	}
 }
 
+/** Can a step join its neighbours with "and" ("gain 1 {GLO} and advance
+ *  MILITARY by 1")? A plain command can, and the other side doing one. */
+function joinable(node: Effect): boolean {
+	switch (node.k) {
+		case 'OPPONENT':
+		case 'FORCE':
+			return joinable(node.body)
+		case 'MAY':
+			return node.body.k !== 'IF' && joinable(node.body)
+		case 'SEQ':
+		case 'CHOOSE_ONE':
+		case 'PAY_THEN':
+		case 'REPEAT':
+		case 'TRY':
+		case 'ATTACK':
+		case 'MODIFIER_ATTACH':
+		case 'MODIFIER_DETACH':
+		case 'ALT_PLAY':
+		case 'SCRIPT':
+			return false
+		default:
+			return isCommand(node)
+	}
+}
+
+/** A body read as one clause: a sequence of plain steps joins with "and"
+ *  ("discard a WEAPON to gain 1 {GLO} and advance MILITARY by 1"), so an
+ *  either/or option or a paid-for body doesn't break off into a sentence of
+ *  its own. Anything else keeps its sentences. */
+function asClause(node: Effect): string {
+	if (node.k !== 'SEQ' || node.steps.length < 2 || !node.steps.every(joinable))
+		return phrase(render(node))
+	const parts = node.steps.map((s) => phrase(render(s)))
+	return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
+}
+
 /** Can this node's English follow "… to"? A command or a FORCE can. */
 function followsTo(node: Effect): boolean {
 	if (node.k === 'SEQ')
@@ -283,8 +319,14 @@ export function describeAmount(amount: Amount): string {
 			return `your ${resourceToken(amount.res)}`
 		case 'UNUSED_ACTIONS':
 			return 'your unused actions'
-		case 'MIN':
+		case 'MIN': {
+			// a number caps the other term: "… (max 5)"
+			const [cap, ...more] = amount.terms.filter((t) => typeof t === 'number')
+			const rest = amount.terms.filter((t) => typeof t !== 'number')
+			if (cap !== undefined && more.length === 0 && rest.length === 1)
+				return `${describeAmount(rest[0]!)} (max ${cap})`
 			return `the lesser of ${amount.terms.map(describeAmount).join(' and ')}`
+		}
 		case 'MAX':
 			return `the greater of ${amount.terms.map(describeAmount).join(' and ')}`
 		case 'SUM':
@@ -325,6 +367,57 @@ function perOf(
 		}
 	}
 	return undefined
+}
+
+/** A per-card amount as the records word it, "1 {LAT} for each FERENGI and
+ *  each BUSINESS you have in play (max 5)": a COUNT, a SUM of COUNTs or a
+ *  "1 for every 1", optionally capped by a MIN with a number. Undefined for
+ *  any other amount. */
+function eachOf(amount: Amount): { each: string; cap?: number } | undefined {
+	if (typeof amount !== 'object') return undefined
+	switch (amount.k) {
+		case 'COUNT':
+			return { each: `each ${describeQuery(amount.query, 'in')}` }
+		case 'PER':
+			return amount.every === 1 ? eachOf(amount.of) : undefined
+		case 'ICON_COUNT':
+			return {
+				each: `each ${amount.kind === 'SKILL' ? 'Skill' : 'Focus'} icon of ${boundCard(amount.bind)}`,
+			}
+		case 'TRAIT_COUNT':
+			return { each: `each trait of ${boundCard(amount.bind)}` }
+		case 'SHARED_TRAITS':
+			return {
+				each: `each trait ${boundCard(amount.bind)} shares with ${traitPartnerTarget(amount.with)}`,
+			}
+		case 'SUM': {
+			const parts = amount.terms.map(eachOf)
+			if (parts.some((p) => p === undefined || p.cap !== undefined))
+				return undefined
+			return { each: parts.map((p) => p!.each).join(' and ') }
+		}
+		case 'MIN': {
+			const caps = amount.terms.filter((t) => typeof t === 'number')
+			const rest = amount.terms.filter((t) => typeof t !== 'number')
+			if (caps.length !== 1 || rest.length !== 1) return undefined
+			const inner = eachOf(rest[0]!)
+			return inner === undefined || inner.cap !== undefined
+				? undefined
+				: { ...inner, cap: caps[0]! }
+		}
+		default:
+			return undefined
+	}
+}
+
+/** "for each ANOMALY you have in play (max 3)"; a cap joins a closing
+ *  parenthesis ("(excluding this card, max 5)"). */
+function forEach(each: { each: string; cap?: number }, unit = ''): string {
+	if (each.cap === undefined) return `for ${each.each}`
+	const max = `max ${each.cap}${unit}`
+	return each.each.endsWith(')')
+		? `for ${each.each.slice(0, -1)}, ${max})`
+		: `for ${each.each} (${max})`
 }
 
 /** "…(max N cards)" tail for a capped divisor, or empty when uncapped. */
@@ -921,12 +1014,12 @@ function render(node: Effect): string {
 			return `You may ${phrase(render(node.body))}.`
 		case 'CHOOSE_ONE':
 			if (node.count !== undefined && node.count > 1)
-				return `Choose ${node.count} of the following: ${node.options.map((o) => phrase(render(o.body))).join(' OR ')}.`
-			return `Either ${node.options.map((o) => phrase(render(o.body))).join(' or ')}.`
+				return `Choose ${node.count} of the following: ${node.options.map((o) => asClause(o.body)).join(' OR ')}.`
+			return `Either ${node.options.map((o) => asClause(o.body)).join(' or ')}.`
 		case 'PAY_THEN': {
 			// "… to if …" doesn't read: a body that isn't a command gets a colon
 			const to = followsTo(node.body) ? 'to' : 'to do the following:'
-			return `${render(node.cost).replace(/\.$/, '')} ${to} ${phrase(render(node.body))}.`
+			return `${capitalise(asClause(node.cost))} ${to} ${asClause(node.body)}.`
 		}
 		case 'IF': {
 			const branch = (e: Effect): string => theyDo(e, phrase(render(e)))
@@ -950,8 +1043,17 @@ function render(node: Effect): string {
 		case 'REPEAT':
 			if (typeof node.times === 'object' && node.times.k === 'UNUSED_ACTIONS')
 				return `For each of your unused actions, ${phrase(render(node.body))}.`
-			if (typeof node.times === 'object' && node.times.k === 'COUNT')
-				return `For each ${describeQuery(node.times.query, 'in')}, ${phrase(render(node.body))}.`
+			{
+				const each = eachOf(node.times)
+				if (each !== undefined)
+					return `${capitalise(forEach(each, ' times'))}, ${phrase(render(node.body))}.`
+				const upTo =
+					typeof node.times === 'object' && node.times.k === 'UP_TO'
+						? eachOf(node.times.max)
+						: undefined
+				if (upTo !== undefined && upTo.cap === undefined)
+					return `Up to once ${forEach(upTo)}, ${phrase(render(node.body))}.`
+			}
 			return `Repeat ${describeAmount(node.times)} times: ${phrase(render(node.body))}.`
 		case 'FOR_EACH':
 			return `For each ${describeQuery(node.over, 'in')}, ${theyDo(node.body, phrase(render(node.body)))}.`
@@ -1106,6 +1208,8 @@ function render(node: Effect): string {
 		case 'DRAW': {
 			if (node.fromBottom === true && node.count === 1)
 				return 'Draw the bottom card of your deck.'
+			const each = eachOf(node.count)
+			if (each !== undefined) return `Draw a card ${forEach(each)}.`
 			const per = perOf(node.count)
 			if (per !== undefined)
 				return `Draw a card for every ${per.every} ${perBasePhrase(per.base, per.every)}${perCapTail(per)}.`
@@ -1113,9 +1217,7 @@ function render(node: Effect): string {
 				? node.count === 1
 					? 'Draw a card.'
 					: `Draw ${node.count} cards.`
-				: node.count.k === 'COUNT'
-					? `Draw a card for each ${describeQuery(node.count.query, 'in')}.`
-					: `Draw ${describeAmount(node.count)} cards.`
+				: `Draw ${describeAmount(node.count)} cards.`
 		}
 		case 'DRAW_FROM_DISCARD':
 			return `Draw ${countOf(node.count, describeFilter(node.filter))} from your Discard pile.`
@@ -1213,14 +1315,17 @@ function render(node: Effect): string {
 
 		// -------- resources & actions (6) --------
 		case 'GAIN_RESOURCE': {
+			const supply =
+				node.fromSupply === true
+					? ' from the supply (not the Stardate card)'
+					: ''
+			const each = eachOf(node.amount)
+			if (each !== undefined)
+				return `Gain 1 ${resourceToken(node.res)}${supply} ${forEach(each)}.`
 			const per = perOf(node.amount)
 			return per !== undefined
 				? `Gain 1 ${resourceToken(node.res)} for every ${per.every} ${perBasePhrase(per.base, per.every)}${perCapTail(per)}, rounded down.`
-				: `Gain ${describeAmount(node.amount)} ${resourceToken(node.res)}${
-						node.fromSupply === true
-							? ' from the supply (not the Stardate card)'
-							: ''
-					}.`
+				: `Gain ${describeAmount(node.amount)} ${resourceToken(node.res)}${supply}.`
 		}
 		case 'SPEND_RESOURCE':
 			return `Spend ${describeAmount(node.amount)} ${resourceToken(node.res)}.`
@@ -1275,7 +1380,7 @@ function render(node: Effect): string {
 						: describeAmount(node.count)
 				return `Warp ${n} ${describeQuery(node.ship)} to ${describeLocation(node.to)}.`
 			}
-			return node.ship.filter?.suits?.includes('SHIP') === true
+			return node.ship.thisCard === true
 				? `Warp this ship to ${describeLocation(node.to)}.`
 				: `Warp ${describeCardTarget(node.ship)} to ${describeLocation(node.to)}.`
 		case 'TAKE_CONTROL':

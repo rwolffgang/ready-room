@@ -711,10 +711,10 @@ vitestDescribe('describe() on real card operations', () => {
 			'Free play an ATTACK. If you have no card in your Duty Officer, you may either promote a PERSON from your hand to Duty Officer or promote a PERSON from your Discard pile to Duty Officer.',
 		)
 		expect(opText('1PER05-25', 2)).toContain(
-			'Gain 1 {DIL} for every 2 cards in your Log, rounded down.',
+			'gain 1 {DIL} for every 2 cards in your Log, rounded down.',
 		)
 		expect(opText('1KOL08-24', 0)).toBe(
-			'Send 1 Away Team to a LOCATION in the Neutral Zone. If you have secured that LOCATION, you may spend an {ACTION} to take control of that LOCATION. Log this card.',
+			'Send 1 Away Team to a LOCATION in the Neutral Zone. If you have secured that LOCATION, you may spend an {ACTION} to take control of that LOCATION and log this card.',
 		)
 		expect(opText('1BUR21-26', 2)).toBe(
 			"Exhaust a SHIP you have in play to refresh that card's LOCATION.",
@@ -741,7 +741,7 @@ vitestDescribe('describe() on real card operations', () => {
 			'When an attack would make you remove 1 or more Away Teams: Dismiss this card to ignore the effect.',
 		)
 		expect(opText('1KOL20-24', 2)).toBe(
-			'If you have an Away Team here, draw a card. If you have 3 or more Away Teams in total at LOCATIONs in your Location area, draw a card. You may spend 2 {DIL}. Discard a card from your hand to draw a card.',
+			'If you have an Away Team here, draw a card. If you have 3 or more Away Teams in total at LOCATIONs in your Location area, draw a card. You may spend 2 {DIL} and discard a card from your hand to draw a card.',
 		)
 		expect(opText('1SHR12-24', 2)).toBe(
 			'If you have no Away Team here, dismiss this card.',
@@ -806,6 +806,57 @@ vitestDescribe('describe() on real card operations', () => {
 		// a REINFORCEMENT zone used to recurse without end
 		expect(opText('1DIR02-2', 1)).toBe(
 			'If you have no card in your Reinforcement deck, draw a card. Log this card.',
+		)
+	})
+
+	it('keeps a multi-step option or paid-for body in one clause', () => {
+		expect(opText('1MAL25-25', 1)).toBe(
+			'Either discard a WEAPON from your hand to gain 1 {GLO} and advance MILITARY by 1 or discard a MILITARY icon card from your hand to gain 1 {GLO} and advance MILITARY by 1.',
+		)
+		expect(opText('1SHR12-24', 3)).toBe(
+			'Either discard a WEAPON from your hand to send 1 Away Team to this card and advance INFLUENCE by 1 or discard a MILITARY icon card from your hand to send 1 Away Team to this card and advance INFLUENCE by 1.',
+		)
+		expect(opText('1SHR11-24', 1)).toMatch(
+			/: Either draw a card and your opponent gains 2 \{DIL\} or gain 2 \{DIL\} and your opponent may draw a card\.$/,
+		)
+		expect(opText('1PER21-25', 0)).toContain(
+			'You may spend 1 {LAT} to advance INFLUENCE by 1 and advance MILITARY by 1.',
+		)
+		expect(opText('1BUR24-26', 1)).toBe(
+			'{ACTION} Dismiss a [[card:1BUR03-26]] you have in play, dismiss this card and spend 3 {DIL} to take 1 Encounter card.',
+		)
+	})
+
+	it('warps "this ship" only when it is this card', () => {
+		expect(opText('1PER02-25', 0)).toContain(
+			'You may warp a SHIP from your Fleet to a LOCATION.',
+		)
+		expect(opText('1LOC01-20', 2)).toContain(
+			'Warp a SHIP from your Fleet to a LOCATION (excluding this card).',
+		)
+		expect(opText('1SHI13-13', 2)).toBe(
+			'Spend 1 {DIL} to warp this ship to a LOCATION.',
+		)
+	})
+
+	it('words a counted amount "for each …", with its cap', () => {
+		expect(opText('1CAR04-16', 0)).toBe(
+			'Requires INFLUENCE 5 Gain 1 {LAT} for each FERENGI you have in play and each BUSINESS you have in play (max 5). If the number of FERENGI you have in play plus the number of BUSINESS you have in play (max 5) is at least 3, gain 1 {GLO}.',
+		)
+		expect(opText('1ALL01-13', 0)).toBe(
+			'Requires MILITARY 3 For each KLINGON you have in play (max 5 times), either gain 2 {DIL} or gain 1 {LAT} or discard a card from your hand to gain 1 {GLO}. Log this card.',
+		)
+		expect(opText('1LOC04-20', 0)).toBe(
+			'Up to once for each PERSON in your hand or in your Discard pile or beamed here, beam a PERSON from your hand or from your Discard pile to this card.',
+		)
+		expect(opText('1PER12-25', 1)).toBe(
+			'Spend 1 {LAT} to gain 1 {GLO} for each ANOMALY you have in play (max 3) and dismiss this card.',
+		)
+		expect(opText('1CAR08-16', 0)).toContain(
+			'Draw a card for each VULCAN you have in play (excluding this card, max 5).',
+		)
+		expect(opText('1PER19-25', 1)).toContain(
+			'gain 1 {GLO} for each trait that card shares with this card.',
 		)
 	})
 

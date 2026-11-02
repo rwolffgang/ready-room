@@ -1085,7 +1085,7 @@ describe('1PIC08 — INCIDENTs gain a substitute PLAY operation (discard to send
 
 	it('describes as the card text, and the schema keeps ALT_PLAY a static PASSIVE', () => {
 		expect(describeEffect(pic08.operations[1]!.effect)).toBe(
-			'You may play any INCIDENT with "Play: Discard a card from your hand to return this card to the bottom of the Incident deck. Draw 2 cards" in place of its own play operation.',
+			'You may play any INCIDENT with "Play: Discard a card from your hand to return this card to the bottom of the Incident deck and draw 2 cards" in place of its own play operation.',
 		)
 		const nested = {
 			...pic08,
