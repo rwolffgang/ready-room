@@ -319,7 +319,8 @@ function ZoneRow({
  * Location Area, Captain + Fleet, Staging); a laptop screen has room for two,
  * so the zones flow in two lines — Captain, Fleet, Duty Officer and Location
  * Area on the first, the Staging Area on its own — and wrap only when a late
- * game runs out of width (docs/ui-lcars.md §4).
+ * game runs out of width (docs/ui-lcars.md §4). The Duty Officer and the
+ * Location Area share a row on the printed board, so they wrap as one.
  */
 export function PlayerArea({
 	seat,
@@ -357,16 +358,18 @@ export function PlayerArea({
 			<div className="area-flow">
 				<ZoneRow seat={seat} k="CAPTAIN" title="Captain" />
 				<ZoneRow seat={seat} k="FLEET" title="Fleet Area" />
-				<ZoneRow
-					seat={seat}
-					k="DUTY_OFFICER"
-					title={
-						doSlots > 1
-							? `Duty Officers (${doCount}/${doSlots})`
-							: 'Duty Officer'
-					}
-				/>
-				<ZoneRow seat={seat} k="LOCATION_AREA" title="Location Area" />
+				<div className="area-pair">
+					<ZoneRow
+						seat={seat}
+						k="DUTY_OFFICER"
+						title={
+							doSlots > 1
+								? `Duty Officers (${doCount}/${doSlots})`
+								: 'Duty Officer'
+						}
+					/>
+					<ZoneRow seat={seat} k="LOCATION_AREA" title="Location Area" />
+				</div>
 				{aside !== undefined && <div className="area-aside">{aside}</div>}
 				<ZoneRow seat={seat} k="STAGING" title="Staging Area" full />
 			</div>

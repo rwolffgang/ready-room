@@ -452,6 +452,18 @@
 .area-zone {
 	min-width: 0;
 }
+/* The Duty Officer stays beside the Location Area: when the Locations no
+ * longer fit after the Fleet, both move to the next line, and a Location Area
+ * wider than a whole line wraps its own cards. */
+.area-pair {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+	min-width: 0;
+}
+.area-pair > .zone-duty-officer {
+	flex: none;
+}
 /* the close-up button (B) ends the first line, or takes one of its own */
 .area-aside {
 	margin-left: auto;

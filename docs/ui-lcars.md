@@ -143,7 +143,8 @@ What the layout follows:
   Each panel's name runs up its left edge as a tab, so the row spends its height on cards.
 - **Your area in two lines.** The printed board has three rows; a laptop has height for two, so
   the zones flow Captain · Fleet · Duty Officer · Location Area on the first line and the Staging
-  Area on its own. A late game that runs out of width wraps. The line for Staging is reserved even
+  Area on its own. A late game that runs out of width wraps, and the Duty Officer moves with the
+  Location Area, as they share a row on the printed board. The line for Staging is reserved even
   when it is empty, so the board does not jump when you play a card.
 - **The hand docks.** It rests along the bottom edge with only the top strip of each card showing —
   the name band, enough to see what you hold, with unplayable cards dimmed as always — and lifts
