@@ -541,6 +541,46 @@ describe('console across the table', () => {
 		}
 	})
 
+	it('a right click zooms a card until a click or Esc closes it', () => {
+		const host = renderGame()
+		const card = host.querySelector('.own-row .card') as HTMLElement
+		const layer = () => document.querySelector<HTMLElement>('.zoom-layer')
+		const rightClick = (el: Element) => {
+			const e = new MouseEvent('contextmenu', {
+				bubbles: true,
+				cancelable: true,
+				button: 2,
+			})
+			act(() => {
+				el.dispatchEvent(e)
+			})
+			return e
+		}
+		expect(rightClick(card).defaultPrevented).toBe(true)
+		expect(layer()).not.toBeNull()
+		// the button coming up leaves it open
+		act(() => {
+			card.dispatchEvent(
+				new PointerEvent('pointerup', { bubbles: true, pointerType: 'mouse' }),
+			)
+		})
+		expect(layer()).not.toBeNull()
+		// the closing click stays on the overlay
+		act(() => {
+			layer()!.click()
+		})
+		expect(layer()).toBeNull()
+		expect(useGameStore.getState().detailIid).toBeNull()
+
+		rightClick(card)
+		key('Escape')
+		expect(layer()).toBeNull()
+
+		rightClick(card)
+		expect(rightClick(layer()!).defaultPrevented).toBe(true)
+		expect(layer()).toBeNull()
+	})
+
 	it('F asks for fullscreen where the browser offers it', () => {
 		const request = vi.fn(() => Promise.resolve())
 		Object.defineProperty(document, 'fullscreenEnabled', {

@@ -3,7 +3,8 @@
 // it into the same zoom overlay Option-hover does (CardZoom), until the finger
 // lifts. Moving the finger first is a scroll, not a press; the tap that ends a
 // long press is swallowed, so reading a card never also opens or plays it.
-// A mouse never long-presses.
+// A mouse never long-presses: a right click opens the same zoom instead, and
+// it stays open until a click or Esc closes it (CardZoom).
 
 import type {
 	MouseEvent as ReactMouseEvent,
@@ -26,8 +27,8 @@ function cancel() {
 
 function release() {
 	cancel()
-	if (useGameStore.getState().zoomIid !== null)
-		useGameStore.getState().setZoomIid(null)
+	const { zoomIid, zoomPinned, setZoomIid } = useGameStore.getState()
+	if (zoomIid !== null && !zoomPinned) setZoomIid(null)
 }
 
 export interface LongPressHandlers {
@@ -42,9 +43,9 @@ export interface LongPressHandlers {
 export function longPress(iid: CardInstanceId): LongPressHandlers {
 	return {
 		onPointerDown: (e) => {
-			if (e.pointerType === 'mouse') return
 			cancel()
 			fired = false
+			if (e.pointerType === 'mouse') return
 			pending = {
 				x: e.clientX,
 				y: e.clientY,
@@ -68,9 +69,11 @@ export function longPress(iid: CardInstanceId): LongPressHandlers {
 			e.stopPropagation()
 			e.preventDefault()
 		},
-		// the browser's own long-press menu
+		// a right click, or the browser's own long-press menu
 		onContextMenu: (e) => {
-			if (fired || pending !== null) e.preventDefault()
+			e.preventDefault()
+			if (fired || pending !== null) return
+			useGameStore.getState().setZoomIid(iid, true)
 		},
 	}
 }

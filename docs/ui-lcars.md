@@ -198,25 +198,29 @@ What the layout follows:
   so reading a card never also plays it. The overlay is `pointer-events: none` and sits above
   everything, the choice bar included, because reading a card is usually what you are doing while a
   choice is pending. Releasing the key, lifting the finger, leaving the window or hiding the tab
-  drop it. The Card list zooms its catalog cards the same way, with or without a game.
+  drop it. A **right click** on a card opens the same zoom and keeps it open after the button
+  comes up; a click anywhere (either button) or Esc closes it, and while it is open the overlay
+  takes the pointer, so that click never lands on the board. The Card list zooms its catalog cards
+  with Option, with or without a game.
 - **Fullscreen** (**F**, or the button) takes the whole document fullscreen, which wins back the
   browser's ~90px on a laptop. It is offered only where it works and helps: not on an iPhone, not
   in the desktop app, not when the app runs from the home screen (which has no browser chrome to
   begin with — the way to play on an iPad).
 
-| Key        | Does                                 |
-| ---------- | ------------------------------------ |
-| O          | Orders: every legal move in one list |
-| H          | your hand close up                   |
-| V          | the opponent on screen               |
-| N          | the Neutral Zone close up            |
-| M          | the Market close up                  |
-| B          | your area close up                   |
-| L          | the log drawer                       |
-| F          | fullscreen                           |
-| Option     | hold over a card to zoom it          |
-| Esc        | close the topmost layer              |
-| long press | (touch) zoom a card until you let go |
+| Key         | Does                                 |
+| ----------- | ------------------------------------ |
+| O           | Orders: every legal move in one list |
+| H           | your hand close up                   |
+| V           | the opponent on screen               |
+| N           | the Neutral Zone close up            |
+| M           | the Market close up                  |
+| B           | your area close up                   |
+| L           | the log drawer                       |
+| F           | fullscreen                           |
+| Option      | hold over a card to zoom it          |
+| right click | zoom a card until you click or Esc   |
+| Esc         | close the topmost layer              |
+| long press  | (touch) zoom a card until you let go |
 
 Shortcuts are bare keys: none fires with Cmd, Ctrl or Option held, on auto-repeat, or while you
 type in a field (`console/useShortcut.ts`).

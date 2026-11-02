@@ -59,6 +59,7 @@ import { cardName, withCardNames } from '../data/cardNames'
 import { contextOf, foldReason } from './tile/lines'
 import { BeamedChips, BeamedOnto, beamedHeading } from './beamed'
 import { longPress, type LongPressHandlers } from './console/longPress'
+import { useEscape } from './console/useShortcut'
 
 export type CardSize =
 	'micro' | 'board' | 'hand' | 'preview' | 'review' | 'zoom'
@@ -1037,17 +1038,33 @@ function usePileState(): [
  * the middle of the screen at 3× the board size. Hover alone does nothing — the board is dense enough that a
  * preview firing on every pointer move is noise, and it cost a permanent panel
  * in the side column for something wanted a few times a turn.
+ *
+ * A right click opens the same zoom and pins it: it stays after the button
+ * comes up, and a click anywhere (either button) or Esc closes it. Pinned, the
+ * layer takes the pointer, so the click that closes it never lands on the
+ * board underneath.
  */
 export function CardZoom() {
 	const hoverIid = useHoverIid()
 	const zoomHeld = useZoomKey()
-	// a card held under a finger (console/longPress.ts) — the touch twin
+	// a card held under a finger or right-clicked (console/longPress.ts)
 	const pressedIid = useGameStore((s) => s.zoomIid)
+	const pinned = useGameStore((s) => s.zoomPinned)
+	const unpin = () => useGameStore.getState().setZoomIid(null)
+	useEscape(pinned, unpin)
 
 	const iid = pressedIid ?? (zoomHeld ? hoverIid : null)
 	if (iid === null) return null
 	return (
-		<div className="zoom-layer" role="presentation">
+		<div
+			className={`zoom-layer${pinned ? ' zoom-layer-pinned' : ''}`}
+			role="presentation"
+			onClick={pinned ? unpin : undefined}
+			onContextMenu={(e) => {
+				e.preventDefault()
+				if (pinned) unpin()
+			}}
+		>
 			<CardSprite
 				iid={iid}
 				size="zoom"

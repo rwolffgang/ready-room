@@ -1241,6 +1241,10 @@ h3,
 	pointer-events: none;
 	background: #05050ab8;
 }
+.zoom-layer-pinned {
+	pointer-events: auto;
+	cursor: zoom-out;
+}
 .zoom-layer .card {
 	box-shadow:
 		0 0 0 3px var(--orange),
