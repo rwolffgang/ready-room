@@ -8,7 +8,15 @@
 
 import { describe, expect, it } from 'vitest'
 import type { Effect } from './nodes'
-import { fresh, register, makeDef, place, ID, setResources } from './testUtils'
+import {
+	fresh,
+	register,
+	makeDef,
+	place,
+	ID,
+	setResources,
+	setSpecialty,
+} from './testUtils'
 import { probe } from './probe'
 import { probeFirstChoice } from './choices'
 import { pushAndRun } from './testUtils'
@@ -224,6 +232,28 @@ describe('probe: first LEGAL selection per choice kind (todo/07)', () => {
 		// probe also records the declared substitution on the cloned card only
 		expect(resolved.cards[ID('w')]!.wildcardAs).toBe('VULCAN')
 		expect(JSON.stringify(s)).toBe(before)
+	})
+
+	it('CHOOSE_SPECIALTY picks the first offered track — a LOWEST tie without RESEARCH (1SIS22)', () => {
+		// R1 I0 M0: "advance your lowest specialty" offers only INFLUENCE and
+		// MILITARY, so a fixed RESEARCH answer would make the play look illegal
+		const s = setSpecialty(fresh(), 0, 'RESEARCH', 1)
+		const node: Effect = {
+			k: 'ADVANCE_SPECIALTY',
+			specialty: 'LOWEST',
+			amount: 1,
+		}
+		expect(probe(s, node, CTX)).toBe(true)
+		const halted = pushAndRun(s, node, ID('src'), 0)
+		const ch = halted.pendingChoice
+		if (ch === null || ch.k !== 'CHOOSE_SPECIALTY')
+			throw new Error('expected CHOOSE_SPECIALTY')
+		expect(ch.specialties).toEqual(['INFLUENCE', 'MILITARY'])
+		const resolved = probeFirstChoice(structuredClone(halted) as typeof halted)
+		const top = resolved.stack[resolved.stack.length - 1]
+		if (top === undefined || top.k !== 'EFFECT')
+			throw new Error('expected a resume frame')
+		expect(top.ctx.bindings[ch.id]).toBe('INFLUENCE')
 	})
 
 	it('probe auto-resolve emits no events and opens no reaction windows (eventQueue untouched)', () => {

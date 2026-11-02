@@ -157,7 +157,7 @@ function summarise(session: Session, state: GameState, args: Args): void {
 		console.log(`\nSeat ${p.seat}: ${p.deckId} (${p.boardSide})`)
 		console.log(
 			`  resources DIL ${p.resources.DIL} LAT ${p.resources.LAT} GLO ${p.resources.GLO}` +
-				`  actions ${p.actions.available - p.actions.spent}/${p.actions.available}` +
+				`  actions ${p.actions.available} left, ${p.actions.spent} spent` +
 				`  specialties R${p.specialties.RESEARCH} I${p.specialties.INFLUENCE} M${p.specialties.MILITARY}` +
 				`  away teams ${p.awayTeamsInPool}/${p.awayTeamsTotal}  VP ${state.scoreVp[p.seat]}`,
 		)

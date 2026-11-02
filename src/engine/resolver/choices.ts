@@ -634,7 +634,8 @@ export function probeFirstChoice(state: GameState): GameState {
 				selection = choice.traits[0] as string
 				break
 			case 'CHOOSE_SPECIALTY':
-				selection = 'RESEARCH'
+				// a LOWEST tie (1SIS22) offers only the tied tracks, not all three
+				selection = choice.specialties[0] as string
 				break
 			case 'CHOOSE_DESTINATION':
 				selection = choice.options[0] ?? 'DECK_TOP'
