@@ -1391,6 +1391,61 @@ h3,
 	left: 4px;
 }
 
+/* The Play button (quickPlay.tsx): a card's one legal operation in one click.
+ * On a card it sits in the top-left corner, the part a fanned hand and the
+ * lowered dock still show. The operation's timing mark leads; the isolinear
+ * chip follows when the operation costs an action. */
+.quick-play {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 3px 6px 3px 3px;
+	border: 0;
+	border-radius: 999px;
+	background: #0b0b14eb;
+	box-shadow:
+		0 0 0 1.5px var(--orange),
+		0 2px 8px #000b;
+	font-size: 14px;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		transform 0.1s ease,
+		box-shadow 0.1s ease;
+}
+.quick-play:not(.qp-costs) {
+	padding-right: 3px;
+}
+.quick-play:hover {
+	transform: scale(1.08);
+	box-shadow:
+		0 0 0 2px var(--sunflower),
+		0 2px 10px #000c;
+}
+.quick-play:focus-visible {
+	outline: 2px solid var(--ice);
+	outline-offset: 2px;
+}
+.quick-play:active {
+	transform: scale(0.96);
+}
+.card .quick-play {
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	z-index: 2;
+}
+.card-micro .quick-play {
+	font-size: 10px;
+	top: 2px;
+	left: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.quick-play {
+		transition: none;
+	}
+}
+
 /* ----------------------------------------------------------------- modal */
 .modal-backdrop {
 	position: fixed;

@@ -170,6 +170,24 @@
 	cursor: pointer;
 }
 
+/* the header row: the header (opens the card) and, beside it, the Play
+   button for a card with one legal operation (quickPlay.tsx, styled in
+   ui.css) */
+.pb-top {
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+}
+.pb-top > .pb-th {
+	flex: 1;
+	min-width: 0;
+}
+.pb-quick {
+	flex: none;
+	margin: -3px -2px -3px 0;
+	min-height: 30px;
+	font-size: 15px;
+}
 .pb-th {
 	display: flex;
 	align-items: flex-start;
@@ -540,6 +558,14 @@
 	.pb-tok {
 		display: none;
 	}
+	.pb-top {
+		gap: 3px;
+	}
+	.pb-quick {
+		min-height: 0;
+		margin: -2px -1px 0 0;
+		font-size: 11px;
+	}
 	.pb-lines {
 		margin-top: 5px;
 	}
@@ -602,7 +628,8 @@
 	.pb-lines,
 	.pb-traits,
 	.pb-meta,
-	.pb-why {
+	.pb-why,
+	.pb-quick {
 		display: none;
 	}
 	.pb-vp {

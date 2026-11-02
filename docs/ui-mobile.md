@@ -71,7 +71,8 @@ detail: everything.
 - **Hand dock:** chip-density hand, `Hand n` / `Orders n` / primary `End step ›` buttons. Swipe up
   (or tap) for the hand sheet with wide tiles.
 - **The line is the button.** A legal operation is a lit line on its tile; tapping it plays or
-  activates it (or opens its choice). No double-click, no hover.
+  activates it (or opens its choice). No double-click, no hover. A card with a single legal
+  action also carries the console's Play button beside its header (`src/ui/quickPlay.tsx`).
 - **Orders sheet:** every legal move right now, grouped by where the card is, built from
   `legalIntents`; also the screen-reader path through a turn.
 - **Choice sheets:** one renderer per `PendingChoice` kind (14 kinds). A choice switches to the

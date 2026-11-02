@@ -14,7 +14,9 @@
 // the selection.
 //
 // The line is the button: a lit line (legal right now for the viewer — see
-// lines.ts) dispatches its PLAY_CARD / ACTIVATE on tap or Enter/Space. The
+// lines.ts) dispatches its PLAY_CARD / ACTIVATE on tap or Enter/Space. A card
+// with exactly one legal operation also carries the Play button beside its
+// header (quickPlay.tsx), the same one the console draws on its cards. The
 // header opens the card detail. While the card is a candidate of the pending
 // choice, the whole tile is the button and toggles the selection.
 
@@ -44,6 +46,7 @@ import { ShipStandees } from '../standees'
 import { Gl, SuitGl } from './glyph'
 import { intentOffered, speakable, tileLines, type TileLine } from './lines'
 import { useViewerLegal } from './legal'
+import { QuickPlayButton, useQuickAction } from '../quickPlay'
 import './tile.css'
 import { cardName, deckLabel } from '../../data/cardNames'
 
@@ -397,6 +400,9 @@ export function CardTile(props: CardTileProps) {
 	const def = iid !== undefined ? liveDef : (props.def ?? null)
 
 	const legal = useViewerLegal()
+	const quick = useQuickAction(
+		interactive && iid !== undefined && !hidden ? iid : null,
+	)
 	const lines = useMemo(
 		() =>
 			def === null
@@ -487,6 +493,7 @@ export function CardTile(props: CardTileProps) {
 		([, n]) => (n ?? 0) > 0,
 	) as ['DIL' | 'LAT' | 'GLO', number][]
 	const headerButton = interactive && !pickable
+	const showQuick = quick !== null && interactive && !pickable
 
 	return (
 		<div className="pb-slot">
@@ -497,33 +504,49 @@ export function CardTile(props: CardTileProps) {
 				{...(pickable ? { 'aria-label': `${cardName(def)}, candidate` } : {})}
 				{...tileProps}
 			>
-				<header
-					className="pb-th"
-					role={headerButton ? 'button' : undefined}
-					tabIndex={headerButton ? 0 : undefined}
-					aria-label={headerButton ? `Open ${cardName(def)}` : undefined}
-					onClick={
-						headerButton
-							? (e) => {
-									e.stopPropagation()
-									open()
-								}
-							: undefined
-					}
-					onKeyDown={headerButton ? onKeys(open) : undefined}
-				>
-					<SuitGl suit={def.suit} className="pb-sg" />
-					<h4>{cardName(def)}</h4>
-					{tokens.map(([r, n]) => (
-						<span key={r} className={`pb-tok pb-tok-${r}`} title={`${n} ${r}`}>
-							<Gl g={r} />
-							{n}
-						</span>
-					))}
-					{vp !== null && (
-						<span className={`pb-vp${def.vp < 0 ? ' pb-neg' : ''}`}>{vp}</span>
+				<div className="pb-top">
+					<header
+						className="pb-th"
+						role={headerButton ? 'button' : undefined}
+						tabIndex={headerButton ? 0 : undefined}
+						aria-label={headerButton ? `Open ${cardName(def)}` : undefined}
+						onClick={
+							headerButton
+								? (e) => {
+										e.stopPropagation()
+										open()
+									}
+								: undefined
+						}
+						onKeyDown={headerButton ? onKeys(open) : undefined}
+					>
+						<SuitGl suit={def.suit} className="pb-sg" />
+						<h4>{cardName(def)}</h4>
+						{tokens.map(([r, n]) => (
+							<span
+								key={r}
+								className={`pb-tok pb-tok-${r}`}
+								title={`${n} ${r}`}
+							>
+								<Gl g={r} />
+								{n}
+							</span>
+						))}
+						{vp !== null && (
+							<span className={`pb-vp${def.vp < 0 ? ' pb-neg' : ''}`}>
+								{vp}
+							</span>
+						)}
+					</header>
+					{showQuick && iid !== undefined && (
+						<QuickPlayButton
+							iid={iid}
+							quick={quick}
+							cardName={cardName(def)}
+							className="pb-quick"
+						/>
 					)}
-				</header>
+				</div>
 				<Traits def={def} />
 				<div className="pb-meta">
 					{iid !== undefined && projected !== null && (

@@ -60,6 +60,7 @@ import { contextOf, foldReason } from './tile/lines'
 import { BeamedChips, BeamedOnto, beamedHeading } from './beamed'
 import { longPress, type LongPressHandlers } from './console/longPress'
 import { useEscape } from './console/useShortcut'
+import { QuickPlayButton, useQuickAction } from './quickPlay'
 
 export type CardSize =
 	'micro' | 'board' | 'hand' | 'preview' | 'review' | 'zoom'
@@ -488,6 +489,9 @@ export interface CardFaceProps {
 	anchor?: string | undefined
 	/** Touch long-press handlers (console/longPress.ts). */
 	press?: LongPressHandlers | undefined
+	/** Drawn over the face beside its click target, never inside it (the
+	 *  Play button, quickPlay.tsx). */
+	overlay?: ReactNode | undefined
 }
 
 /** A single named "ship" chip used at Locations (docs/ui-spec.md §3). */
@@ -514,6 +518,7 @@ export function CardFace({
 	onMouseLeave,
 	anchor,
 	press,
+	overlay,
 }: CardFaceProps) {
 	const classes = [
 		'card',
@@ -581,6 +586,7 @@ export function CardFace({
 			{...press}
 		>
 			{body}
+			{overlay}
 		</div>
 	)
 }
@@ -860,6 +866,9 @@ export interface CardSpriteProps {
 	detailOnHover?: boolean | undefined
 	/** Report hover into the shared preview area (default true). */
 	hoverable?: boolean | undefined
+	/** Offer the Play button when the card has exactly one legal operation
+	 *  for the viewer right now (quickPlay.tsx): the hand and the table. */
+	quickPlay?: boolean | undefined
 }
 
 export function CardSprite({
@@ -873,6 +882,7 @@ export function CardSprite({
 	badge,
 	detailOnHover = true,
 	hoverable = true,
+	quickPlay = false,
 }: CardSpriteProps) {
 	const projected = useProjected()
 	const card = projected?.cards[iid]
@@ -883,6 +893,7 @@ export function CardSprite({
 	const hoverIid = useHoverIid()
 	const isHovered = detailOnHover && hoverIid === iid
 	const setHoverIid = useGameStore((s) => s.setHoverIid)
+	const quick = useQuickAction(quickPlay && !isHidden ? iid : null)
 
 	return (
 		<CardFace
@@ -902,6 +913,11 @@ export function CardSprite({
 			onMouseLeave={hoverable ? () => setHoverIid(null) : undefined}
 			anchor={`card:${iid}`}
 			press={hoverable && !isHidden ? longPress(iid) : undefined}
+			overlay={
+				quick !== null && def !== null ? (
+					<QuickPlayButton iid={iid} quick={quick} cardName={cardName(def)} />
+				) : undefined
+			}
 		/>
 	)
 }

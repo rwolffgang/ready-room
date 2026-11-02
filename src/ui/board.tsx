@@ -306,6 +306,7 @@ function ZoneRow({
 							key={iid}
 							iid={iid}
 							onClick={() => useGameStore.getState().cardClicked(iid)}
+							quickPlay
 						/>
 					))
 				)}
@@ -701,6 +702,8 @@ export function Hand({
 					// that can be played more than one way (e.g. UTILIZE: pay an action
 					// for one effect, or a free one) has no single legal action, so
 					// double click does nothing and the player picks from the detail.
+					// The Play button on the card (quickPlay.tsx) is the same fast
+					// path in one click.
 					const canAct = inTurn && state.pendingChoice === null
 					const playOps = check !== null && check.ok ? check.operations : []
 					const multiPlay = canAct && playOps.length > 1
@@ -715,6 +718,7 @@ export function Hand({
 							dimmed={dimmed}
 							reason={reason}
 							onClick={() => useGameStore.getState().cardClicked(iid)}
+							quickPlay
 						/>
 					)
 				})}

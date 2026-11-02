@@ -151,8 +151,8 @@ export function HandDock({ seat }: { seat: Seat }) {
 		if (inCap(e.target)) return
 		later(() => setHovered(true), RAISE_MS)
 	}
-	// touch: the first tap on a lowered hand only lifts it (the decks and the
-	// end cap work at once)
+	// touch: the first tap on a lowered hand only lifts it (the decks, the
+	// end cap and a card's Play button work at once)
 	const lastPointer = useRef<string>('mouse')
 	const onDownCapture = (e: ReactPointerEvent) => {
 		lastPointer.current = e.pointerType
@@ -161,7 +161,8 @@ export function HandDock({ seat }: { seat: Seat }) {
 		if (raised || inCloseup || lastPointer.current !== 'touch') return
 		if (
 			!(e.target instanceof Element) ||
-			e.target.closest('.dock-fan') === null
+			e.target.closest('.dock-fan') === null ||
+			e.target.closest('.quick-play') !== null
 		)
 			return
 		e.stopPropagation()

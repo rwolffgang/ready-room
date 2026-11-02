@@ -775,6 +775,9 @@ export interface GameStore {
 	openBotHistory: (whyMove?: number | null) => void
 	closeBotHistory: () => void
 	cardClicked: (iid: CardInstanceId) => void
+	/** Run the card's one legal operation from its Play button (quickPlay.tsx):
+	 *  the double-click fast path, through the same legality gate. */
+	playSingleAction: (iid: CardInstanceId, action: SingleLegalAction) => void
 	setSelected: (iids: CardInstanceId[]) => void
 	clearSelection: () => void
 	setDetail: (iid: CardInstanceId | null) => void
@@ -1310,6 +1313,12 @@ export const useGameStore = create<GameStore>((set) => ({
 		}
 		cancelPendingDetail()
 		scheduleDetailOpen(iid)
+	},
+
+	playSingleAction: (iid, action) => {
+		// a click on the card a moment before must not open its detail after
+		cancelPendingDetail()
+		runSingleAction(iid, action)
 	},
 
 	setSelected: (iids) => set({ selected: iids }),

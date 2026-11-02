@@ -21,6 +21,8 @@ interface TableCardProps {
 	dimmed?: boolean | undefined
 	reason?: string | undefined
 	onClick?: (() => void) | undefined
+	/** the Play button for a card with one legal operation (quickPlay.tsx) */
+	quickPlay?: boolean | undefined
 }
 
 /** A Fleet ship: the card, the tab naming where its standee stands, and the
@@ -33,6 +35,7 @@ export function ShipCard({
 	dimmed,
 	reason,
 	onClick,
+	quickPlay,
 }: TableCardProps) {
 	const sprite = (
 		<CardSprite
@@ -42,6 +45,7 @@ export function ShipCard({
 			dimmed={dimmed}
 			reason={reason}
 			onClick={onClick}
+			quickPlay={quickPlay}
 		/>
 	)
 	if (size === 'micro') return sprite

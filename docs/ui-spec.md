@@ -107,6 +107,11 @@ One component per `PendingChoice` variant (`docs/state-machine.md` §4). Contrac
   than one legal operation (e.g. UTILIZE: pay an action for one effect, or a free one) has no
   single legal action — double click does nothing and the player picks from the detail, which
   shows one **Play** button per legal PLAY op; it never silently plays the first one.
+- **The Play button on the card** is the same fast path in one click (`src/ui/quickPlay.tsx`):
+  a card in your hand or on your table with a single legal action carries a small button in its
+  top-left corner, drawn with the operation's timing mark and, when it costs an action, the
+  printed action token. It shows only on your ACTION step with no choice pending and never while
+  the house AI or the solo Bot is to move, and a click on it neither opens nor zooms the card.
 - **Always show the prompt**, the **source card** that caused it, and a **Cancel/Decline** button
   when the choice is optional.
 - `CHOOSE_CARDS`: candidates get the accent ring **wherever they physically are** — in hand, in

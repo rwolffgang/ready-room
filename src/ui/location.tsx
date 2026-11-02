@@ -63,6 +63,7 @@ export function LocationCard({
 	dimmed,
 	reason,
 	onClick,
+	quickPlay,
 }: {
 	iid: CardInstanceId
 	size?: 'board' | 'micro' | undefined
@@ -70,6 +71,8 @@ export function LocationCard({
 	dimmed?: boolean | undefined
 	reason?: string | undefined
 	onClick?: (() => void) | undefined
+	/** the Play button for one legal operation (quickPlay.tsx) */
+	quickPlay?: boolean | undefined
 }) {
 	const projected = useProjected()
 	const viewer = useViewerSeat()
@@ -94,6 +97,7 @@ export function LocationCard({
 					) : null
 				}
 				onClick={onClick}
+				quickPlay={quickPlay}
 			/>
 			<AwayTeamMarkers
 				teams={state?.awayTeamsAt[iid]}
