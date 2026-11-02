@@ -6,6 +6,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
+import { cardNameById } from '../../data/cardNames'
 import { GLYPHS, shorthandOperation } from '../../engine/shorthand'
 import { useGameStore } from '../store'
 import { loadBrowserCatalog } from '../browserCatalog'
@@ -16,8 +17,8 @@ import {
 	glyphsOfLines,
 	makeQuestion,
 	quizPool,
+	englishOf,
 	resolveRef,
-	tidyEnglish,
 } from './glossary'
 import { ShorthandGuide, type GuideSection } from './ShorthandGuide'
 
@@ -64,16 +65,15 @@ describe('glossary', () => {
 		expect(new Set(words).size).toBe(words.length)
 	})
 
-	it('smooths the generator seams in English', () => {
-		expect(
-			tidyEnglish("Discard 2 2 cards from your opponent's a LOCATION"),
-		).toBe("Discard 2 cards from your opponent's LOCATION")
-		expect(tidyEnglish('If the q.scan card is SHADY')).toBe(
-			'If that card is SHADY',
+	// describe() itself reads cleanly (describe.test.ts sweeps every card);
+	// the guide only names the cards its tokens stand for
+	it('names the cards in its English', () => {
+		const hit = resolveRef(catalog.defs, { card: '1SHP22', op: 1 })!
+		const english = englishOf(hit.op)!
+		expect(english).not.toContain('[[card:')
+		expect(english).toContain(
+			`If you have at least 1 ${cardNameById('1SHP14-25')} in play`,
 		)
-		expect(
-			tidyEnglish('Score 1 VP for each of your a INFLUENCE Focus card cards.'),
-		).toBe('Score 1 VP for each of your INFLUENCE Focus cards.')
 	})
 
 	it('asks one right and two wrong sentences of the same timing', () => {

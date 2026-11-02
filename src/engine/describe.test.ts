@@ -5,12 +5,14 @@
 // on every Effect['k'] forces a missing node kind to fail compilation, and the
 // runtime asserts every one of the 63 renders to non-empty English.
 
-import { describe as vitestDescribe, expect, it } from 'vitest'
+import { beforeAll, describe as vitestDescribe, expect, it } from 'vitest'
 
 import type { Effect, Operation } from './resolver/nodes'
 import type { Amount, Query } from './resolver/queries'
 import type { MarketSuit, ResourceId } from '../data/ids'
 import { SUITS, TRAITS, SPECIALTIES } from '../data/ids'
+import { loadCatalog } from '../data/catalog'
+import type { CardCatalog } from './setup'
 import { describe, describeOperation } from './describe'
 import { PRIMITIVES } from './resolver/primitives'
 
@@ -527,7 +529,7 @@ vitestDescribe('describe() record-vocabulary helpers', () => {
 			},
 		}
 		expect(describe({ k: 'SCORE_VP', amount })).toBe(
-			'Score 1 VP for each of your SHADY cards.',
+			'Score 1 VP for each SHADY you own.',
 		)
 	})
 })
@@ -620,7 +622,7 @@ vitestDescribe("describe() on the opponent's side (FORCE / OPPONENT)", () => {
 				},
 			}),
 		).toBe(
-			'If your opponent has at least 1 PERSON from their hand or from their Discard pile, force them to log a PERSON from their hand or from their Discard pile. They may draw a card. Otherwise, force them to take 1 Incident card.',
+			'If your opponent has at least 1 PERSON in their hand or in their Discard pile, force them to log a PERSON from their hand or from their Discard pile. They may draw a card. Otherwise, force them to take 1 Incident card.',
 		)
 	})
 
@@ -671,7 +673,242 @@ vitestDescribe("describe() on the opponent's side (FORCE / OPPONENT)", () => {
 				then: draw(1),
 			}),
 		).toBe(
-			'If your opponent has at least 1 PERSON from their hand or from their Discard pile, draw a card.',
+			'If your opponent has at least 1 PERSON in their hand or in their Discard pile, draw a card.',
 		)
+	})
+})
+
+// The card trees themselves, as tooltips and the guide show them (and the
+// solo Bot's rows without a fetched bots.json). Card ids, never names: a
+// named card is a `[[card:<def id>]]` token the UI expands.
+vitestDescribe('describe() on real card operations', () => {
+	let catalog: CardCatalog
+	beforeAll(async () => {
+		catalog = await loadCatalog()
+	})
+	const opText = (id: string, index: number): string => {
+		const def = catalog.defs.find((d) => d.id === id)
+		if (def === undefined) throw new Error(`no card ${id}`)
+		return describeOperation(def.operations[index]!)
+	}
+	const botRow = (deck: string) => {
+		const bot = catalog.bots?.find((b) => b.deck === deck)
+		if (bot === undefined) throw new Error(`no Bot ${deck}`)
+		return bot
+	}
+
+	it('names the Market once, whatever its suit zones', () => {
+		for (const id of ['1CAR15-16', '1SEL15-24'])
+			expect(opText(id, 0)).not.toMatch(/Market or from the Market/)
+		expect(opText('1CAR15-16', 0)).toContain('Junk a card from the Market.')
+	})
+
+	it('counts cards without a second article, and names a bound one', () => {
+		expect(opText('1SHR24-24', 1)).toBe(
+			"[ATTACK] Discard an ANDORIAN from your hand to remove 1 of your opponent's Away Teams from a LOCATION. If that LOCATION is in your opponent's Location area, your opponent takes 1 Incident card. Dismiss this card.",
+		)
+		expect(opText('1PER03-25', 0)).toBe(
+			'Free play an ATTACK. If you have no card in your Duty Officer, you may either promote a PERSON from your hand to Duty Officer or promote a PERSON from your Discard pile to Duty Officer.',
+		)
+		expect(opText('1PER05-25', 2)).toContain(
+			'gain 1 {DIL} for every 2 cards in your Log, rounded down.',
+		)
+		expect(opText('1KOL08-24', 0)).toBe(
+			'Send 1 Away Team to a LOCATION in the Neutral Zone. If you have secured that LOCATION, you may spend an {ACTION} to take control of that LOCATION and log this card.',
+		)
+		expect(opText('1BUR21-26', 2)).toBe(
+			"Exhaust a SHIP you have in play to refresh that card's LOCATION.",
+		)
+		expect(opText('1PER16-25', 1)).toBe(
+			'After putting a SYNTHETIC or HOLOGRAM into play: If that card is SYNTHETIC, gain 1 {GLO}. If that card is HOLOGRAM, draw a card.',
+		)
+		expect(opText('1INC02-6', 0)).toContain(
+			'If the discarded card is a MILITARY icon card, gain 2 {DIL}.',
+		)
+	})
+
+	it('names a card by its token, in play once', () => {
+		expect(opText('1SHP08-25', 1)).toBe(
+			"[ATTACK] Discard a card from your hand to remove 1 of your opponent's Away Teams from a LOCATION where you have an Away Team. If you do, gain 1 {GLO}. If you have at least 1 [[card:1SHP14-25]] in play, advance MILITARY by 1.",
+		)
+		expect(opText('1SHP22-25', 1)).toBe(
+			'Spend 2 {DIL} to advance RESEARCH by 1. If you have at least 1 [[card:1SHP14-25]] in play, advance RESEARCH by 1.',
+		)
+	})
+
+	it('writes Away Teams as the cards do, here or across Locations', () => {
+		expect(opText('1CAR11-16', 2)).toBe(
+			'When an attack would make you remove 1 or more Away Teams: Dismiss this card to ignore the effect.',
+		)
+		expect(opText('1KOL20-24', 2)).toBe(
+			'If you have an Away Team here, draw a card. If you have 3 or more Away Teams in total at LOCATIONs in your Location area, draw a card. You may spend 2 {DIL} and discard a card from your hand to draw a card.',
+		)
+		expect(opText('1SHR12-24', 2)).toBe(
+			'If you have no Away Team here, dismiss this card.',
+		)
+		expect(opText('1BUR10-26', 2)).toBe('You cannot send an Away Team here.')
+	})
+
+	it('joins the fields of a filter with AND, not "or"', () => {
+		expect(opText('1BUR22-26', 0)).toContain(
+			'For each non-CAPTAIN SCIENTIST you have in play, draw a card.',
+		)
+		expect(opText('1KOL04-24', 0)).toContain(
+			'Dismiss a KLINGON PERSON from your Duty Officer to gain 4 {GLO}.',
+		)
+		expect(opText('1SEL01-24', 2)).toBe(
+			'Score 1 VP for each non-ROMULAN/REMAN ATTACK you own.',
+		)
+	})
+
+	it('counts once, with an article where a card is named', () => {
+		expect(opText('1PIC15-24', 1)).toBe(
+			'{ACTION} Discard 2 cards from your hand to gain a CARGO.',
+		)
+		expect(opText('1ALL10-13', 0)).toContain(
+			'You may draw a CARGO from your Discard pile.',
+		)
+		expect(opText('1ALL07-13', 1)).toBe(
+			'If you have an ATTACK in play, log this card.',
+		)
+		expect(opText('1KOL17-24', 0)).toContain(
+			'You may log a PERSON beamed to a SHIP to advance MILITARY by 1.',
+		)
+		expect(opText('1SEL21-24', 0)).toBe(
+			'Warp up to 3 CLOAK SHIP from your Fleet to a LOCATION.',
+		)
+	})
+
+	it('scores what you own, and icons in play', () => {
+		expect(opText('1BUR04-26', 2)).toBe(
+			'Score 1 VP for each INFLUENCE/MILITARY Focus card you own.',
+		)
+		expect(opText('1KOL05-24', 4)).toBe(
+			'Score 1 VP for each Skill icon you have in play (excluding beamed cards).',
+		)
+	})
+
+	it('reads conditions, negations and repeats as sentences', () => {
+		// a LET's cards are named by the query that collected them
+		expect(opText('1CAR14-16', 0)).toContain(
+			"For each KLINGON in your opponent's Duty Officer, dismiss that card. If any of those cards is in your opponent's Discard pile, force your opponent to discard a card from their hand.",
+		)
+		// "You may if …" puts the condition first
+		expect(opText('1PER24-25', 0)).toContain(
+			'If the gained card is in your deck or in your Discard pile and you have at least 1 SHIP in your Fleet, you may beam the gained card to a SHIP from your Fleet.',
+		)
+		expect(opText('1SHI11-13', 1)).toContain(
+			'If your opponent has fewer than 2 SHIP in their Fleet, deploy this ship.',
+		)
+		expect(opText('1KOL22-24', 1)).toBe(
+			'For each of your unused actions, temporarily increase your hand size by 1. You may gain 1 {GLO}.',
+		)
+		// a REINFORCEMENT zone used to recurse without end
+		expect(opText('1DIR02-2', 1)).toBe(
+			'If you have no card in your Reinforcement deck, draw a card. Log this card.',
+		)
+	})
+
+	it('keeps a multi-step option or paid-for body in one clause', () => {
+		expect(opText('1MAL25-25', 1)).toBe(
+			'Either discard a WEAPON from your hand to gain 1 {GLO} and advance MILITARY by 1 or discard a MILITARY icon card from your hand to gain 1 {GLO} and advance MILITARY by 1.',
+		)
+		expect(opText('1SHR12-24', 3)).toBe(
+			'Either discard a WEAPON from your hand to send 1 Away Team to this card and advance INFLUENCE by 1 or discard a MILITARY icon card from your hand to send 1 Away Team to this card and advance INFLUENCE by 1.',
+		)
+		expect(opText('1SHR11-24', 1)).toMatch(
+			/: Either draw a card and your opponent gains 2 \{DIL\} or gain 2 \{DIL\} and your opponent may draw a card\.$/,
+		)
+		expect(opText('1PER21-25', 0)).toContain(
+			'You may spend 1 {LAT} to advance INFLUENCE by 1 and advance MILITARY by 1.',
+		)
+		expect(opText('1BUR24-26', 1)).toBe(
+			'{ACTION} Dismiss a [[card:1BUR03-26]] you have in play, dismiss this card and spend 3 {DIL} to take 1 Encounter card.',
+		)
+	})
+
+	it('warps "this ship" only when it is this card', () => {
+		expect(opText('1PER02-25', 0)).toContain(
+			'You may warp a SHIP from your Fleet to a LOCATION.',
+		)
+		expect(opText('1LOC01-20', 2)).toContain(
+			'Warp a SHIP from your Fleet to a LOCATION (excluding this card).',
+		)
+		expect(opText('1SHI13-13', 2)).toBe(
+			'Spend 1 {DIL} to warp this ship to a LOCATION.',
+		)
+	})
+
+	it('words a counted amount "for each …", with its cap', () => {
+		expect(opText('1CAR04-16', 0)).toBe(
+			'Requires INFLUENCE 5 Gain 1 {LAT} for each FERENGI you have in play and each BUSINESS you have in play (max 5). If the number of FERENGI you have in play plus the number of BUSINESS you have in play (max 5) is at least 3, gain 1 {GLO}.',
+		)
+		expect(opText('1ALL01-13', 0)).toBe(
+			'Requires MILITARY 3 For each KLINGON you have in play (max 5 times), either gain 2 {DIL} or gain 1 {LAT} or discard a card from your hand to gain 1 {GLO}. Log this card.',
+		)
+		expect(opText('1LOC04-20', 0)).toBe(
+			'Up to once for each PERSON in your hand or in your Discard pile or beamed here, beam a PERSON from your hand or from your Discard pile to this card.',
+		)
+		expect(opText('1PER12-25', 1)).toBe(
+			'Spend 1 {LAT} to gain 1 {GLO} for each ANOMALY you have in play (max 3) and dismiss this card.',
+		)
+		expect(opText('1CAR08-16', 0)).toContain(
+			'Draw a card for each VULCAN you have in play (excluding this card, max 5).',
+		)
+		expect(opText('1PER19-25', 1)).toContain(
+			'gain 1 {GLO} for each trait that card shares with this card.',
+		)
+	})
+
+	it("reads the solo Bot's rows like its Automated Command cards", () => {
+		expect(describe(botRow('PIC').suits.ALLY.noDo)).toBe(
+			'Discard the top 2 cards of the Bot deck. Advance INFLUENCE by the number of PERSON in your Discard pile. Send an Away Team to a neutral LOCATION for each SHIP in your Discard pile.',
+		)
+		expect(describe(botRow('BUR').traits[2]!.effect)).toBe(
+			'Promote a PERSON from the Bot Discard pile to Duty Officer. If this card is a SHIP, deploy this SHIP; it explores. Otherwise, gain 2 {GLO}.',
+		)
+		expect(describe(botRow('SIS').suits.INCIDENT.noDo)).toContain(
+			'Gain a MILITARY Focus card > INFLUENCE Focus card > PERSON / ALLY.',
+		)
+		// the row already asked whether this card is a PERSON
+		expect(describe(botRow('SHR').traits[3]!.effect)).toContain(
+			'If this card is a PERSON, promote it to Duty Officer. Otherwise, log this card.',
+		)
+	})
+
+	it('leaves no generator seams in any operation or Bot row', () => {
+		const SEAMS: [RegExp, string][] = [
+			[/\b(an?|the) (an?|the|this|that) /, 'doubled article'],
+			[/\b\d+ an? /, 'article after a count'],
+			[/\b(\d+) \1 /, 'doubled count'],
+			[/\b(your|their)( opponent's)? an? /, 'article after a possessive'],
+			[/\bcard cards\b/, 'card cards'],
+			[/\$|\b[a-z]+\.[a-z.]+ card\b/, 'bind name'],
+			[/AWAY TEAM/, 'keyword noun in caps'],
+			[/(from the [\w ]+?) or \1\b/, 'repeated zone'],
+			[/\b(\w+) \1\b/, 'doubled word'],
+			[/(?<!\[\[card:)\b\d[A-Z]{3}\d\d-\d+/, 'bare card id'],
+			[/\bnot you\b|\byou may if\b|\bLet \$|\bfrom beamed\b/i, 'broken clause'],
+		]
+		const texts: [string, string][] = []
+		for (const def of catalog.defs)
+			def.operations.forEach((o, i) =>
+				texts.push([`${def.id} op ${i}`, describeOperation(o)]),
+			)
+		for (const bot of catalog.bots ?? []) {
+			bot.traits.forEach((row, i) =>
+				texts.push([`${bot.deck} trait ${i}`, describe(row.effect)]),
+			)
+			for (const [suit, row] of Object.entries(bot.suits)) {
+				texts.push([`${bot.deck} ${suit}`, describe(row.noDo)])
+				texts.push([`${bot.deck} ${suit} DO`, describe(row.do)])
+			}
+		}
+		const hits = texts.flatMap(([where, text]) =>
+			SEAMS.filter(([re]) => re.test(text)).map(
+				([, what]) => `${where} (${what}): ${text}`,
+			),
+		)
+		expect(hits).toEqual([])
 	})
 })

@@ -25,6 +25,7 @@ import {
 	type Tok,
 } from '../engine/shorthand'
 import type { Suit, TraitId } from '../data/ids'
+import { withCardNames } from '../data/cardNames'
 import { isGameplayTrait, isSpecies } from '../data/ids'
 import {
 	printedGlyphUrl,
@@ -633,7 +634,7 @@ function englishOf(op: Operation): string | undefined {
 	if (!englishLines.has(op)) {
 		let text: string | undefined
 		try {
-			text = describeOperation(op)
+			text = withCardNames(describeOperation(op))
 		} catch {
 			text = undefined
 		}

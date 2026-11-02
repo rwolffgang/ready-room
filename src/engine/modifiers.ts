@@ -137,7 +137,7 @@ export const MODIFIERS: Record<string, RuleModifierHooks> = {
 	// 1KOL22 CLEAN-UP: one stacked copy per unspent action, gone once the
 	// Clean-up draw is done (MODIFIER_ATTACH { stack: true }).
 	TEMP_HAND_PLUS_1: {
-		describe: 'temporarily increase your hand size by 1',
+		describe: 'Temporarily increase your hand size by 1.',
 		handSize: (base) => base + 1,
 		untilEndOfTurn: true,
 	},
@@ -188,12 +188,12 @@ export const MODIFIERS: Record<string, RuleModifierHooks> = {
 			).length,
 	},
 	'1BUR10_BLOCK': {
-		describe: 'You cannot send an AWAY TEAM here.',
+		describe: 'You cannot send an Away Team here.',
 		blockSendsHere: true,
 	},
 	'1PIC05_BLOCK': {
 		describe:
-			'You ignore all opponent SHIPs when sending an AWAY TEAM to a neutral LOCATION.',
+			'You ignore all opponent SHIPs when sending an Away Team to a neutral LOCATION.',
 		ignoreOpponentShips: true,
 	},
 	// 1BUR12: describe-only — the counting lives on the card's

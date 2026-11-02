@@ -572,7 +572,7 @@ describe('PIC vs SHR — scripted real-card game (todo/13 Phase A)', () => {
 		expect(p.endgame).toEqual([
 			{
 				card: findDef(s, 'CAPTAIN:0', '1PIC01-24')!,
-				label: 'Score 1 VP for each of your ALLY cards.', // describeOperation — card data carries no printed text
+				label: 'Score 1 VP for each ALLY you own.', // describeOperation — card data carries no printed text
 				vp: 1,
 			},
 		])
