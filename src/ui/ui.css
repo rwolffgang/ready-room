@@ -3858,6 +3858,15 @@ h3,
 .bot-beat > .btn {
 	margin-left: auto;
 }
+/* a choice asked by a Bot row (choice.tsx): that row, on the card's paper */
+.source-card-row {
+	display: inline-block;
+	padding: 1px 6px;
+	border-radius: 4px;
+	background: #f1efe9;
+	color: #1c1c1c;
+	font-family: 'Barlow Condensed', 'Barlow', sans-serif;
+}
 /* src/ui/solo/Campaign.tsx: the Five-Year Mission's logbook */
 .deck-picker {
 	display: flex;

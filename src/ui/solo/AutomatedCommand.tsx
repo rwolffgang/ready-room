@@ -235,6 +235,64 @@ export function AcPanel({ onClose }: { onClose: () => void }) {
 	)
 }
 
+/** A TRAITS or SUITS row's printed text, or our own words for it. */
+function rowWording(
+	row: Exclude<AcRowRef, { surprise: true }>,
+	ac: BotCard,
+	text: StccBot | null,
+): ReactNode {
+	if ('trait' in row) {
+		const t = text?.traits[row.trait]
+		return t !== undefined ? (
+			<AcText text={t.text} />
+		) : (
+			<OurText effect={ac.traits[row.trait]!.effect} />
+		)
+	}
+	const t = text?.suits.find((r) => r.suit.toUpperCase() === row.suit)
+	return t !== undefined ? (
+		<AcText text={row.do ? t.do_text : t.text} />
+	) : (
+		<OurText effect={ac.suits[row.suit as BotSuit][row.do ? 'do' : 'noDo']} />
+	)
+}
+
+/** "Bot’s <traits / suit> row", naming a row the way its card heads it. */
+export function AcRowName({ row }: { row: AcRowRef }) {
+	const bot = useSoloBot()
+	if (bot === null || 'surprise' in row) return null
+	const key =
+		'trait' in row
+			? (bot.text?.traits[row.trait]?.key ??
+				(bot.ac.traits[row.trait]?.match ?? [])
+					.map((t) => `[[${t.toLowerCase()}]]`)
+					.join(' / '))
+			: row.suit
+	return (
+		<>
+			Bot’s <OpText text={key} plain /> row
+		</>
+	)
+}
+
+/** A choice asked by an Automated Command row (choice.tsx): which row of the
+ *  Bot's cards it is, and the row's text — so it never reads as the printed
+ *  text of the card the Bot is resolving. */
+export function AcRowSource({ row }: { row: AcRowRef }) {
+	const bot = useSoloBot()
+	if (bot === null || 'surprise' in row) return null
+	return (
+		<span className="source-card-op">
+			<span className="source-card-op-type">
+				<AcRowName row={row} />:
+			</span>{' '}
+			<span className="source-card-row">
+				{rowWording(row, bot.ac, bot.text)}
+			</span>
+		</span>
+	)
+}
+
 // ---------------------------------------------------------------------------
 // The narration strip
 // ---------------------------------------------------------------------------
@@ -264,26 +322,9 @@ export function BotBeatStrip() {
 	const def = seen === HIDDEN_DEF ? undefined : seen
 	const row = beat?.row
 	let rowText: ReactNode = null
-	if (row !== undefined && !('surprise' in row)) {
-		if ('trait' in row) {
-			const t = text?.traits[row.trait]
-			rowText =
-				t !== undefined ? (
-					<AcText text={t.text} />
-				) : (
-					<OurText effect={ac.traits[row.trait]!.effect} />
-				)
-		} else {
-			const t = text?.suits.find((r) => r.suit.toUpperCase() === row.suit)
-			const effect = ac.suits[row.suit as BotSuit][row.do ? 'do' : 'noDo']
-			rowText =
-				t !== undefined ? (
-					<AcText text={row.do ? t.do_text : t.text} />
-				) : (
-					<OurText effect={effect} />
-				)
-		}
-	} else if (row !== undefined) rowText = <em>its own Surprise operation</em>
+	if (row !== undefined && !('surprise' in row))
+		rowText = rowWording(row, ac, text)
+	else if (row !== undefined) rowText = <em>its own Surprise operation</em>
 	return (
 		<div className="bot-beat" aria-live="polite">
 			<span className="bot-beat-head">

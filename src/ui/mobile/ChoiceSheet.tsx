@@ -32,6 +32,7 @@ import { useDefById, useDefForIid, useDefIndex } from '../defs'
 import { OpText } from '../cards'
 import { OperationOptions, operationOptions } from '../opOptions'
 import { ShorthandOp } from '../shorthand'
+import { AcRowName } from '../solo/AutomatedCommand'
 import { useOrderState } from '../choice'
 import { CardTile } from '../tile/CardTile'
 import { Gl, SuitGl } from '../tile/glyph'
@@ -54,6 +55,13 @@ function SourceChip({ choice }: { choice: PendingChoice }) {
 		<span className="pb-src">
 			<SuitGl suit={def.suit} />
 			{cardName(def)}
+			{/* the Bot resolves the card through its row, not the card's text */}
+			{choice.sourceRow !== undefined && (
+				<>
+					{' · '}
+					<AcRowName row={choice.sourceRow} />
+				</>
+			)}
 		</span>
 	)
 }

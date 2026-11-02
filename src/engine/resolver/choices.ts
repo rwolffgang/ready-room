@@ -21,7 +21,7 @@
 
 import type { GameState, JsonValue, EffectCtx } from '../state'
 import type { CardInstanceId } from '../ids'
-import type { OperationRef } from '../state'
+import type { AcRowRef, OperationRef } from '../state'
 import type { MarketSuit, SpecialtyId, TraitId } from '../../data/ids'
 import type { Seat } from './queries'
 
@@ -81,6 +81,9 @@ export interface ChoiceBase {
 	 *  can say why the choice is asked and what it pays for. Absent for
 	 *  phase-level prompts and granted (ALT_PLAY) operations. */
 	sourceOp?: number | undefined
+	/** The solo Bot's Automated Command row resolving sourceCard instead of
+	 *  its printed text (rules/13 §13.6) — then there is no sourceOp. */
+	sourceRow?: AcRowRef | undefined
 	/** This prompt is the whole "you may …" (may.ts asked no CONFIRM): its
 	 *  `declineSelection` — the empty pick, Skip or Decline — declines the
 	 *  optional effect, and a "decline everything optional" policy answers it. */
@@ -174,7 +177,7 @@ export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
  *  `sourceCard = ctx.source`. */
 export type ChoiceSeed = DistributiveOmit<
 	PendingChoice,
-	'id' | 'seat' | 'sourceCard' | 'sourceDef' | 'sourceOp'
+	'id' | 'seat' | 'sourceCard' | 'sourceDef' | 'sourceOp' | 'sourceRow'
 >
 
 /** Result of the pure selection validator (todo/07 DoD). */

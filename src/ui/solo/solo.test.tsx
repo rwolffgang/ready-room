@@ -21,7 +21,8 @@ import { endHeadline } from '../EndScreen'
 import { endedLine } from '../load'
 import { stopBots, useGameStore } from '../store'
 import { loadBrowserCatalog } from '../browserCatalog'
-import { resetShellChoiceCache } from '../mobile/shell'
+import { resetShellChoiceCache, SHELL_KEY } from '../mobile/shell'
+import type { PendingChoice } from '../../engine/resolver/choices'
 import { segments } from './AutomatedCommand'
 
 vi.setConfig({ testTimeout: 30_000 })
@@ -173,6 +174,45 @@ describe('the solo screens', () => {
 			).toBeGreaterThan(0)
 		expect(dialog!.textContent).toContain('with no Duty Officer')
 		await tick()
+	})
+
+	// A row the Bot resolves a card through may ask you something ("you remove
+	// an Away Team"): the choice names that row, so it never reads as the
+	// card's own text.
+	it('names the Bot’s row on a choice it asks of you, on the console and the phone', () => {
+		start(3)
+		const choice: PendingChoice = {
+			k: 'CHOOSE_LOCATION',
+			id: 'c-row',
+			seat: 0,
+			prompt: 'Remove an Away Team from which Location?',
+			sourceCard: st().zones['CAPTAIN:1']![0]!,
+			sourceRow: { deck: 'KOL', trait: 0 },
+			candidates: [...(st().zones['NEUTRAL_ZONE:0'] ?? [])],
+		}
+		const render = (): HTMLElement => {
+			const host = document.createElement('div')
+			document.body.appendChild(host)
+			root = createRoot(host)
+			act(() => root!.render(<App />))
+			act(() => useGameStore.setState({ pendingChoice: choice }))
+			return host
+		}
+
+		const consoleHost = render()
+		const head = consoleHost.querySelector('.choice-head .source-card-op')
+		expect(head?.textContent).toMatch(/^Bot’s .* row:/)
+		expect(
+			head?.querySelector('.source-card-row')?.textContent?.length,
+		).toBeGreaterThan(0)
+		act(() => root!.unmount())
+
+		localStorage.setItem(SHELL_KEY, 'phone')
+		resetShellChoiceCache()
+		const phoneHost = render()
+		expect(phoneHost.querySelector('.pb-choice .pb-src')?.textContent).toMatch(
+			/ · Bot’s .* row$/,
+		)
 	})
 })
 

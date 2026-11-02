@@ -20,6 +20,7 @@ import {
 	type GameEvent,
 	type JsonValue,
 	type Declinable,
+	type AcRowRef,
 } from '../state'
 import { cardDef, isLocationDef } from '../cards'
 import type { ChoiceSeed, ChoiceDisabledCard, PendingChoice } from './choices'
@@ -98,19 +99,21 @@ export function nextRng(state: GameState): GameState {
 	return { ...state, rng: { ...state.rng, counter: state.rng.counter + 1 } }
 }
 
-/** The printed operation of `card` that is resolving: the nearest OPERATION
- *  frame below the running node, when it is that card's own and not a granted
- *  ALT_PLAY. A choice asked for by anything else gets no operation. */
+/** What is resolving `card`: the nearest OPERATION frame below the running
+ *  node, when it is that card's own and not a granted ALT_PLAY — its printed
+ *  operation, or the solo Bot's Automated Command row it runs instead of the
+ *  card's text. A choice asked for by anything else gets neither. */
 function resolvingOpOf(
 	state: GameState,
 	card: CardInstanceId,
-): number | undefined {
+): { opIndex: number } | { row: AcRowRef } | undefined {
 	for (let i = state.stack.length - 1; i >= 0; i--) {
 		const frame = state.stack[i]
 		if (frame?.k !== 'OPERATION') continue
-		return frame.card === card && frame.via === undefined
-			? frame.opIndex
-			: undefined
+		if (frame.card !== card || frame.via !== undefined) return undefined
+		return frame.row !== undefined
+			? { row: frame.row }
+			: { opIndex: frame.opIndex }
 	}
 	return undefined
 }
@@ -145,9 +148,12 @@ export function suspend(
 	const sourceDef =
 		sourceCard === null ? undefined : state.cards[sourceCard]?.def
 	if (sourceDef !== undefined) full.sourceDef = sourceDef
-	const sourceOp =
+	const resolving =
 		sourceCard === null ? undefined : resolvingOpOf(state, sourceCard)
-	if (sourceOp !== undefined) full.sourceOp = sourceOp
+	if (resolving !== undefined) {
+		if ('row' in resolving) full.sourceRow = resolving.row
+		else full.sourceOp = resolving.opIndex
+	}
 	next.pendingChoice = full
 	// The key -> choiceId link and any `extra` fields are written IN PLACE on
 	// the shared ctx.bindings object, not on a per-frame clone. Every control

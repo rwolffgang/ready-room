@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CardArraySchema } from '../../data/schema'
+import { BotArraySchema, CardArraySchema } from '../../data/schema'
 import {
 	fresh,
 	register,
@@ -27,6 +27,7 @@ import type { GameState } from '../state'
 import { cardValue, pickByValue } from './value'
 import { botDeckTop } from './deck'
 import { sendTarget, warpTarget } from './rank'
+import { registerBots } from './acRegistry'
 
 const BOT = 1 as const
 
@@ -348,6 +349,58 @@ describe('TRY + ATTACK (rules/13 §13.6.2, §13.12.1)', () => {
 			},
 		])
 		expect(attacks(bot(fresh(), row))).toEqual([])
+	})
+
+	// The Bot resolves a card through a row, not its printed text: a choice the
+	// row asks of you names the row, so the UI never shows it as the card's own.
+	it('a choice asked by a row carries the row, not an operation of the card', () => {
+		registerBots(
+			BotArraySchema.parse(
+				JSON.parse(
+					readFileSync(
+						join(__dirname, '../../data/cards/solo/bots.json'),
+						'utf8',
+					),
+				),
+			),
+		)
+		let s: GameState = {
+			...fresh(),
+			mode: 'SOLO',
+			solo: {
+				bot: BOT,
+				crew: 'PIC',
+				level: 'ENSIGN',
+				conspiringAdmirals: false,
+				marketOwned: [],
+			},
+		}
+		s = place(s, 'pKlingon', ID('k'), { k: 'STAGING', seat: BOT }, BOT)
+		s = place(s, 'loc', ID('l0'), { k: 'NEUTRAL_ZONE', slot: 0 })
+		s = place(s, 'loc', ID('l1'), { k: 'NEUTRAL_ZONE', slot: 1 })
+		s = { ...s, awayTeamsAt: { l0: [1, 0], l1: [1, 0] } }
+		// the PIC TRAITS row for KLINGON: "If able, you remove an Away Team"
+		const klingon = { deck: 'PIC' as const, trait: 1 }
+		s = run({
+			...s,
+			stack: [
+				{
+					k: 'OPERATION',
+					card: ID('k'),
+					opIndex: -1,
+					row: klingon,
+					ctx: { actor: BOT, source: ID('k'), bindings: {} },
+					phase: 0,
+				},
+			],
+		})
+		expect(s.pendingChoice).toMatchObject({
+			k: 'CHOOSE_LOCATION',
+			seat: 0,
+			sourceCard: ID('k'),
+			sourceRow: klingon,
+		})
+		expect(s.pendingChoice).not.toHaveProperty('sourceOp')
 	})
 
 	it('a cancelled attack still counts as done: no otherwise, and the record closes', () => {

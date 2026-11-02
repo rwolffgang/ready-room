@@ -19,7 +19,7 @@ import type {
 	ChoicePreview,
 } from '../engine/resolver/choices'
 import { SKIP_LOCATION } from '../engine/resolver/choices'
-import type { OperationRef } from '../engine/state'
+import type { AcRowRef, OperationRef } from '../engine/state'
 import { otherSeat, zoneKey } from '../engine/state'
 import type { CardInstanceId } from '../engine/ids'
 import type { Seat, ZoneRef } from '../engine/resolver/queries'
@@ -44,6 +44,7 @@ import { useDefForIid, useDefById, type CardDef } from './defs'
 import { cardName, withCardNames } from '../data/cardNames'
 import { printedOpFor, printedOps } from '../data/stcc'
 import { stccCard } from './stcc'
+import { AcRowSource } from './solo/AutomatedCommand'
 
 // ---------------------------------------------------------------------------
 // shared bits
@@ -66,12 +67,15 @@ function SourceCard({
 	sourceCard,
 	sourceDef,
 	sourceOp,
+	sourceRow,
 	label,
 }: {
 	sourceCard: CardInstanceId | null
 	sourceDef?: string | undefined
 	/** the resolving operation: its wording says why the choice is asked */
 	sourceOp?: number | undefined
+	/** or the solo Bot's Automated Command row resolving the card */
+	sourceRow?: AcRowRef | undefined
 	label?: string | undefined
 }) {
 	// The instance may have gone face-down (an Incident returned to its deck
@@ -94,6 +98,7 @@ function SourceCard({
 			)}
 			<span className="source-card-body">
 				<span className="source-card-name">{cardName(def)}</span>
+				{sourceRow !== undefined && <AcRowSource row={sourceRow} />}
 				{type !== undefined && wording !== null && (
 					<span className="source-card-op">
 						<span className="source-card-op-type">
@@ -127,6 +132,7 @@ function ChoiceHeader({
 					sourceCard={choice.sourceCard}
 					sourceDef={choice.sourceDef}
 					sourceOp={choice.sourceOp}
+					sourceRow={choice.sourceRow}
 					label={sourceLabel}
 				/>
 			</div>
