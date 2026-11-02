@@ -442,7 +442,10 @@ const samples: { [K in Effect['k']]: Effect & { k: K } } = {
 	BOT_ACQUIRE: {
 		k: 'BOT_ACQUIRE',
 		mode: 'GAIN',
-		pref: [[{ traits: ['KLINGON'] }], [{ suits: ['PERSON'] }, { suits: ['SHIP'] }]],
+		pref: [
+			[{ traits: ['KLINGON'] }],
+			[{ suits: ['PERSON'] }, { suits: ['SHIP'] }],
+		],
 	},
 	BOT_JUNK: { k: 'BOT_JUNK' },
 	BOT_SEND_AWAY_TEAM: {
@@ -561,6 +564,42 @@ vitestDescribe("describe() on the opponent's side (FORCE / OPPONENT)", () => {
 		).toBe(
 			'Force your opponent to log a PERSON from their hand or from their Discard pile. If they do, they may draw a card.',
 		)
+	})
+
+	// whose Away Teams, never "your opponent's a LOCATION" / "their a LOCATION"
+	it('words removing Away Teams by their owner, from a LOCATION', () => {
+		const loc: Query = { zones: ['LOCATIONS'], filter: { suits: ['LOCATION'] } }
+		expect(
+			describe({
+				k: 'REMOVE_AWAY_TEAM',
+				count: 1,
+				target: { ...loc, withAwayTeam: true },
+				whose: 'OPPONENT',
+			}),
+		).toBe(
+			"Remove 1 of your opponent's Away Teams from a LOCATION where you have an Away Team.",
+		)
+		expect(
+			describe({
+				k: 'FORCE',
+				body: {
+					k: 'REMOVE_AWAY_TEAM',
+					count: 1,
+					target: loc,
+					whose: 'SELF',
+				},
+			}),
+		).toBe(
+			'Force your opponent to remove 1 of their Away Teams from a LOCATION.',
+		)
+		expect(
+			describe({
+				k: 'REMOVE_AWAY_TEAM',
+				count: 1,
+				target: { zones: ['LOCATIONS'], bound: '$t.loc' },
+				whose: 'OPPONENT',
+			}),
+		).toBe("Remove 1 of your opponent's Away Teams from that LOCATION.")
 	})
 
 	it('names the opponent first when a forced body opens with IF', () => {

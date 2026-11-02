@@ -464,6 +464,7 @@ export function describeQuery(query: Query): string {
 	const zone = zonePhrase(query.zones, query.seat)
 	const tail =
 		shipPhrase(query) +
+		(query.withAwayTeam === true ? ' where you have an Away Team' : '') +
 		(query.exceptThis === true ? ' (excluding this card)' : '')
 	if (zone === '') return `${head}${tail}`
 	return `${head} ${zone}${tail}`
@@ -1009,9 +1010,16 @@ function render(node: Effect): string {
 					: 'Away Teams'
 			} to ${describeLocation(node.target)}.`
 		case 'REMOVE_AWAY_TEAM':
-			return `Remove ${node.count} ${node.count === 1 ? 'Away Team' : 'Away Teams'} from ${
+			// `whose` owns the Away Teams, not the Location: "1 of your opponent's
+			// Away Teams from a LOCATION"; a bound target is the one just used
+			// (1PER07's second removal)
+			return `Remove ${node.count} of ${
 				node.whose === 'SELF' ? 'your' : "your opponent's"
-			} ${describeLocation(node.target)}.`
+			} Away Teams from ${
+				node.target.bound !== undefined
+					? 'that LOCATION'
+					: describeLocation(node.target)
+			}.`
 		case 'WARP':
 			if (node.count !== undefined)
 				return `Warp ${describeAmount(node.count)} of ${describeCardTarget(node.ship)} to ${describeLocation(node.to)}.`
@@ -1203,7 +1211,9 @@ function describeBotDeck(node: Extract<Effect, { k: 'BOT_DECK' }>): string {
 }
 
 /** "Gain a KLINGON > PERSON / SHIP." — the Bot's preference expression. */
-function describeBotAcquire(node: Extract<Effect, { k: 'BOT_ACQUIRE' }>): string {
+function describeBotAcquire(
+	node: Extract<Effect, { k: 'BOT_ACQUIRE' }>,
+): string {
 	const verb = node.mode === 'GAIN' ? 'Gain' : 'Take'
 	if (node.from === 'ENCOUNTER') return `${verb} the top ENCOUNTER.`
 	if (node.from === 'INCIDENT') return `${verb} an INCIDENT.`
