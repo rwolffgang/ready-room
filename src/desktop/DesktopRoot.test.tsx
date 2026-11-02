@@ -1,9 +1,16 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+	afterAll,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from 'vitest'
 
 import type { StccIo, StccManifest } from '../data/stccFetch'
-import { cardImageUrl, setStccIndex, stccIconUrl } from '../ui/stcc'
 
 // An in-memory app-data folder standing in for the Rust side.
 const disk = new Map<string, string>()
@@ -50,7 +57,12 @@ vi.mock('./bridge', () => {
 	}
 })
 
+// Load the card data module as the desktop build does: no bundled STCC data
+// and no bundled custom faces, only the custom packs' names and text.
+vi.stubEnv('MODE', 'desktop')
 const { DesktopRoot } = await import('./DesktopRoot')
+const { cardImageUrl, setStccIndex, stccIconUrl } = await import('../ui/stcc')
+afterAll(() => vi.unstubAllEnvs())
 
 let root: Root
 let host: HTMLElement
@@ -122,5 +134,23 @@ describe('DesktopRoot', () => {
 		await settle()
 		expect(host.textContent).toContain('the app')
 		expect(cardImageUrl({ cardId: '1PIC01/24' })).toBeNull()
+	})
+
+	it('shows the custom pack faces installed into the data folder', async () => {
+		disk.set(
+			'vendor/manifest.json',
+			JSON.stringify({ sha: SHA, images: 1, imagesTotal: 1, bots: 16 }),
+		)
+		disk.set(
+			'vendor/custom/firefly.images.json',
+			JSON.stringify({ '1MAL01/25': 'firefly/1MAL01-25.jpg' }),
+		)
+		await mount()
+		await settle()
+		expect(cardImageUrl({ cardId: '1MAL01/25' })).toBe(
+			'stcc://localhost/public/custom/firefly/1MAL01-25.jpg',
+		)
+		// a pack nobody installed keeps its text face
+		expect(cardImageUrl({ cardId: '1SHP01/25' })).toBeNull()
 	})
 })

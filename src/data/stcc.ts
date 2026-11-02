@@ -98,6 +98,21 @@ export function addCustomPacks(
 	return index
 }
 
+/** The name of a custom pack (`firefly`), or null when `raw` is not a pack. */
+export function customPackName(raw: unknown): string | null {
+	const pack = CustomPackSchema.safeParse(raw)
+	return pack.success ? pack.data.pack : null
+}
+
+/** A pack's face map (`vendor/custom/<pack>.images.json`: card number → file),
+ *  or null when `raw` is not one. */
+export function parseCustomImageMap(
+	raw: unknown,
+): Record<string, string> | null {
+	const map = z.record(z.string(), z.string()).safeParse(raw)
+	return map.success ? map.data : null
+}
+
 /** Their card numbers carry print marks we don't: `2PER01/26●` → `2PER01/26`. */
 export function normalizeCardNumber(n: string): string {
 	return n.replace(/[^0-9A-Z/?]/gi, '').toUpperCase()

@@ -4,7 +4,9 @@
 import { describe, expect, it } from 'vitest'
 import {
 	buildStccIndex,
+	customPackName,
 	normalizeCardNumber,
+	parseCustomImageMap,
 	parseStccBots,
 	printedOpFor,
 	stccBotForSource,
@@ -159,5 +161,18 @@ describe('stcc join', () => {
 		const both = parseStccBots([bot, { ...bot, id: 'testbot-v', variant: 'V' }])
 		expect(stccBotForSource(both, 'Test')?.id).toBe('testbot')
 		expect(stccBotForSource(both, 'Other')).toBeNull()
+	})
+
+	it('reads a custom pack name and its face map, rejecting anything else', () => {
+		const pack = { pack: 'demo', deck: 'DEM', title: 'Demo', cards: [] }
+		expect(customPackName(pack)).toBe('demo')
+		expect(customPackName({ ...pack, pack: 7 })).toBeNull()
+		expect(customPackName(null)).toBeNull()
+
+		const map = { '1DEM01/25': 'demo/1DEM01-25.jpg' }
+		expect(parseCustomImageMap(map)).toEqual(map)
+		expect(parseCustomImageMap({ '1DEM01/25': 7 })).toBeNull()
+		expect(parseCustomImageMap(['demo/1DEM01-25.jpg'])).toBeNull()
+		expect(parseCustomImageMap(null)).toBeNull()
 	})
 })

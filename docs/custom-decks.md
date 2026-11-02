@@ -36,7 +36,9 @@ appear wherever STCC cards show them, and `tools/crosscheck-stcc.ts` checks the
 pack against the card defs (suit, traits, VP, position, icons, missions). The
 publish audit checks names against the real STCC data only. Custom cards
 never replace an STCC record. Code-only builds (desktop, hosted) ship the names
-but not the rendered faces (`vite.config.ts` drops `dist/custom`).
+but not the rendered faces (`vite.config.ts` drops `dist/custom`). A desktop
+app on your own machine shows them after `npm run custom-cards:desktop` (see
+Card art).
 
 ## Card art
 
@@ -45,12 +47,20 @@ npm run custom-cards        # download art, render 25 faces + template-blank.jpg
 npm run custom-cards:kit    # build the ChatGPT prompt kit from the rendered faces
 tools/custom/codex-art.sh 01 02 03   # paint those cards' art with Codex (your ChatGPT login)
 npm run custom-cards        # re-render with the painted art
+npm run custom-cards:desktop   # copy every rendered pack into the desktop app's data folder
 ```
 
 The npm scripts run the Firefly pack; for another pack pass its name:
 `npx tsx tools/custom/render-cards.ts atlantis`,
 `npx tsx tools/custom/build-prompt-kit.ts atlantis` and
 `PACK=atlantis tools/custom/codex-art.sh …`.
+
+`custom-cards:desktop` (`tools/custom/install-desktop.ts`, or pass pack names)
+copies the faces and their maps into the desktop app's data folder, next to its
+STCC download (`stcc/public/custom/<pack>/`, `stcc/vendor/custom/<pack>.images.json`).
+The app reads them at startup (`loadStccFrom` in `src/ui/stcc.ts`); restart it
+to see them. Re-run it after re-rendering. The faces stay on this machine:
+installers and the hosted build never carry them.
 
 The template lays each face out like the printed cards, checked against the
 scans: the name and suit bars in the suit's colour, skill icons below them, trait

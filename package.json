@@ -19,6 +19,7 @@
 		"fetch-cards": "tsx tools/fetch-stcc.ts",
 		"custom-cards": "tsx tools/custom/render-cards.ts firefly",
 		"custom-cards:kit": "tsx tools/custom/build-prompt-kit.ts firefly",
+		"custom-cards:desktop": "tsx tools/custom/install-desktop.ts",
 		"audit:publish": "tsx tools/audit-publish.ts",
 		"bot:check": "tsx tools/bot-check.ts",
 		"bot:retrain": "tsx tools/retrain.ts",

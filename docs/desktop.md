@@ -23,6 +23,10 @@ skip it and play with text cards.
   is missing. **Card database** on the start screen opens it at any time.
 - `vite build --mode desktop` (`npm run build:desktop`, which `tauri build` runs) leaves the STCC
   JSON out of the bundle and deletes `dist/stcc`, even on a machine that has fetched the data.
+  It drops the rendered faces of the fan-made custom decks (`dist/custom`) the same way.
+  `npm run custom-cards:desktop` copies them into this machine's app-data folder
+  (`stcc/public/custom/`, `stcc/vendor/custom/`), where the app finds them at its next start
+  (docs/custom-decks.md).
 
 ## Online play
 

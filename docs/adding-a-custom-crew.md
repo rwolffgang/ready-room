@@ -249,6 +249,7 @@ icons.
 npx tsx tools/custom/build-prompt-kit.ts <pack>   # vendor/custom/<pack>/prompt-kit/
 PACK=<pack> tools/custom/codex-art.sh 01 02 03    # paint, one card at a time
 npx tsx tools/custom/render-cards.ts <pack>       # re-render with the art
+npx tsx tools/custom/install-desktop.ts <pack>    # show the faces in the desktop app here
 ```
 
 - **The kit:** per card, prompt A (art only, recommended), prompt B (whole

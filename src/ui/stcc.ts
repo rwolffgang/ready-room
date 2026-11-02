@@ -11,6 +11,8 @@
 // and join the index in every build but tests. Their card art is rendered
 // locally (`npm run custom-cards`) into public/custom/, listed by the
 // gitignored vendor/custom/*.images.json, and never shipped by code-only builds.
+// A desktop app finds the faces that `npm run custom-cards:desktop` copied into
+// its data folder through `loadStccFrom`.
 
 import { setCardNameIndex } from '../data/cardNames'
 import type { CardDef } from '../data/schema'
@@ -18,7 +20,9 @@ import {
 	STCC_BOXES,
 	addCustomPacks,
 	buildStccIndex,
+	customPackName,
 	normalizeCardNumber,
+	parseCustomImageMap,
 	parseStccBots,
 	stccBotForSource,
 	type StccBot,
@@ -60,14 +64,27 @@ const customImages: Record<string, string> = Object.assign(
 /** Where scans and icons are served from: public/stcc/ for the web build. */
 let assetBase = `${import.meta.env.BASE_URL}stcc`
 
-/** The index plus every custom pack (custom cards never replace STCC ones). */
-function withCustomPacks(index: Map<string, StccCard>): Map<string, StccCard> {
-	return addCustomPacks(
-		index,
-		customPacks,
-		customImages,
-		`${import.meta.env.BASE_URL}custom`,
-	)
+/** The index plus every custom pack (custom cards never replace STCC ones).
+ *  A pack's faces installed at runtime (`installed`: pack → face map, served
+ *  from `installedBase`) win over the bundled ones. */
+function withCustomPacks(
+	index: Map<string, StccCard>,
+	installed: Readonly<Record<string, Record<string, string>>> = {},
+	installedBase = '',
+): Map<string, StccCard> {
+	for (const pack of customPacks) {
+		const name = customPackName(pack)
+		const own = name === null ? undefined : installed[name]
+		if (own !== undefined) addCustomPacks(index, [pack], own, installedBase)
+		else
+			addCustomPacks(
+				index,
+				[pack],
+				customImages,
+				`${import.meta.env.BASE_URL}custom`,
+			)
+	}
+	return index
 }
 
 function fromModules(): Map<string, StccCard> {
@@ -94,7 +111,9 @@ let bots: Map<string, StccBot> = parseStccBots(
 
 /** Install STCC data read at runtime: `readJson` reads a fetched JSON file by
  *  its name (`box1.json`, `icons.json`) or returns null; scans and icons are
- *  then served from `base`. Missing files leave those lookups empty. */
+ *  then served from `base`. Missing files leave those lookups empty. Custom
+ *  pack faces installed next to them (`custom/<pack>.images.json`, faces under
+ *  `base`/custom/) replace the bundled ones. */
 export async function loadStccFrom(
 	base: string,
 	readJson: (name: string) => Promise<unknown>,
@@ -105,9 +124,18 @@ export async function loadStccFrom(
 		if (data !== null) boxes[box] = data
 	}
 	const nextIcons = await readJson('icons.json')
+	const installed: Record<string, Record<string, string>> = {}
+	for (const pack of customPacks) {
+		const name = customPackName(pack)
+		if (name === null) continue
+		const map = parseCustomImageMap(
+			await readJson(`custom/${name}.images.json`),
+		)
+		if (map !== null) installed[name] = map
+	}
 	assetBase = base
 	setStccIndex(
-		withCustomPacks(buildStccIndex(boxes, base)),
+		withCustomPacks(buildStccIndex(boxes, base), installed, `${base}/custom`),
 		(nextIcons as Record<string, string> | null) ?? {},
 	)
 	setStccBots(parseStccBots(await readJson('bots.json')))
