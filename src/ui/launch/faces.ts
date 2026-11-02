@@ -35,4 +35,5 @@ export const FACES: Readonly<Record<string, Face>> = {
 	'3RIK01/25': { x: 0.55, y: 0.195, h: 0.15 },
 	// custom packs
 	'1MAL01/25': { x: 0.479, y: 0.421, h: 0.253 },
+	'1SHP01/25': { x: 0.551, y: 0.38, h: 0.241 },
 }

@@ -136,8 +136,9 @@ export function VsBadge({ label = 'vs' }: { label?: string }) {
 	)
 }
 
-/** Every crew deck as a portrait tile; a click puts that captain in the seat
- *  being chosen. Tiles carry the seat badges of the captains already seated. */
+/** Every crew deck as a round face over the captain's name; a click puts that
+ *  captain in the seat being chosen. Faces carry the seat badges of the
+ *  captains already seated. */
 export function Roster({
 	catalog,
 	decks,
@@ -178,17 +179,19 @@ export function Roster({
 								aria-label={`${deckLabel(d)} for ${seatTags[active]}`}
 								onClick={() => onPick(d)}
 							>
-								<Portrait catalog={catalog} deck={d} />
+								<span className="lr-tile-face">
+									<Portrait catalog={catalog} deck={d} />
+									{at.length > 0 && (
+										<span className="lr-tile-badges">
+											{at.map((s) => (
+												<span key={s} className={`lr-badge lr-seat-${s}`}>
+													{seatTags[s]}
+												</span>
+											))}
+										</span>
+									)}
+								</span>
 								<span className="lr-tile-name">{deckLabel(d)}</span>
-								{at.length > 0 && (
-									<span className="lr-tile-badges">
-										{at.map((s) => (
-											<span key={s} className={`lr-badge lr-seat-${s}`}>
-												{seatTags[s]}
-											</span>
-										))}
-									</span>
-								)}
 							</button>
 						</li>
 					)

@@ -705,8 +705,8 @@
 	--cy: 0.37;
 }
 .lr-tile .lr-portrait {
-	--F: 0.46;
-	--cy: 0.44;
+	--F: 0.58;
+	--cy: 0.5;
 }
 .lr-avatar {
 	--F: 0.6;
@@ -918,82 +918,99 @@
 }
 .lr-roster-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
-	gap: 10px;
+	grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+	gap: 6px;
 	margin: 0;
 	padding: 0;
 	list-style: none;
 }
+/* a captain as a profile picture: the round face over the name */
 .lr-tile {
-	position: relative;
+	--d: 68px; /* the face's diameter */
 	display: flex;
 	flex-direction: column;
+	align-items: center;
+	gap: 10px;
 	width: 100%;
-	padding: 0;
-	overflow: hidden;
+	padding: 10px 4px 8px;
 	border: 0;
 	border-radius: 14px;
-	background: var(--panel);
+	background: transparent;
 	color: var(--text);
-	box-shadow: inset 0 0 0 1px var(--hair);
 	cursor: pointer;
 	transition:
-		transform 180ms ease,
-		box-shadow 180ms ease,
+		background 180ms ease,
 		filter 180ms ease;
 }
-.lr-tile .lr-portrait {
+.lr-tile-face {
 	position: relative;
-	aspect-ratio: 1;
+	display: block;
 }
-/* the card's corner icons fade out around the face */
+/* a fixed size: WebKit gives an aspect-ratio box in this flex column no width */
+.lr-tile .lr-portrait {
+	width: var(--d);
+	height: var(--d);
+	border-radius: 50%;
+	box-shadow:
+		0 0 0 2px var(--bg, #05050c),
+		0 0 0 3px var(--hair-2);
+	transition: box-shadow 180ms ease;
+}
 .lr-tile .lr-portrait::after {
 	content: '';
 	position: absolute;
 	inset: 0;
-	background: radial-gradient(
-		ellipse 60% 64% at 50% 44%,
-		transparent 58%,
-		color-mix(in oklab, var(--panel) 85%, transparent) 100%
-	);
+	border-radius: 50%;
+	box-shadow: inset 0 0 10px #0009;
 }
 .lr-tile:hover:not(:disabled) {
-	transform: translateY(-3px);
+	background: color-mix(in oklab, var(--sc) 10%, transparent);
+}
+.lr-tile:hover:not(:disabled) .lr-portrait {
 	box-shadow:
-		inset 0 0 0 1px var(--sc),
-		0 10px 22px -12px color-mix(in oklab, var(--sc) 60%, transparent);
+		0 0 0 2px var(--bg, #05050c),
+		0 0 0 3px color-mix(in oklab, var(--sc) 70%, transparent);
 }
 .lr-tile:hover:not(:disabled) .lr-portrait img {
 	transform: scale(1.08);
 }
-.lr-tile.is-picked {
+.lr-tile.is-picked .lr-portrait {
 	box-shadow:
-		inset 0 0 0 2px var(--sc),
-		0 0 18px -4px color-mix(in oklab, var(--sc) 55%, transparent);
+		0 0 0 2px var(--bg, #05050c),
+		0 0 0 4px var(--sc),
+		0 0 18px 2px color-mix(in oklab, var(--sc) 45%, transparent);
+}
+.lr-tile.is-picked .lr-tile-name {
+	color: var(--sc);
 }
 .lr-tile:disabled {
 	cursor: not-allowed;
 	filter: grayscale(1) brightness(0.45);
 }
 .lr-tile-name {
-	display: block;
-	min-height: 2.3em;
-	padding: 7px 8px 8px;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+	overflow: hidden;
+	max-width: 100%;
+	min-height: 2.2em;
 	font:
-		600 13px/1.1 'Antonio',
+		600 12.5px/1.1 'Antonio',
 		sans-serif;
 	letter-spacing: 0.05em;
 	text-transform: uppercase;
-	text-align: left;
+	text-align: center;
 }
+/* seat badges sit on the face's lower edge, like a status pill */
 .lr-tile-badges {
 	position: absolute;
-	left: 6px;
-	top: 6px;
+	left: 50%;
+	bottom: -8px;
+	z-index: 1;
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
 	gap: 3px;
+	white-space: nowrap;
+	transform: translateX(-50%);
 }
 .lr-badge {
 	padding: 3px 7px;
@@ -1825,11 +1842,15 @@
 	}
 	.lr-roster-grid {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 8px;
+		gap: 4px;
+	}
+	.lr-tile {
+		--d: 56px;
+		gap: 9px;
+		padding: 8px 2px 6px;
 	}
 	.lr-tile-name {
 		font-size: 11.5px;
-		padding: 5px 6px 6px;
 	}
 	/* the start buttons stay in reach at the foot of the screen: the bar
 	 * dissolves so they can stick within the whole stage */
