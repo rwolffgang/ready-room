@@ -100,7 +100,7 @@ exports[`shorthand golden > pins the whole catalogue (review this snapshot like 
   "1BUR10-26": [
     "PLAY ACT | CONTROL",
     "CONT | RECRYSTALLIZE all LOG ·"1BUR02/26" +4 GLO",
-    "PASS | §«You cannot send an AWAY TEAM here.»",
+    "PASS | §«You cannot send an Away Team here.»",
     "ENDG | 1 VP / 2 DIL",
     "DEV | REQ[RESEARCH ≥12]",
   ],
@@ -388,7 +388,7 @@ exports[`shorthand golden > pins the whole catalogue (review this snapshot like 
   ],
   "1KOL22-24": [
     "PLAY ATTACK | +1 GLO OPP[−1 DECK] IF =<PERSON>? ⇒ +1<INCIDENT> OPP[+1<INCIDENT>]",
-    "CLEA | §«temporarily increase your hand size by 1» (+1 GLO)? / ACT unused",
+    "CLEA | §«Temporarily increase your hand size by 1.» (+1 GLO)? / ACT unused",
     "ACTI | REFRESH ·"1KOL02/24" ({−1 CARD} › REFRESH ·non-"1KOL02/24" <SHIP> #KLINGON)?",
   ],
   "1KOL23-24": [
@@ -732,7 +732,7 @@ exports[`shorthand golden > pins the whole catalogue (review this snapshot like 
   "1PIC05-24": [
     "PLAY ACT | DEPLOY JUNK",
     "ACTI | FREE_PLAY ·<SHIP>",
-    "PASS | §«You ignore all opponent SHIPs when sending an AWAY TEAM to a neutral LOCATION.»",
+    "PASS | §«You ignore all opponent SHIPs when sending an Away Team to a neutral LOCATION.»",
     "DEV | −2 DIL LOG ·<PERSON>",
   ],
   "1PIC06-24": [

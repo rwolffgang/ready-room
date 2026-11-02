@@ -29,7 +29,7 @@ import {
 } from '../../engine/describe'
 import { shorthand, shorthandCondition, type Tok } from '../../engine/shorthand'
 import { SKIP_LOCATION } from '../../engine/resolver/choices'
-import { missionTitle } from '../../data/cardNames'
+import { missionTitle, withCardNames } from '../../data/cardNames'
 
 // ---------------------------------------------------------------------------
 // Neutral Zone: the secure rule (rules/03 §3.4.1)
@@ -196,7 +196,7 @@ export function missionView(
 	const ctx = { actor: seat, source: '' as CardInstanceId, bindings: {} }
 	const goals = terms.map((t) => ({
 		toks: safe(() => shorthandCondition(t), []),
-		english: safe(() => describePredicate(t), ''),
+		english: safe(() => withCardNames(describePredicate(t)), ''),
 		met: safe(() => evalPredicate(state, t, ctx), false),
 	}))
 	return {
@@ -208,7 +208,7 @@ export function missionView(
 			legal.some((it) => it.t === 'COMPLETE_MISSION' && it.index === index),
 		goals,
 		reward: safe(() => shorthand(m.reward), []),
-		rewardEnglish: safe(() => describeEffect(m.reward), ''),
+		rewardEnglish: safe(() => withCardNames(describeEffect(m.reward)), ''),
 		vp: m.vp,
 	}
 }

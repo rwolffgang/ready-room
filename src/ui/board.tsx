@@ -29,7 +29,7 @@ import { seatLabel, specialtyName } from './format'
 import { Icon, suitIconId } from './icons'
 import { DeltaCounter } from './delta'
 import { HIDDEN_DEF } from './projection'
-import { deckLabel, missionTitle } from '../data/cardNames'
+import { deckLabel, missionTitle, withCardNames } from '../data/cardNames'
 import { describePredicate } from '../engine/describe'
 import { isSoloBot } from '../engine/solo/seat'
 
@@ -528,7 +528,7 @@ export function CrewBoard({ seat }: { seat: Seat }) {
 								</button>
 							)}
 							<span className="mission-text" title={m.cardId}>
-								{missionTitle(m)} — {describePredicate(m.goal)}
+								{missionTitle(m)} — {withCardNames(describePredicate(m.goal))}
 							</span>
 						</div>
 					)

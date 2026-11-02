@@ -21,7 +21,7 @@
 // authoring-only nodes like LET / MODIFIER_ATTACH). The game UI reuses this for
 // tooltips (docs/ui-spec.md §3).
 
-import { cardNameById } from '../data/cardNames'
+import { cardNameById, cardToken } from '../data/cardNames'
 import type { Effect, Operation, TriggerSpec } from './resolver/nodes'
 import type {
 	Amount,
@@ -63,10 +63,38 @@ function articleFor(noun: string): string {
 	return 'AEIO'.includes(noun.charAt(0)) ? 'an' : 'a'
 }
 
+/** A bare noun with its article; a phrase that already has a determiner
+ *  ("the gained card", "this card", "that LOCATION") keeps it. */
 function withArticle(noun: string): string {
-	return noun.startsWith('a ') || noun.startsWith('an ')
+	return /^(an?|the|this|that|those|your|their) /.test(noun)
 		? noun
 		: `${articleFor(noun)} ${noun}`
+}
+
+/** "LOCATION" → "LOCATIONs" (record caps keep their case). */
+function plural(noun: string): string {
+	return `${noun}s`
+}
+
+/** A number of cards of a noun: "a SHIP" / "2 SHIP", "a card" / "2 cards". */
+function countOf(count: number, noun: string): string {
+	if (count === 1) return withArticle(noun)
+	return `${count} ${manyCards(noun)}`
+}
+
+/** "card in your Log" counted more than once: "cards in your Log". Record
+ *  nouns (SHIP, KLINGON) stay as printed ("2 SHIP"). */
+function manyCards(noun: string): string {
+	return noun.replace(/^card\b/, 'cards')
+}
+
+/** A card bound earlier in the effect, by its bind name: "the milled card"
+ *  where the name reads as English, "that card" for an internal name
+ *  ("$1bur21.ship", "q.scan"). */
+function boundCard(bind: string): string {
+	return /^(?:[a-z]+ed|found|top)$/.test(bind)
+		? `the ${bind} card`
+		: 'that card'
 }
 
 /** Strip a trailing period and de-capitalise, so a sentence embeds in " …". */
@@ -97,6 +125,10 @@ function capitalise(text: string): string {
 let opponentActs = false
 /** bind name → written while the opponent acts ("If they do"). */
 const bindSide = new Map<string, boolean>()
+/** LET bind name → the cards it holds, so a FOR_EACH over it names them. */
+const letQueries = new Map<string, Query>()
+/** The suit an enclosing IF has established the resolving card has. */
+let thisCardIs: Suit | undefined
 
 const SUBJECT = '\u0001'
 const OWN_START = '\u0002'
@@ -244,7 +276,7 @@ export function describeAmount(amount: Amount): string {
 	if (typeof amount === 'number') return String(amount)
 	switch (amount.k) {
 		case 'COUNT':
-			return `the number of ${describeQuery(amount.query)}`
+			return `the number of ${describeQuery(amount.query, 'in')}`
 		case 'SPECIALTY':
 			return `your ${specialtyWord(amount.specialty)}`
 		case 'RESOURCE':
@@ -260,17 +292,17 @@ export function describeAmount(amount: Amount): string {
 		case 'UP_TO':
 			return `up to ${describeAmount(amount.max)}`
 		case 'PER':
-			return `1 for every ${amount.every} ${perBasePhrase(amount.of)}`
+			return `1 for every ${amount.every} ${perBasePhrase(amount.of, amount.every)}`
 		case 'ICON_COUNT':
-			return `the ${amount.kind === 'SKILL' ? 'Skill' : 'Focus'} icons of the ${amount.bind} card`
+			return `the ${amount.kind === 'SKILL' ? 'Skill' : 'Focus'} icons of ${boundCard(amount.bind)}`
 		case 'SKILL_ICONS':
 			return amount.specialty === 'CHOSEN'
 				? 'your matching Skill icons in play (excluding beamed cards)'
 				: `your ${specialtyWord(amount.specialty)} Skill icons in play (excluding beamed cards)`
 		case 'TRAIT_COUNT':
-			return `the number of traits of the ${amount.bind} card`
+			return `the number of traits of ${boundCard(amount.bind)}`
 		case 'SHARED_TRAITS':
-			return `the number of traits the ${amount.bind} card shares with ${traitPartnerTarget(amount.with)}`
+			return `the number of traits ${boundCard(amount.bind)} shares with ${traitPartnerTarget(amount.with)}`
 	}
 }
 
@@ -305,45 +337,55 @@ function perCapTail(per: { cap?: number }): string {
 /** The noun phrase under a PER divisor: a COUNT base renders its query
  *  directly ("ANOMALY you have in play"), anything else renders as an amount
  *  ("your {DIL}"). */
-function perBasePhrase(base: Amount): string {
-	return typeof base === 'object' && base !== null && base.k === 'COUNT'
-		? describeQuery(base.query)
-		: describeAmount(base)
+function perBasePhrase(base: Amount, every: number): string {
+	if (typeof base !== 'object' || base === null || base.k !== 'COUNT')
+		return describeAmount(base)
+	const noun = describeQuery(base.query, 'in')
+	return every === 1 ? noun : manyCards(noun)
 }
 
 // ---------------------------------------------------------------------------
 // Filters / zones / queries
 // ---------------------------------------------------------------------------
 
-/** Bare noun for a CardFilter: "SHIP", "SHADY", "BORG or STARFLEET", "a card".
- *  No article — callers add one for target phrases ("beam a SHIP"). */
+/** Bare noun for a CardFilter, no article: "SHIP", "BORG or STARFLEET",
+ *  "KLINGON PERSON", "non-CLOAK SHIP", "card". The fields AND together (a
+ *  KLINGON that is a PERSON), the entries of one field are alternatives.
+ *  Callers add an article for a target ("beam a SHIP"). A named card is its
+ *  `[[card:<def id>]]` token, which the UI turns into the printed name. */
 export function describeFilter(filter: CardFilter | undefined): string {
-	if (filter === undefined) return 'a card'
-	const parts: string[] = []
-	if (filter.suits !== undefined && filter.suits.length > 0)
-		parts.push(...filter.suits.map(suitWord))
-	if (filter.traits !== undefined && filter.traits.length > 0)
-		parts.push(...filter.traits)
-	if (filter.allTraits !== undefined && filter.allTraits.length > 0)
-		parts.push(...filter.allTraits.map((t) => `${t}`))
-	if (filter.ids !== undefined)
-		parts.push(
+	if (filter === undefined) return 'card'
+	const kind =
+		filter.suits !== undefined && filter.suits.length > 0
+			? filter.suits.map(suitWord).join(' or ')
+			: filter.focus !== undefined && filter.focus.length > 0
+				? `${filter.focus.map(specialtyWord).join('/')} Focus card`
+				: filter.exhibits !== undefined && filter.exhibits.length > 0
+					? `${filter.exhibits.map(specialtyWord).join(' or ')} icon card`
+					: undefined
+	const words: string[] = []
+	if (filter.not !== undefined)
+		words.push(`non-${describeFilter(filter.not).replaceAll(' or ', '/')}`)
+	if (filter.ids !== undefined) {
+		// one token per printed name: two copies of a card share it
+		const names = filter.ids.map(cardNameById)
+		words.push(
 			filter.ids.length > 0
-				? [...new Set(filter.ids.map(cardNameById))].join(' or ')
-				: 'an unprinted card',
+				? filter.ids
+						.filter((_id, i) => names.indexOf(names[i]!) === i)
+						.map(cardToken)
+						.join(' or ')
+				: `unprinted ${kind ?? 'card'}`,
 		)
-	if (filter.exhibits !== undefined && filter.exhibits.length > 0) {
-		parts.push(`a ${filter.exhibits.map(specialtyWord).join(' or ')} icon card`)
+	} else {
+		if (filter.traits !== undefined && filter.traits.length > 0)
+			words.push(filter.traits.join(' or '))
+		if (filter.allTraits !== undefined && filter.allTraits.length > 0)
+			words.push(filter.allTraits.join(' '))
+		if (kind !== undefined) words.push(kind)
 	}
-	if (filter.focus !== undefined && filter.focus.length > 0) {
-		parts.push(`a ${filter.focus.map(specialtyWord).join('/')} Focus card`)
-	}
-	if (filter.minVp !== undefined) parts.push(`with ${filter.minVp}+ VP`)
-	if (filter.not !== undefined) parts.push(`non-${describeFilter(filter.not)}`)
-	if (parts.length === 0) return 'a card'
-	const noun = parts.join(' or ')
-	// single suit/trait: bare form ("SHIP", "CARGO") so "for each SHIP you own" reads right
-	return noun
+	const noun = words.length > 0 ? words.join(' ') : 'card'
+	return filter.minVp !== undefined ? `${noun} with ${filter.minVp}+ VP` : noun
 }
 
 /** For COST_RECALL / COST_LOG: "from in play" (default) or "from <explicit
@@ -357,7 +399,7 @@ function inPlayFrom(from: ZoneSpec | ZoneSpec[] | undefined): string {
 	const zp = zones
 		.map((z) => (z === 'IN_PLAY' ? 'from play' : zonePhrase([z], 'SELF')))
 		.join(' or ')
-	return ` ${zp.startsWith('from ') ? zp : `from ${zp}`}`
+	return ` ${/^(from|beamed) /.test(zp) ? zp : `from ${zp}`}`
 }
 
 /** Whose a per-player zone (`{ k: 'HAND', seat }`) is, relative to the actor;
@@ -367,107 +409,185 @@ function zoneOwner(z: ZoneSpec): 'SELF' | 'OPPONENT' | undefined {
 	return z.seat === 1 ? 'OPPONENT' : 'SELF'
 }
 
-/** Zone qualifier for a query: "you own", "you have in play", "in your hand". */
+/** The per-player zones a card is in play in, beamed cards aside (1KOL05). */
+const IN_PLAY_ZONES = [
+	'STAGING',
+	'FLEET',
+	'LOCATION_AREA',
+	'DUTY_OFFICER',
+	'CAPTAIN',
+	'STATUS',
+]
+
+/** Zone qualifier for a query: "you own", "you have in play", "from your
+ *  hand" — or, `where` 'in', "in your hand" (what a count or a "for each"
+ *  looks through, rather than where a card is taken from). */
 function zonePhrase(
 	zones: ZoneSpec[],
 	seat: 'SELF' | 'OPPONENT' | 'ANY' | undefined,
+	where: 'from' | 'in' = 'from',
 ): string {
 	if (zones.length === 0) return ''
+	const owners = new Set(zones.map(zoneOwner))
+	if (
+		owners.size === 1 &&
+		zones.length === IN_PLAY_ZONES.length &&
+		IN_PLAY_ZONES.every((k) =>
+			zones.some((z) => typeof z === 'object' && z.k === k),
+		)
+	)
+		return `${
+			owners.has('OPPONENT') ? 'your opponent has' : 'you have'
+		} in play (excluding beamed cards)`
+	// each phrase once: one MARKET_OFFER zone per suit is still "from the Market"
+	return [...new Set(zones.map((z) => oneZonePhrase(z, seat)))]
+		.map((p) => (where === 'in' ? p.replace(/^from /, 'in ') : p))
+		.join(' or ')
+}
 
-	if (zones.length === 1) {
-		const z = zones[0]!
-		// a per-player zone is the actor's (seat 0) or their opponent's (seat 1),
-		// whatever the query's seat (resolveQuery.ts header)
-		const owner = zoneOwner(z) ?? seat
-		const fromWord = (s: string): string =>
-			owner === 'OPPONENT'
-				? `from your opponent's ${s}`
-				: owner === 'ANY'
-					? `from any player's ${s}`
-					: `from your ${s}`
-		if (z === 'ALL_OWNED')
-			return seat === 'OPPONENT' ? 'your opponent owns' : 'you own'
-		if (z === 'IN_PLAY')
-			return seat === 'OPPONENT'
-				? 'your opponent has in play'
-				: 'you have in play'
-		if (z === 'BEAMED_ANY') return 'beamed to one of your cards'
-		if (z === 'BEAMED_TO_SHIP') return 'beamed to a SHIP'
-		// "a LOCATION" = any Location you may reach (controlled or neutral)
-		if (z === 'LOCATIONS') return ''
-		if (z === 'NEUTRAL_LOCATIONS') return 'in the Neutral Zone'
-		switch (z.k) {
-			case 'BEAMED_TO':
-				return 'host' in z ? 'beamed here' : `beamed to the ${z.bound} card`
-			case 'HAND':
-				return fromWord('hand')
-			case 'DRAW':
-				return fromWord('deck')
-			case 'DISCARD':
-				return fromWord('Discard pile')
-			case 'RESERVE':
-				return fromWord('Reserve')
-			case 'DEVELOPMENT':
-				return fromWord('Development pile')
-			case 'LOG':
-				return fromWord('Log')
-			case 'STAGING':
-				return fromWord('Staging Area')
-			case 'FLEET':
-				return fromWord('Fleet')
-			case 'LOCATION_AREA':
-				return fromWord('Location area')
-			case 'DUTY_OFFICER':
-				return fromWord('Duty Officer')
-			case 'CAPTAIN':
-				return fromWord('Captain')
-			case 'STATUS':
-				return fromWord('Status card')
-			case 'JUNK':
-				return 'from the Junk'
-			case 'INCIDENT_DECK':
-				return 'from the Incident deck'
-			case 'ENCOUNTER_DECK':
-				return 'from the Encounter deck'
-			case 'LOCATION_DECK':
-				return 'from the Location deck'
-			case 'NEUTRAL_ZONE':
-				return 'in the Neutral Zone'
-			case 'STARDATE_PILE':
-				return 'from the Stardate pile'
-			case 'BOX':
-				return 'from the box'
-			case 'MARKET_OFFER':
-				return 'from the Market'
-			case 'MARKET_DECK':
-				return `from the ${suitWord(z.suit)} Market deck`
-			case 'BEAMED':
-				return `beamed to ${z.host}`
-		}
+/** One zone of a query, as zonePhrase words it. */
+function oneZonePhrase(
+	z: ZoneSpec,
+	seat: 'SELF' | 'OPPONENT' | 'ANY' | undefined,
+): string {
+	// a per-player zone is the actor's (seat 0) or their opponent's (seat 1),
+	// whatever the query's seat (resolveQuery.ts header)
+	const owner = zoneOwner(z) ?? seat
+	const fromWord = (s: string): string =>
+		owner === 'OPPONENT'
+			? `from your opponent's ${s}`
+			: owner === 'ANY'
+				? `from any player's ${s}`
+				: `from your ${s}`
+	if (z === 'ALL_OWNED')
+		return seat === 'OPPONENT' ? 'your opponent owns' : 'you own'
+	if (z === 'IN_PLAY')
+		return seat === 'OPPONENT'
+			? 'your opponent has in play'
+			: 'you have in play'
+	if (z === 'BEAMED_ANY') return 'beamed to one of your cards'
+	if (z === 'BEAMED_TO_SHIP') return 'beamed to a SHIP'
+	// "a LOCATION" = any Location you may reach (controlled or neutral)
+	if (z === 'LOCATIONS') return ''
+	if (z === 'NEUTRAL_LOCATIONS') return 'in the Neutral Zone'
+	switch (z.k) {
+		case 'BEAMED_TO':
+			return 'host' in z ? 'beamed here' : `beamed to ${boundCard(z.bound)}`
+		case 'HAND':
+			return fromWord('hand')
+		case 'DRAW':
+			return fromWord('deck')
+		case 'DISCARD':
+			return fromWord('Discard pile')
+		case 'RESERVE':
+			return fromWord('Reserve')
+		case 'DEVELOPMENT':
+			return fromWord('Development pile')
+		case 'LOG':
+			return fromWord('Log')
+		case 'STAGING':
+			return fromWord('Staging Area')
+		case 'FLEET':
+			return fromWord('Fleet')
+		case 'LOCATION_AREA':
+			return fromWord('Location area')
+		case 'DUTY_OFFICER':
+			return fromWord('Duty Officer')
+		case 'CAPTAIN':
+			return fromWord('Captain')
+		case 'STATUS':
+			return fromWord('Status card')
+		case 'BOT_ROW':
+			return "from the Bot's Staging row"
+		case 'SUPPLEMENT':
+			return "from the Bot's Supplement deck"
+		case 'REINFORCEMENT':
+			return fromWord('Reinforcement deck')
+		case 'JUNK':
+			return 'from the Junk'
+		case 'INCIDENT_DECK':
+			return 'from the Incident deck'
+		case 'ENCOUNTER_DECK':
+			return 'from the Encounter deck'
+		case 'LOCATION_DECK':
+			return 'from the Location deck'
+		case 'NEUTRAL_ZONE':
+			return 'in the Neutral Zone'
+		case 'STARDATE_PILE':
+			return 'from the Stardate pile'
+		case 'BOX':
+			return 'from the box'
+		case 'MARKET_OFFER':
+			return 'from the Market'
+		case 'MARKET_DECK':
+			return `from the ${suitWord(z.suit)} Market deck`
+		case 'BEAMED':
+			return `beamed to ${z.host}`
 	}
-	return zones.map((z) => zonePhrase([z], seat)).join(' or ')
 }
 
 /** A Query as a noun phrase: "SHIP you have in play", "card from your Discard
- *  pile", "ALLY you own". Bare form — callers add articles for targets. */
-export function describeQuery(query: Query): string {
+ *  pile", "ALLY you own". Bare form — callers add articles for targets.
+ *  `where` 'in' words the zone as where a count looks ("card in your hand"). */
+export function describeQuery(
+	query: Query,
+	where: 'from' | 'in' = 'from',
+): string {
 	if (query.thisCard === true) return 'this card'
-	const head = describeFilter(query.filter)
+	if (query.bound !== undefined) {
+		// a LET's cards are named by the query that collected them
+		const set =
+			typeof query.bound === 'string' ? letQueries.get(query.bound) : undefined
+		return set !== undefined ? describeQuery(set, where) : boundNoun(query)
+	}
+	const head =
+		query.countIcons !== undefined
+			? `${query.countIcons === 'SKILL' ? 'Skill' : 'Focus'} icon${
+					query.filter !== undefined
+						? ` on ${withArticle(describeFilter(query.filter))}`
+						: ''
+				}`
+			: describeFilter(query.filter)
 	if (query.atThisShip === true)
 		return query.withShip !== undefined &&
 			query.withShip !== false &&
 			query.shipSeat === 'OPPONENT'
 			? `${head} where this ship is, if your opponent has a SHIP there`
 			: `${head} where this ship is`
-	if (query.atBound !== undefined) return `the ${query.atBound} card's ${head}`
+	if (query.atBound !== undefined)
+		return `${boundCard(query.atBound)}'s ${head}`
 	if (query.secured === true) return `${head} you have secured`
-	const zone = zonePhrase(query.zones, query.seat)
+	const zone = zonePhrase(query.zones, query.seat, where)
 	const tail =
 		shipPhrase(query) +
 		(query.withAwayTeam === true ? ' where you have an Away Team' : '') +
 		(query.exceptThis === true ? ' (excluding this card)' : '')
 	if (zone === '') return `${head}${tail}`
 	return `${head} ${zone}${tail}`
+}
+
+/** A query for a card bound earlier: "that LOCATION", "the gained card",
+ *  "those cards" (one of several binds). */
+function boundNoun(query: Query): string {
+	if (typeof query.bound !== 'string') return 'those cards'
+	return isLocationQuery(query) ? 'that LOCATION' : boundCard(query.bound)
+}
+
+/** Does this query only match LOCATIONs? */
+function isLocationQuery(query: Query): boolean {
+	const suits = query.filter?.suits
+	if (suits !== undefined && suits.length === 1 && suits[0] === 'LOCATION')
+		return true
+	return (
+		query.zones.length > 0 &&
+		query.zones.every(
+			(z) =>
+				z === 'LOCATIONS' ||
+				z === 'NEUTRAL_LOCATIONS' ||
+				(typeof z === 'object' &&
+					(z.k === 'LOCATION_AREA' || z.k === 'NEUTRAL_ZONE')),
+		)
+	)
 }
 
 /** " where you have a SHIP" for a `withShip` query (whose: `shipSeat`). */
@@ -484,9 +604,7 @@ function shipPhrase(query: Query): string {
 /** A CardQuery as a target noun: "a SHIP you have in play", "a card from your
  *  hand", "an ALLY". */
 function describeCardTarget(q: Query): string {
-	const noun = describeQuery(q)
-	if (noun === 'a card' || q.thisCard === true) return noun
-	return withArticle(noun)
+	return withArticle(describeQuery(q))
 }
 
 /** A Location/Market query as a target noun. */
@@ -503,20 +621,12 @@ export function describePredicate(pred: Predicate): string {
 	switch (pred.k) {
 		case 'SPECIALTY_AT_LEAST':
 			return `your ${specialtyWord(pred.specialty)} is at least ${pred.value}`
-		case 'COUNT_AT_LEAST': {
-			const zones = pred.query.zones
-			if (
-				!opponentActs &&
-				zones.length > 0 &&
-				zones.every((z) => zoneOwner(z) === 'OPPONENT')
-			)
-				return `your opponent has at least ${pred.value} ${describeQuery(pred.query).replace(/your opponent's /g, 'their ')}`
-			return `you have at least ${pred.value} ${describeQuery(pred.query)}`
-		}
+		case 'COUNT_AT_LEAST':
+			return describeCount(pred.query, pred.value, false)
 		case 'HAS_TRAIT_IN_PLAY':
 			return pred.count !== undefined && pred.count > 1
 				? `you have ${pred.count} or more ${pred.trait} in play`
-				: `you have a ${pred.trait} in play`
+				: `you have ${withArticle(pred.trait)} in play`
 		case 'DIFFERENT_SPECIES_IN_PLAY':
 			return `you have ${pred.count} different species${
 				pred.filter?.not !== undefined
@@ -552,15 +662,8 @@ export function describePredicate(pred: Predicate): string {
 			return 'this card is owned by the Bot'
 		case 'COMPARE':
 			return `${describeAmount(pred.a)} is ${pred.op === 'LT' ? 'lower than' : 'at least'} ${describeAmount(pred.b)}`
-		case 'AWAY_TEAMS_AT': {
-			const who =
-				pred.seat === 'OPPONENT'
-					? 'your opponent has'
-					: pred.seat === 'ANY'
-						? 'there are'
-						: 'you have'
-			return `${who} ${pred.value} or more AWAY TEAMS at ${withArticle(describeQuery(pred.at))}`
-		}
+		case 'AWAY_TEAMS_AT':
+			return describeAwayTeamsAt(pred, false)
 		case 'DID': {
 			// "if they do" when the bound step was the other player's
 			const binds = Array.isArray(pred.bind) ? pred.bind : [pred.bind]
@@ -577,10 +680,21 @@ export function describePredicate(pred: Predicate): string {
 					: `${who} all of them`
 				: who
 		}
-		case 'BOUND_IS':
-			return `the ${pred.bind} card is ${describeFilter(pred.filter)}`
+		case 'BOUND_IS': {
+			// a suit or a kind of card is a noun ("is a PERSON", "is a MILITARY
+			// icon card"); a bare trait reads as an adjective ("is SHADY")
+			const f = pred.filter
+			const noun =
+				f.ids !== undefined ||
+				f.minVp !== undefined ||
+				[f.suits, f.focus, f.exhibits].some(
+					(v) => v !== undefined && v.length > 0,
+				)
+			const what = describeFilter(f)
+			return `${boundCard(pred.bind)} is ${noun ? withArticle(what) : what}`
+		}
 		case 'BOUND_SHARES_TRAIT':
-			return `the ${pred.bind} card shares at least one trait with ${traitPartnerTarget(pred.with)}`
+			return `${boundCard(pred.bind)} shares at least one trait with ${traitPartnerTarget(pred.with)}`
 		case 'LOG_LEGAL': {
 			const what =
 				pred.filter !== undefined
@@ -597,8 +711,116 @@ export function describePredicate(pred: Predicate): string {
 		case 'OR':
 			return pred.terms.map(describePredicate).join(' or ')
 		case 'NOT':
-			return `not ${describePredicate(pred.term)}`
+			return describeNot(pred.term)
 	}
+}
+
+/** A negated predicate as a statement ("you have no card in your Duty
+ *  Officer"); a term with no plain negation reads "it is not the case that". */
+function describeNot(term: Predicate): string {
+	switch (term.k) {
+		case 'COUNT_AT_LEAST':
+			return describeCount(term.query, term.value, true)
+		case 'AWAY_TEAMS_AT':
+			return describeAwayTeamsAt(term, true)
+		case 'BOUND_SHARES_TRAIT':
+			return `${boundCard(term.bind)} shares no trait with ${traitPartnerTarget(term.with)}`
+	}
+	return `it is not the case that ${describePredicate(term)}`
+}
+
+/** Where a bound card or this card is, as the end of "… is …": "in your
+ *  Location area", "in play", "beamed to a SHIP". */
+function isWhere(query: Query): string {
+	const zone = zonePhrase(query.zones, query.seat, 'in')
+	if (zone === '' || zone.includes('in play')) return 'in play'
+	if (zone === 'you own') return 'yours'
+	if (zone === 'your opponent owns') return "your opponent's"
+	return zone
+}
+
+/** A COUNT_AT_LEAST: "you have at least 2 SHIP in play", "your opponent has
+ *  at least 1 card in their hand", "that LOCATION is in your opponent's
+ *  Location area", "this card is a SHIP". `none` words its negation ("you
+ *  have no card in your Duty Officer", "fewer than 2 SHIP"). */
+function describeCount(query: Query, value: number, none: boolean): string {
+	const is = none ? 'is not' : 'is'
+	if (query.thisCard === true)
+		return query.filter !== undefined
+			? `this card ${is} ${withArticle(describeFilter(query.filter))}`
+			: `this card ${is} ${isWhere(query)}`
+	if (query.bound !== undefined) {
+		const many = typeof query.bound !== 'string' || letQueries.has(query.bound)
+		if (many)
+			return `${none ? 'none' : 'any'} of those cards is ${isWhere(query)}`
+		const noun = boundNoun(query)
+		if (!none) {
+			if (query.secured === true) return `you have secured ${noun}`
+			const zone = zonePhrase(query.zones, query.seat, 'in')
+			const at = zone === '' ? noun : `${noun} ${zone}`
+			if (query.withAwayTeam === true) return `you have an Away Team at ${at}`
+			const ship = shipPhrase(query)
+			if (ship !== '') return `${ship.replace(/^ where /, '')} at ${at}`
+		}
+		return `${noun} ${is} ${isWhere(query)}`
+	}
+	const counted = (q: Query): string => {
+		const noun = describeQuery(q, 'in')
+		if (value === 1) return none ? `no ${noun}` : `at least 1 ${noun}`
+		return `${none ? 'fewer than' : 'at least'} ${value} ${manyCards(noun)}`
+	}
+	const [zone] = query.zones
+	if (
+		query.zones.length === 1 &&
+		(zone === 'IN_PLAY' || zone === 'ALL_OWNED')
+	) {
+		const opp = query.seat === 'OPPONENT'
+		const bare = { ...query, zones: [] }
+		return zone === 'IN_PLAY'
+			? `${opp ? 'your opponent has' : 'you have'} ${counted(bare)} in play`
+			: `${opp ? 'your opponent owns' : 'you own'} ${counted(bare)}`
+	}
+	if (
+		!opponentActs &&
+		query.zones.length > 0 &&
+		query.zones.every((z) => zoneOwner(z) === 'OPPONENT')
+	)
+		return `your opponent has ${counted(query).replace(/your opponent's /g, 'their ')}`
+	return `you have ${counted(query)}`
+}
+
+/** An AWAY_TEAMS_AT: "you have an Away Team here", "you have 3 or more Away
+ *  Teams in total at LOCATIONs in your Location area". */
+function describeAwayTeamsAt(
+	pred: Extract<Predicate, { k: 'AWAY_TEAMS_AT' }>,
+	none: boolean,
+): string {
+	// the count is the Away Teams; "where you have an Away Team" adds nothing
+	const at: Query = { ...pred.at, withAwayTeam: undefined }
+	const where =
+		at.thisCard === true
+			? 'here'
+			: at.bound !== undefined
+				? `at ${describeQuery(at)}`
+				: pred.value === 1
+					? `at ${withArticle(describeQuery(at, 'in'))}`
+					: `in total at ${[
+							plural(describeFilter(at.filter)),
+							zonePhrase(at.zones, at.seat, 'in'),
+						]
+							.filter((s) => s !== '')
+							.join(' ')}${shipPhrase(at)}`
+	const teams =
+		pred.value === 1
+			? none
+				? 'no Away Team'
+				: 'an Away Team'
+			: none
+				? `fewer than ${pred.value} Away Teams`
+				: `${pred.value} or more Away Teams`
+	if (pred.seat === 'ANY')
+		return `there ${pred.value === 1 ? 'is' : 'are'} ${teams} ${where}`
+	return `${pred.seat === 'OPPONENT' ? 'your opponent has' : 'you have'} ${teams} ${where}`
 }
 
 /** The comparison target of a BOUND_SHARES_TRAIT predicate. A CAPTAIN-zone
@@ -627,7 +849,7 @@ export function describeZoneSpec(z: ZoneSpec): string {
 	const your = zoneOwner(z) === 'OPPONENT' ? "your opponent's" : 'your'
 	switch (z.k) {
 		case 'BEAMED_TO':
-			return 'host' in z ? 'beamed here' : `beamed to the ${z.bound} card`
+			return 'host' in z ? 'beamed here' : `beamed to ${boundCard(z.bound)}`
 		case 'HAND':
 			return `${your} hand`
 		case 'DRAW':
@@ -693,6 +915,9 @@ function render(node: Effect): string {
 				.map((s, i) => (i === 0 ? render(s) : theyDo(s, render(s))))
 				.join(' ')
 		case 'MAY':
+			// "you may if …" doesn't read: the condition goes first
+			if (node.body.k === 'IF' && node.body.else === undefined)
+				return `If ${describePredicate(node.body.cond)}, you may ${phrase(render(node.body.then))}.`
 			return `You may ${phrase(render(node.body))}.`
 		case 'CHOOSE_ONE':
 			if (node.count !== undefined && node.count > 1)
@@ -707,20 +932,40 @@ function render(node: Effect): string {
 			const branch = (e: Effect): string => theyDo(e, phrase(render(e)))
 			const tail =
 				node.else !== undefined ? ` Otherwise, ${branch(node.else)}.` : ''
-			return `If ${describePredicate(node.cond)}, ${branch(node.then)}.${tail}`
+			// "if this card is a PERSON": its then-branch need not ask again
+			const known = thisCardIs
+			const suits =
+				node.cond.k === 'COUNT_AT_LEAST' && node.cond.query.thisCard === true
+					? node.cond.query.filter?.suits
+					: undefined
+			if (suits !== undefined && suits.length === 1) thisCardIs = suits[0]
+			let then: string
+			try {
+				then = branch(node.then)
+			} finally {
+				thisCardIs = known
+			}
+			return `If ${describePredicate(node.cond)}, ${then}.${tail}`
 		}
 		case 'REPEAT':
+			if (typeof node.times === 'object' && node.times.k === 'UNUSED_ACTIONS')
+				return `For each of your unused actions, ${phrase(render(node.body))}.`
+			if (typeof node.times === 'object' && node.times.k === 'COUNT')
+				return `For each ${describeQuery(node.times.query, 'in')}, ${phrase(render(node.body))}.`
 			return `Repeat ${describeAmount(node.times)} times: ${phrase(render(node.body))}.`
 		case 'FOR_EACH':
-			return `For each ${describeQuery(node.over)}, ${theyDo(node.body, phrase(render(node.body)))}.`
+			return `For each ${describeQuery(node.over, 'in')}, ${theyDo(node.body, phrase(render(node.body)))}.`
 		case 'LET':
-			return `Let ${node.bind} equal ${
+			// a LET of cards is named where the body uses it ("for each KLINGON …")
+			if (
 				node.value !== null &&
 				typeof node.value === 'object' &&
 				'zones' in node.value
-					? describeQuery(node.value as Query)
-					: describeAmount(node.value as Amount)
-			}. ${render(node.body)}`
+			) {
+				letQueries.set(node.bind, node.value as Query)
+				return render(node.body)
+			}
+			return `Let ${node.bind} equal ${describeAmount(node.value as Amount)}. ${render(node.body)}`
 		case 'OPPONENT':
 			return renderOtherSide(node.body, false)
 		case 'NOOP':
@@ -737,15 +982,9 @@ function render(node: Effect): string {
 			return 'Spend an {ACTION}.'
 		case 'COST_DISCARD': {
 			if (node.target === 'THIS') return 'Discard this card.'
-			const what =
-				node.filter !== undefined
-					? describeFilter(node.filter)
-					: node.count === 1
-						? 'a card'
-						: `${node.count} cards`
 			const fromHand =
 				node.whose === 'OPPONENT' ? "your opponent's hand" : 'your hand'
-			return `Discard ${node.count === 1 ? '' : node.count + ' '}${what} from ${fromHand}.`
+			return `Discard ${countOf(node.count, describeFilter(node.filter))} from ${fromHand}.`
 		}
 		case 'COST_PUT': {
 			if (node.target === 'THIS')
@@ -788,7 +1027,11 @@ function render(node: Effect): string {
 			return `Take ${node.count} Incident card${node.count === 1 ? '' : 's'}.`
 		case 'COST_DISMISS':
 			if (node.target === 'THIS') return 'Dismiss this card.'
-			return `Dismiss ${node.count} ${node.count === 1 ? 'card' : 'cards'} ${describeFilter(node.filter)}${node.from !== undefined && node.from !== 'IN_PLAY' ? ` ${describeZoneSpec(node.from)}` : ''}.`
+			return `Dismiss ${countOf(node.count, describeFilter(node.filter))}${
+				node.from !== undefined && node.from !== 'IN_PLAY'
+					? ` ${zonePhrase([node.from], 'SELF')}`
+					: ' you have in play'
+			}.`
 		case 'COST_LOG_THIS':
 			return 'Log this card.'
 		case 'COST_REQUIRE':
@@ -819,11 +1062,13 @@ function render(node: Effect): string {
 			const what =
 				node.target === 'THIS'
 					? 'this card'
-					: node.count === 1
-						? `${withArticle(describeFilter(node.filter))}`
-						: `${node.count} cards`
+					: node.bound !== undefined
+						? boundCard(node.bound)
+						: node.count === 1
+							? `${withArticle(describeFilter(node.filter))}`
+							: `${node.count} cards`
 			const fromPhrase =
-				node.from !== undefined
+				node.from !== undefined && node.bound === undefined
 					? ` ${zonePhrase(Array.isArray(node.from) ? node.from : [node.from], undefined)}`
 					: ''
 			return `Beam ${what}${fromPhrase} to ${describeCardTarget(node.to)}.`
@@ -846,19 +1091,13 @@ function render(node: Effect): string {
 				return node.onlyBound.length === 1
 					? 'Discard it.'
 					: 'Discard one of them.'
-			const what =
-				node.filter !== undefined
-					? describeFilter(node.filter)
-					: node.count === 1
-						? 'a card'
-						: 'cards'
 			const fromZone =
 				node.from === 'HAND'
 					? node.whose === 'OPPONENT'
 						? "opponent's hand"
 						: 'hand'
 					: 'deck'
-			return `Discard ${node.count === 1 ? '' : node.count + ' '}${what} from your ${fromZone}.`
+			return `Discard ${countOf(node.count, describeFilter(node.filter))} from your ${fromZone}.`
 		}
 		case 'DISMISS':
 			return node.target === 'THIS'
@@ -869,19 +1108,17 @@ function render(node: Effect): string {
 				return 'Draw the bottom card of your deck.'
 			const per = perOf(node.count)
 			if (per !== undefined)
-				return `Draw a card for every ${per.every} ${perBasePhrase(per.base)}${perCapTail(per)}.`
+				return `Draw a card for every ${per.every} ${perBasePhrase(per.base, per.every)}${perCapTail(per)}.`
 			return typeof node.count === 'number'
 				? node.count === 1
 					? 'Draw a card.'
 					: `Draw ${node.count} cards.`
 				: node.count.k === 'COUNT'
-					? `Draw a card for each ${describeQuery(node.count.query)}.`
+					? `Draw a card for each ${describeQuery(node.count.query, 'in')}.`
 					: `Draw ${describeAmount(node.count)} cards.`
 		}
 		case 'DRAW_FROM_DISCARD':
-			return `Draw ${node.count} ${node.count === 1 ? 'card' : 'cards'}${
-				node.filter !== undefined ? ` ${describeFilter(node.filter)}` : ''
-			} from your Discard pile.`
+			return `Draw ${countOf(node.count, describeFilter(node.filter))} from your Discard pile.`
 		case 'RECALL':
 			return `Recall ${describeCardTarget(node.target)}.`
 		case 'LOG':
@@ -890,7 +1127,13 @@ function render(node: Effect): string {
 				: `Log ${describeCardTarget(node.target)}.`
 		case 'PROMOTE':
 			if (node.target === 'THIS') return 'Promote this card to Duty Officer.'
-			return `Promote ${describeFilter(node.filter)} from your ${node.from.toLowerCase()} to Duty Officer.`
+			return `Promote ${withArticle(describeFilter(node.filter))} from your ${
+				node.from === 'DISCARD'
+					? 'Discard pile'
+					: node.from === 'STAGING'
+						? 'Staging Area'
+						: 'hand'
+			} to Duty Officer.`
 		case 'JUNK':
 			return `Junk ${describeCardTarget(node.target)}.`
 		case 'PUT_INTO_STAGING':
@@ -972,7 +1215,7 @@ function render(node: Effect): string {
 		case 'GAIN_RESOURCE': {
 			const per = perOf(node.amount)
 			return per !== undefined
-				? `Gain 1 ${resourceToken(node.res)} for every ${per.every} ${perBasePhrase(per.base)}${perCapTail(per)}, rounded down.`
+				? `Gain 1 ${resourceToken(node.res)} for every ${per.every} ${perBasePhrase(per.base, per.every)}${perCapTail(per)}, rounded down.`
 				: `Gain ${describeAmount(node.amount)} ${resourceToken(node.res)}${
 						node.fromSupply === true
 							? ' from the supply (not the Stardate card)'
@@ -1021,8 +1264,17 @@ function render(node: Effect): string {
 					: describeLocation(node.target)
 			}.`
 		case 'WARP':
-			if (node.count !== undefined)
-				return `Warp ${describeAmount(node.count)} of ${describeCardTarget(node.ship)} to ${describeLocation(node.to)}.`
+			if (node.count !== undefined) {
+				// "up to the number of SHIP in your Fleet" of them is any number
+				const n =
+					typeof node.count === 'object' &&
+					node.count.k === 'UP_TO' &&
+					typeof node.count.max === 'object' &&
+					node.count.max.k === 'COUNT'
+						? 'any number of'
+						: describeAmount(node.count)
+				return `Warp ${n} ${describeQuery(node.ship)} to ${describeLocation(node.to)}.`
+			}
 			return node.ship.filter?.suits?.includes('SHIP') === true
 				? `Warp this ship to ${describeLocation(node.to)}.`
 				: `Warp ${describeCardTarget(node.ship)} to ${describeLocation(node.to)}.`
@@ -1081,7 +1333,7 @@ function render(node: Effect): string {
 			if (node.from.length === 1 && node.from[0] === 'RESOLVED_THIS_TURN')
 				return `Duplicate a ${node.opType} operation you have already resolved this turn.`
 			if (node.from.length === 1 && node.from[0] === 'BOUND')
-				return `Duplicate the ${node.bound ?? 'bound'} card's ${node.other === true ? 'other ' : ''}${node.opType} operation.`
+				return `Duplicate ${node.bound !== undefined ? boundCard(node.bound) : 'that card'}'s ${node.other === true ? 'other ' : ''}${node.opType} operation.`
 			return `Duplicate a ${node.opType} operation of ${
 				node.filter !== undefined ? `${describeFilter(node.filter)} ` : ''
 			}${node.suits.map(suitWord).join(' or ')} from the ${node.from
@@ -1112,15 +1364,14 @@ function render(node: Effect): string {
 		case 'SCORE_VP': {
 			const per = perOf(node.amount)
 			if (per !== undefined) {
-				return `Score 1 VP for every ${per.every} ${perBasePhrase(per.base)}${perCapTail(per)}, rounded down.`
+				return `Score 1 VP for every ${per.every} ${perBasePhrase(per.base, per.every)}${perCapTail(per)}, rounded down.`
 			}
 			if (
 				typeof node.amount === 'object' &&
 				node.amount !== null &&
 				node.amount.k === 'COUNT'
 			) {
-				const noun = describeFilter(node.amount.query.filter)
-				return `Score 1 VP for each of your ${noun} cards.`
+				return `Score 1 VP for each ${describeQuery(node.amount.query, 'in')}.`
 			}
 			return `Score ${describeAmount(node.amount)} VP.`
 		}
@@ -1146,13 +1397,18 @@ function render(node: Effect): string {
 		case 'BOT_JUNK':
 			return 'Junk the most valuable card in the Market (ignoring any with tokens).'
 		case 'BOT_SEND_AWAY_TEAM': {
-			const n = describeAmount(node.count)
+			// a counted number: "an Away Team … for each SHIP in your Discard pile"
+			const each =
+				typeof node.count === 'object' && node.count.k === 'COUNT'
+					? ` for each ${describeQuery(node.count.query, 'in')}`
+					: ''
+			const n = each !== '' ? '1' : describeAmount(node.count)
 			const teams = n === '1' ? 'an Away Team' : `${n} Away Teams`
 			const where =
 				node.prefer !== undefined
 					? `${node.prefer.join(' > ')} > LOCATION`
 					: 'LOCATION'
-			return `Send ${teams} to a neutral ${where}${
+			return `Send ${teams} to a neutral ${where}${each}${
 				node.ignoreShips === true ? ', ignoring any opponent SHIP' : ''
 			}.`
 		}
@@ -1171,7 +1427,9 @@ function render(node: Effect): string {
 		}
 		case 'BOT_PROMOTE':
 			return node.target === 'THIS'
-				? 'If this card is a PERSON, promote it to Duty Officer.'
+				? thisCardIs === 'PERSON'
+					? 'Promote it to Duty Officer.'
+					: 'If this card is a PERSON, promote it to Duty Officer.'
 				: node.target === 'DISCARD'
 					? 'Promote a PERSON from the Bot Discard pile to Duty Officer.'
 					: 'Promote it to Duty Officer.'
@@ -1311,7 +1569,7 @@ export function describeTrigger(trigger: TriggerSpec): string {
 			return trigger.effect === 'DISMISS_DUTY_OFFICER'
 				? 'When an attack would dismiss your Duty Officer'
 				: trigger.effect === 'REMOVE_AWAY_TEAM'
-					? 'When an attack would make you remove 1 or more AWAY TEAM'
+					? 'When an attack would make you remove 1 or more Away Teams'
 					: TRIGGER_PHRASES.WOULD_BE_ATTACKED
 		case 'OPERATION_RESOLVED':
 			return trigger.paid !== undefined
@@ -1342,6 +1600,7 @@ function actor(
  *  describe(effect). Used by the fidelity checker and the UI tooltips. */
 export function describeOperation(op: Operation): string {
 	bindSide.clear()
+	letQueries.clear()
 	const atoms: string[] = []
 	if (op.costsAction) atoms.push('{ACTION}')
 	if (op.isAttack) atoms.push('[ATTACK]')
@@ -1359,5 +1618,6 @@ export function describeOperation(op: Operation): string {
 /** The public entry point: render an effect tree as a complete sentence. */
 export function describe(effect: Effect): string {
 	bindSide.clear()
+	letQueries.clear()
 	return render(effect)
 }

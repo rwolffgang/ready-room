@@ -42,7 +42,7 @@ import {
 } from '../../engine/shorthand'
 import { describe, describeOperation } from '../../engine/describe'
 import { withLiveValues } from '../../engine/shorthandLive'
-import { cardName } from '../../data/cardNames'
+import { cardName, withCardNames } from '../../data/cardNames'
 
 /** Where a card sits, as far as its lines are concerned. */
 export type TileContext =
@@ -160,7 +160,7 @@ const compiledCache = new WeakMap<CardDef, Compiled[]>()
 
 function safeEnglish(op: Operation): string | undefined {
 	try {
-		return describeOperation(op)
+		return withCardNames(describeOperation(op))
 	} catch {
 		return undefined
 	}
@@ -188,7 +188,7 @@ export function compiledLines(def: CardDef): Compiled[] {
 		try {
 			let english: string | undefined
 			try {
-				english = `Development cost: ${describe(def.developmentCost)}`
+				english = `Development cost: ${withCardNames(describe(def.developmentCost))}`
 			} catch {
 				english = undefined
 			}
@@ -265,7 +265,8 @@ function idleOf(
 ): string | undefined {
 	if (real === null) return undefined
 	try {
-		return idleOperationReason(real, seat, iid, opIndex) ?? undefined
+		const reason = idleOperationReason(real, seat, iid, opIndex)
+		return reason === null ? undefined : withCardNames(reason)
 	} catch {
 		return undefined
 	}

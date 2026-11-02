@@ -223,9 +223,8 @@ describe('CARD_DEPLOYED — 1KOL03 / 1CAR03', () => {
 	})
 
 	it('describe() renders the deploy trigger', () => {
-		// (describeFilter renders `not` as "or non-X" — a pre-existing quirk)
-		expect(describeTrigger(PROTO.operations[1]!.trigger!)).toMatch(
-			/^After deploying a SHIP/,
+		expect(describeTrigger(PROTO.operations[1]!.trigger!)).toBe(
+			'After deploying a non-CLOAK SHIP',
 		)
 	})
 })

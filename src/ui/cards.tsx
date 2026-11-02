@@ -1649,8 +1649,8 @@ function IdleWarning({ reason }: { reason: string | null }) {
 	if (reason === null) return null
 	return (
 		<p className="op-reason op-idle" role="note">
-			Does nothing right now: “{reason}” can’t happen, so it would be skipped.
-			Any cost is still paid.
+			Does nothing right now: “{withCardNames(reason)}” can’t happen, so it
+			would be skipped. Any cost is still paid.
 		</p>
 	)
 }

@@ -4,6 +4,7 @@
 // the grammar shows each rule on a real card's compiled line, and the practice
 // questions are real operations with their describe() English.
 
+import { withCardNames } from '../../data/cardNames'
 import type { CardDef } from '../../data/schema'
 import type { Suit } from '../../data/ids'
 import type { Operation } from '../../engine/resolver/nodes'
@@ -394,21 +395,11 @@ export function linesOfDef(def: CardDef): ShorthandLine[] {
 // English
 // ---------------------------------------------------------------------------
 
-/** describe() output with its generator seams smoothed for reading. */
-export function tidyEnglish(text: string): string {
-	return text
-		.replace(/(the )?\$?[a-z]+\.[a-z.]+ card/gi, 'that card')
-		.replace(/\b(\d) \1 /g, '$1 ')
-		.replace(/'s an? /g, "'s ")
-		.replace(/\byour an? /g, 'your ')
-		.replace(/ card cards\b/g, ' cards')
-		.replace(/ a the /g, ' the ')
-}
-
-/** The English of an operation, or null for a tree describe() can't read. */
+/** The English of an operation, with card names, or null for a tree
+ *  describe() can't read. */
 export function englishOf(op: Operation): string | null {
 	try {
-		return tidyEnglish(describeOperation(op))
+		return withCardNames(describeOperation(op))
 	} catch {
 		return null
 	}
