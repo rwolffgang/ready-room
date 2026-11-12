@@ -383,6 +383,9 @@ export type Frame =
 // ---------------------------------------------------------------------------
 
 export interface GameState {
+	/** Enabled by a recorded live intent; absent in historical logs. */
+	chooseAwayTeamCount?: true
+
 	version: number
 	rng: Rng
 	mode: GameMode

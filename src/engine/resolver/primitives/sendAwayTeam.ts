@@ -32,6 +32,24 @@ export const sendAwayTeam: Primitive<Extract<Effect, { k: 'SEND_AWAY_TEAM' }>> =
 		execute(state, node, ctx, _frame) {
 			const targetKey = 'sendAwayTeam.target'
 			const sourceKey = 'sendAwayTeam.source'
+			if (
+				state.chooseAwayTeamCount &&
+				typeof node.count === 'object' &&
+				node.count.k === 'UP_TO'
+			) {
+				if (!answered(ctx, COUNT_KEY)) {
+					return suspend(state, node, ctx, COUNT_KEY, {
+						k: 'CHOOSE_AMOUNT',
+						prompt: 'How many Away Teams would you like to send?',
+						min: 0,
+						max: Math.min(
+							countOf(state, node, ctx),
+							tokensAvailable(state, ctx.actor),
+						),
+					})
+				}
+				if (answer<number>(ctx, COUNT_KEY) === 0) return state
+			}
 			// 3. source answered (pull): complete the placement, pulling from `source`
 			//    first, then any other of your locations in a fixed order. The
 			//    destination is the answered target, or the single legal one that
@@ -81,17 +99,19 @@ export const sendAwayTeam: Primitive<Extract<Effect, { k: 'SEND_AWAY_TEAM' }>> =
 
 /** Binding of a destination taken without a choice (the only legal one). */
 const AUTO_TARGET = 'sendAwayTeam.autoTarget'
+const COUNT_KEY = 'sendAwayTeam.count'
 
 function countOf(
 	state: GameState,
 	node: Effect & { k: 'SEND_AWAY_TEAM' },
 	ctx: Parameters<Primitive<Effect>['execute']>[2],
 ): number {
+	if (answered(ctx, COUNT_KEY)) return answer<number>(ctx, COUNT_KEY)
 	return Math.max(0, Math.floor(evalAmount(state, node.count, ctx)))
 }
 
 /** Legal destinations: Location cards the query names that `canSendAwayTeam`
- *  allows (or every named Location when `ignoreBlocking`). */
+ *  allows; `ignoreBlocking` bypasses opponent ships only, never a no-send passive. */
 function targets(
 	state: GameState,
 	node: Effect & { k: 'SEND_AWAY_TEAM' },

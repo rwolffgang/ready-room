@@ -34,7 +34,9 @@ import { isSoloBot } from './solo/seat'
 import { soloChoice } from './solo/policy'
 import { pushBotStep } from './solo/turn'
 
-export type Intent =
+export type Intent = IntentAction & { chooseAwayTeamCount?: true }
+
+type IntentAction =
 	| { t: 'START' } // SETUP -> the starting player's RESUPPLY
 	| { t: 'PASS' } // phase boundary: RESUPPLY->CONTROL, CONTROL->ACTION, ACTION->CLEANUP
 	| {
@@ -50,6 +52,16 @@ export type Intent =
 	| { t: 'END_TURN' } // ACTION -> CLEANUP (rules/03 §3.5 / END_ACTION_STEP)
 	| { t: 'COMPLETE_MISSION'; index: number } // ACTION — no action cost (rules/03 §3.5.7)
 	| { t: 'BOT_STEP' } // BOT — the official solo Bot's next beat (rules/13 §13.4)
+
+/** Record the rules transition so older logs keep their original choice IDs. */
+export function withCurrentRules(state: GameState, intent: Intent): Intent {
+	if (
+		!state.chooseAwayTeamCount &&
+		(intent.t === 'PLAY_CARD' || intent.t === 'ACTIVATE')
+	)
+		return { ...intent, chooseAwayTeamCount: true }
+	return intent
+}
 
 export interface ReduceResult {
 	state: GameState
@@ -75,7 +87,14 @@ function requireNoChoice(state: GameState): void {
 }
 
 export function reduce(state: GameState, intent: Intent): ReduceResult {
-	return pilotVirtualSeat(reduceCore(state, intent))
+	return pilotVirtualSeat(
+		reduceCore(
+			intent.chooseAwayTeamCount
+				? { ...state, chooseAwayTeamCount: true }
+				: state,
+			intent,
+		),
+	)
 }
 
 /** START: the starting player's first RESUPPLY step — beneath a campaign
