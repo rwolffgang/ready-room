@@ -1010,6 +1010,22 @@ describe('CardDef passives (todo/13 gap #1)', () => {
 		)
 		expect(blocksSendsTo(s, ID('t'))).toBe(true)
 		expect(canSendAwayTeam(s, 0, ID('t'))).toBe(false) // the integrated gate
+		expect(canSendAwayTeam(s, 0, ID('t'), true)).toBe(false)
+		// 1BUR15 may ignore opponent ships, but cannot ignore 1BUR10.
+		const out = pushAndRun(
+			pool(s, 0, 2),
+			{
+				k: 'SEND_AWAY_TEAM',
+				count: 1,
+				target: { zones: [{ k: 'LOCATION_AREA', seat: 0 }] },
+				ignoreBlocking: true,
+			},
+			SRC,
+			0,
+		)
+		expect(out.awayTeamsAt[ID('t')]).toBeUndefined()
+		expect(out.players[0].awayTeamsInPool).toBe(2)
+		expect(out.pendingChoice).toBeNull()
 	})
 
 	it('1PIC05: your active modifier ignores opponent SHIP tokens at a neutral LOCATION', () => {

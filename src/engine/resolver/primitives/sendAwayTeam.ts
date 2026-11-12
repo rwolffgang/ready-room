@@ -91,7 +91,7 @@ function countOf(
 }
 
 /** Legal destinations: Location cards the query names that `canSendAwayTeam`
- *  allows (or every named Location when `ignoreBlocking`). */
+ *  allows; `ignoreBlocking` bypasses opponent ships only, never a no-send passive. */
 function targets(
 	state: GameState,
 	node: Effect & { k: 'SEND_AWAY_TEAM' },
@@ -100,8 +100,9 @@ function targets(
 	const locs = resolveQuery(state, node.target, ctx).filter((iid) =>
 		isLocationDef(cardDef(state.cards[iid]!.def)),
 	)
-	if (node.ignoreBlocking === true) return locs
-	return locs.filter((iid) => canSendAwayTeam(state, ctx.actor, iid))
+	return locs.filter((iid) =>
+		canSendAwayTeam(state, ctx.actor, iid, node.ignoreBlocking === true),
+	)
 }
 
 /** How many of `seat`'s away-team tokens exist anywhere (pool + Locations). */
