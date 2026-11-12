@@ -111,7 +111,7 @@ function countOf(
 }
 
 /** Legal destinations: Location cards the query names that `canSendAwayTeam`
- *  allows; `ignoreBlocking` bypasses opponent ships only, never a no-send passive. */
+ *  allows (or every named Location when `ignoreBlocking`). */
 function targets(
 	state: GameState,
 	node: Effect & { k: 'SEND_AWAY_TEAM' },
