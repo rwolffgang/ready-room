@@ -73,6 +73,7 @@ export function canSendAwayTeam(
 	state: GameState,
 	seat: Seat,
 	locIid: CardInstanceId,
+	ignoreOpponentShips = false,
 ): boolean {
 	// Passive block: the Location's own passives can forbid sends outright
 	// (1BUR10 "you cannot send here" — docs-notes gap #1).
@@ -81,9 +82,10 @@ export function canSendAwayTeam(
 	if (!isNeutral(state, locIid)) return true // not a live contestable Location
 	// Passive ignore: while the seat has a 1PIC05-style modifier active,
 	// opponent SHIP tokens never block at neutral Locations (1PIC05).
-	const opp = ignoresOpponentShips(state, seat)
-		? 0
-		: shipTokensAt(state, locIid, otherSeat(seat))
+	const opp =
+		ignoreOpponentShips || ignoresOpponentShips(state, seat)
+			? 0
+			: shipTokensAt(state, locIid, otherSeat(seat))
 	const mine = shipTokensAt(state, locIid, seat)
 	return !(opp > mine) // ties do not block
 }
