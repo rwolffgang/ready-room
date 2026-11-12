@@ -47,7 +47,7 @@ import { setup } from '../src/engine/setup'
 import type { GameState } from '../src/engine/state'
 import type { Seat } from '../src/engine/resolver/queries'
 import type { Intent } from '../src/engine/intents'
-import { legalIntents, reduce } from '../src/engine/intents'
+import { legalIntents, reduce, withCurrentRules } from '../src/engine/intents'
 import { validateChoice } from '../src/engine/resolver/choices'
 import { cardDef } from '../src/engine/cards'
 import {
@@ -768,6 +768,7 @@ export class GameService {
 		seat: Seat,
 		by: SubmittedBy,
 	): GameState {
+		intent = withCurrentRules(before, intent)
 		const after = reduce(before, intent).state
 		const floor =
 			by !== 'player' ||

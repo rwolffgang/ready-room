@@ -18,7 +18,7 @@
 
 import type { GameState } from '../engine/state'
 import type { Intent } from '../engine/intents'
-import { reduce } from '../engine/intents'
+import { reduce, withCurrentRules } from '../engine/intents'
 import type { SetupConfig, CardCatalog } from '../engine/setup'
 import { setup } from '../engine/setup'
 import type { Seat } from '../engine/resolver/queries'
@@ -190,8 +190,10 @@ export function commit(
 	catalog: CardCatalog,
 	now = (): Date => new Date(),
 ): Session {
+	const before = replay(session, catalog)
+	intent = withCurrentRules(before, intent)
 	const log = append(session.log, intent)
-	const state = reduce(replay(session, catalog), intent).state
+	const state = reduce(before, intent).state
 	return { ...session, log, meta: metaFor(session, state, catalog, now) }
 }
 

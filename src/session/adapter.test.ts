@@ -207,3 +207,26 @@ describe('adapter state integrity', () => {
 		expect(someChoice).toBeNull()
 	})
 })
+
+it('records the rules transition and restores it through save/load and undo', () => {
+	const adapter = freshAdapter()
+	adapter.dispatch({ t: 'START' })
+	const before = JSON.stringify(adapter.state)
+	const iid = adapter.state.zones['HAND:0']!.find(
+		(iid) => adapter.state.cards[iid]!.def === '1PIC23-24',
+	)!
+	adapter.dispatch({ t: 'PLAY_CARD', iid, operationIndex: 0 })
+	expect(adapter.session.log.at(-1)).toMatchObject({
+		chooseAwayTeamCount: true,
+	})
+	expect(adapter.state.chooseAwayTeamCount).toBe(true)
+	const loaded = new Adapter({
+		session: JSON.parse(JSON.stringify(adapter.session)),
+		catalog,
+		now: fixedClock,
+	})
+	expect(loaded.state).toEqual(adapter.state)
+	loaded.undo()
+	expect(JSON.stringify(loaded.state)).toBe(before)
+	expect(loaded.state.chooseAwayTeamCount).toBeUndefined()
+})

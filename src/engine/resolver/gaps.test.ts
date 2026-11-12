@@ -1052,3 +1052,110 @@ describe('CardDef passives (todo/13 gap #1)', () => {
 		expect(effectiveHandSize(s, 0)).toBe(6)
 	})
 })
+
+describe('SEND_AWAY_TEAM optional amounts', () => {
+	function scenario() {
+		register([makeDef({ id: 'amountLoc', suit: 'LOCATION', operations: [] })])
+		let s = pool(fresh(), 0, 2)
+		for (const id of ['dest', 'from1', 'from2'])
+			s = place(s, 'amountLoc', ID(id), { k: 'LOCATION_AREA', seat: 0 }, 0)
+		s = {
+			...s,
+			chooseAwayTeamCount: true,
+			awayTeamsAt: { from1: [1, 0], from2: [1, 0] },
+		}
+		return s
+	}
+	const effect: Effect = {
+		k: 'SEND_AWAY_TEAM',
+		count: { k: 'UP_TO', max: 3 },
+		target: { zones: [{ k: 'LOCATION_AREA', seat: 0 }] },
+		ignoreBlocking: true,
+	}
+	function choose(s: GameState, selection: unknown) {
+		return run(
+			applyChoice(s, {
+				t: 'RESOLVE_CHOICE',
+				choiceId: s.pendingChoice!.id,
+				selection,
+			}),
+		)
+	}
+	it('sends two from the pool without pulling existing tokens', () => {
+		let s = pushAndRun(scenario(), effect, SRC, 0)
+		expect(s.pendingChoice).toMatchObject({
+			k: 'CHOOSE_AMOUNT',
+			min: 0,
+			max: 3,
+		})
+		s = choose(s, 2)
+		expect(s.pendingChoice?.k).toBe('CHOOSE_LOCATION')
+		s = choose(s, ID('dest'))
+		expect(s.pendingChoice).toBeNull()
+		expect(s.awayTeamsAt.dest).toEqual([2, 0])
+		expect(s.awayTeamsAt.from1).toEqual([1, 0])
+		expect(s.awayTeamsAt.from2).toEqual([1, 0])
+		expect(s.players[0].awayTeamsInPool).toBe(0)
+	})
+	it('allows zero and continues to the later benefit', () => {
+		const node: Effect = {
+			k: 'SEQ',
+			steps: [effect, { k: 'GAIN_RESOURCE', res: 'LAT', amount: 1 }],
+		}
+		const before = scenario()
+		const s = choose(pushAndRun(before, node, SRC, 0), 0)
+		expect(s.pendingChoice).toBeNull()
+		expect(s.awayTeamsAt).toEqual(before.awayTeamsAt)
+		expect(s.players[0].resources.LAT).toBe(before.players[0].resources.LAT + 1)
+	})
+	it('still allows choosing three and pulling the missing token', () => {
+		let s = choose(pushAndRun(scenario(), effect, SRC, 0), 3)
+		s = choose(s, ID('dest'))
+		expect(s.pendingChoice?.prompt).toMatch(/Pull/)
+		s = choose(s, ID('from1'))
+		expect(s.awayTeamsAt.dest).toEqual([3, 0])
+		expect(s.awayTeamsAt.from1).toEqual([0, 0])
+	})
+	it('preserves the old automatic maximum when the log has no rules marker', () => {
+		const before = scenario()
+		delete before.chooseAwayTeamCount
+		const s = pushAndRun(before, effect, SRC, 0)
+		expect(s.pendingChoice?.k).toBe('CHOOSE_LOCATION')
+	})
+})
+
+it('caps an optional send at the available token total', () => {
+	register([makeDef({ id: 'countCapLoc', suit: 'LOCATION', operations: [] })])
+	const s = {
+		...place(
+			pool(fresh(), 0, 2),
+			'countCapLoc',
+			ID('capDest'),
+			{ k: 'LOCATION_AREA', seat: 0 },
+			0,
+		),
+		chooseAwayTeamCount: true as const,
+	}
+	const node: Effect = {
+		k: 'SEND_AWAY_TEAM',
+		count: { k: 'UP_TO', max: 3 },
+		target: { zones: [{ k: 'LOCATION_AREA', seat: 0 }] },
+	}
+	const halted = pushAndRun(s, node, SRC, 0)
+	expect(halted.pendingChoice).toMatchObject({
+		k: 'CHOOSE_AMOUNT',
+		min: 0,
+		max: 2,
+	})
+	const restored: GameState = JSON.parse(JSON.stringify(halted))
+	const out = run(
+		applyChoice(restored, {
+			t: 'RESOLVE_CHOICE',
+			choiceId: restored.pendingChoice!.id,
+			selection: 1,
+		}),
+	)
+	expect(out.awayTeamsAt.capDest).toEqual([1, 0])
+	expect(out.players[0].awayTeamsInPool).toBe(1)
+	expect(out.pendingChoice).toBeNull()
+})

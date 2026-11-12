@@ -8,7 +8,7 @@
 
 import type { GameState } from '../engine/state'
 import type { Intent } from '../engine/intents'
-import { reduce, legalIntents } from '../engine/intents'
+import { reduce, legalIntents, withCurrentRules } from '../engine/intents'
 import type { PendingChoice } from '../engine/resolver/choices'
 import {
 	validateChoice,
@@ -79,6 +79,7 @@ export class SessionAdapter {
 	 *  RESOLVE_CHOICE selection) throw and leave the session untouched. */
 	dispatch(intent: Intent): GameState {
 		this.assertLegal(intent)
+		intent = withCurrentRules(this._state, intent)
 		this._state = reduce(this._state, intent).state
 		this._session = refreshMeta(
 			{ ...this._session, log: append(this._session.log, intent) },
